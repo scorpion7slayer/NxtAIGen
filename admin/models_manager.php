@@ -24,6 +24,163 @@ try {
   exit();
 }
 
+// Gérer les actions AJAX
+if (isset($_GET['ajax'])) {
+  header('Content-Type: application/json');
+
+  switch ($_GET['ajax']) {
+    case 'test_api':
+      $provider = $_POST['provider'] ?? '';
+      $result = testProviderConnection($provider, $pdo);
+      echo json_encode($result);
+      exit();
+
+    case 'export_config':
+      $config = exportConfiguration($pdo);
+      echo json_encode(['success' => true, 'config' => $config]);
+      exit();
+
+    case 'bulk_toggle':
+      $action = $_POST['action'] ?? '';
+      $providers = json_decode($_POST['providers'] ?? '[]', true);
+      $result = bulkToggleProviders($action, $providers, $pdo);
+      echo json_encode($result);
+      exit();
+  }
+
+  echo json_encode(['error' => 'Action inconnue']);
+  exit();
+}
+
+// Fonction pour tester la connexion d'un provider
+function testProviderConnection($provider, $pdo)
+{
+  $apiConfig = getAllApiConfigs($pdo);
+
+  $testUrls = [
+    'openai' => 'https://api.openai.com/v1/models',
+    'anthropic' => 'https://api.anthropic.com/v1/models',
+    'ollama' => ($apiConfig['ollama']['OLLAMA_API_URL'] ?? 'http://localhost:11434') . '/api/tags',
+    'gemini' => 'https://generativelanguage.googleapis.com/v1beta/models',
+    'deepseek' => 'https://api.deepseek.com/v1/models',
+    'mistral' => 'https://api.mistral.ai/v1/models',
+    'huggingface' => 'https://api-inference.huggingface.co/models',
+    'openrouter' => 'https://openrouter.ai/api/v1/models',
+    'perplexity' => 'https://api.perplexity.ai/chat/completions',
+    'xai' => 'https://api.x.ai/v1/models',
+    'moonshot' => 'https://api.moonshot.cn/v1/models',
+    'github' => 'https://api.githubcopilot.com/models',
+  ];
+
+  if (!isset($testUrls[$provider])) {
+    return ['success' => false, 'message' => 'Provider inconnu'];
+  }
+
+  $apiKeys = [
+    'openai' => $apiConfig['openai']['OPENAI_API_KEY'] ?? '',
+    'anthropic' => $apiConfig['anthropic']['ANTHROPIC_API_KEY'] ?? '',
+    'ollama' => $apiConfig['ollama']['OLLAMA_API_KEY'] ?? '',
+    'gemini' => $apiConfig['gemini']['GEMINI_API_KEY'] ?? '',
+    'deepseek' => $apiConfig['deepseek']['DEEPSEEK_API_KEY'] ?? '',
+    'mistral' => $apiConfig['mistral']['MISTRAL_API_KEY'] ?? '',
+    'huggingface' => $apiConfig['huggingface']['HUGGINGFACE_API_KEY'] ?? '',
+    'openrouter' => $apiConfig['openrouter']['OPENROUTER_API_KEY'] ?? '',
+    'perplexity' => $apiConfig['perplexity']['PERPLEXITY_API_KEY'] ?? '',
+    'xai' => $apiConfig['xai']['XAI_API_KEY'] ?? '',
+    'moonshot' => $apiConfig['moonshot']['MOONSHOT_API_KEY'] ?? '',
+    'github' => '', // OAuth based
+  ];
+
+  $apiKey = $apiKeys[$provider] ?? '';
+
+  $ch = curl_init($testUrls[$provider]);
+  $headers = ['Accept: application/json'];
+
+  if (!empty($apiKey)) {
+    if ($provider === 'anthropic') {
+      $headers[] = 'x-api-key: ' . $apiKey;
+      $headers[] = 'anthropic-version: 2023-06-01';
+    } elseif ($provider === 'gemini') {
+      curl_setopt($ch, CURLOPT_URL, $testUrls[$provider] . '?key=' . $apiKey);
+    } else {
+      $headers[] = 'Authorization: Bearer ' . $apiKey;
+    }
+  }
+
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 10,
+    CURLOPT_HTTPHEADER => $headers,
+    CURLOPT_SSL_VERIFYPEER => false,
+  ]);
+
+  $startTime = microtime(true);
+  $response = curl_exec($ch);
+  $latency = round((microtime(true) - $startTime) * 1000);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  $error = curl_error($ch);
+  curl_close($ch);
+
+  if ($error) {
+    return ['success' => false, 'message' => 'Erreur: ' . $error, 'latency' => $latency];
+  }
+
+  if ($httpCode >= 200 && $httpCode < 300) {
+    return ['success' => true, 'message' => 'Connexion réussie', 'latency' => $latency, 'code' => $httpCode];
+  } elseif ($httpCode === 401) {
+    return ['success' => false, 'message' => 'Clé API invalide', 'latency' => $latency, 'code' => $httpCode];
+  } else {
+    return ['success' => false, 'message' => 'Erreur HTTP ' . $httpCode, 'latency' => $latency, 'code' => $httpCode];
+  }
+}
+
+// Fonction pour exporter la configuration
+function exportConfiguration($pdo)
+{
+  $config = [
+    'exported_at' => date('c'),
+    'providers' => [],
+    'models' => []
+  ];
+
+  try {
+    $stmt = $pdo->query("SELECT provider, is_enabled FROM provider_status");
+    while ($row = $stmt->fetch()) {
+      $config['providers'][$row['provider']] = (bool)$row['is_enabled'];
+    }
+
+    $stmt = $pdo->query("SELECT provider, model_id, is_enabled FROM models_status");
+    while ($row = $stmt->fetch()) {
+      if (!isset($config['models'][$row['provider']])) {
+        $config['models'][$row['provider']] = [];
+      }
+      $config['models'][$row['provider']][$row['model_id']] = (bool)$row['is_enabled'];
+    }
+  } catch (PDOException $e) {
+    // Ignorer
+  }
+
+  return $config;
+}
+
+// Fonction pour activer/désactiver en masse
+function bulkToggleProviders($action, $providers, $pdo)
+{
+  $enabled = ($action === 'enable') ? 1 : 0;
+  $count = 0;
+
+  try {
+    foreach ($providers as $provider) {
+      $stmt = $pdo->prepare("INSERT INTO provider_status (provider, is_enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE is_enabled = ?");
+      $stmt->execute([$provider, $enabled, $enabled]);
+      $count++;
+    }
+    return ['success' => true, 'message' => "$count provider(s) mis à jour"];
+  } catch (PDOException $e) {
+    return ['success' => false, 'message' => 'Erreur: ' . $e->getMessage()];
+  }
+}
+
 // Charger la configuration des API depuis la DB (avec fallback vers config.php)
 $apiConfig = getAllApiConfigs($pdo);
 
@@ -178,6 +335,36 @@ function fetch_models_all()
 
 $modelsData = fetch_models_all();
 
+// Calculer les statistiques
+$stats = [
+  'total_providers' => 0,
+  'active_providers' => 0,
+  'total_models' => 0,
+  'active_models' => 0,
+];
+
+if (!isset($modelsData['error'])) {
+  $providers = array_diff(array_keys($modelsData), ['provider', 'timestamp']);
+  $stats['total_providers'] = count($providers);
+
+  foreach ($providers as $prov) {
+    $hasKey = hasApiKey($prov, $apiConfig, $providerApiKeys);
+    $isEnabled = $providerStatuses[$prov] ?? $hasKey;
+    if ($isEnabled) $stats['active_providers']++;
+
+    if (isset($modelsData[$prov]['models']) && is_array($modelsData[$prov]['models'])) {
+      $modelCount = count($modelsData[$prov]['models']);
+      $stats['total_models'] += $modelCount;
+
+      foreach ($modelsData[$prov]['models'] as $m) {
+        $modelId = $m['id'] ?? '';
+        $isModelEnabled = $modelStatuses[$prov][$modelId] ?? true;
+        if ($isModelEnabled && $isEnabled) $stats['active_models']++;
+      }
+    }
+  }
+}
+
 // Helper pour masquer une clé API
 function maskApiKey($key)
 {
@@ -308,6 +495,65 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       background-color: white;
     }
 
+    /* Mini toggle for compact view */
+    .toggle-switch-sm {
+      width: 36px;
+      height: 20px;
+    }
+
+    .toggle-switch-sm .toggle-slider:before {
+      height: 14px;
+      width: 14px;
+    }
+
+    input:checked+.toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .toggle-switch-sm input:checked+.toggle-slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Collapse animation */
+    .collapse-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+      opacity: 0;
+    }
+
+    .collapse-content.expanded {
+      max-height: 2000px;
+      opacity: 1;
+    }
+
+    /* Pulse animation for testing */
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .animate-pulse-dot {
+      animation: pulse-dot 1s infinite;
+    }
+
+    /* Stat card hover */
+    .stat-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
     /* Modal backdrop */
     .modal-backdrop {
       background-color: rgba(0, 0, 0, 0.7);
@@ -357,6 +603,54 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
   <!-- Main Content -->
   <main class="max-w-5xl mx-auto px-4 pt-20 pb-10">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-server text-blue-400"></i>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_providers']; ?></p>
+            <p class="text-xs text-neutral-500">Providers</p>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-check-circle text-green-400"></i>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_providers']; ?></p>
+            <p class="text-xs text-neutral-500">Actifs</p>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-robot text-purple-400"></i>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_models']; ?></p>
+            <p class="text-xs text-neutral-500">Modèles</p>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-amber-400"></i>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_models']; ?></p>
+            <p class="text-xs text-neutral-500">Disponibles</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabs -->
     <div class="flex gap-1 mb-6 border-b border-neutral-700/50">
       <button id="tabModels" onclick="switchTab('models')" class="px-4 py-3 text-sm font-medium text-green-400 border-b-2 border-green-400 transition-colors">
@@ -369,15 +663,54 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
     <!-- Tab: Models -->
     <div id="panelModels">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 class="text-xl font-semibold text-neutral-200">Gestion des modèles</h1>
           <p class="text-sm text-neutral-500 mt-1">Activez ou désactivez les modèles disponibles pour vos utilisateurs.</p>
         </div>
-        <button onclick="refreshModels()" class="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
-          <i class="fa-solid fa-refresh" id="refreshIcon"></i>
-          <span>Actualiser</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- Search -->
+          <div class="relative">
+            <input type="text" id="searchModels" oninput="filterModels(this.value)" placeholder="Rechercher..." class="w-48 px-3 py-2 pl-9 text-sm bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-green-500/50" />
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs"></i>
+          </div>
+          <!-- Sort -->
+          <select id="sortProviders" onchange="sortProviders(this.value)" class="px-3 py-2 text-sm bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 focus:outline-none focus:border-green-500/50">
+            <option value="alpha">A-Z</option>
+            <option value="models">Par modèles</option>
+            <option value="status">Par statut</option>
+          </select>
+          <!-- Bulk Actions -->
+          <div class="relative" id="bulkMenu">
+            <button onclick="toggleBulkMenu()" class="px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
+              <i class="fa-solid fa-ellipsis-v"></i>
+            </button>
+            <div id="bulkDropdown" class="hidden absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-10">
+              <button onclick="bulkToggle('enable')" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-toggle-on text-green-400"></i>Tout activer
+              </button>
+              <button onclick="bulkToggle('disable')" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-toggle-off text-red-400"></i>Tout désactiver
+              </button>
+              <hr class="border-neutral-700 my-1" />
+              <button onclick="expandAll()" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-expand text-blue-400"></i>Tout déplier
+              </button>
+              <button onclick="collapseAll()" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-compress text-blue-400"></i>Tout replier
+              </button>
+              <hr class="border-neutral-700 my-1" />
+              <button onclick="exportConfig()" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-download text-purple-400"></i>Exporter config
+              </button>
+            </div>
+          </div>
+          <!-- Refresh -->
+          <button onclick="refreshModels()" class="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
+            <i class="fa-solid fa-refresh" id="refreshIcon"></i>
+            <span class="hidden md:inline">Actualiser</span>
+          </button>
+        </div>
       </div>
 
       <?php if (isset($modelsData['error'])): ?>
@@ -397,17 +730,21 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         sort($providers);
         ?>
 
-        <div class="space-y-4">
+        <div class="space-y-4" id="providersContainer">
           <?php foreach ($providers as $prov):
             $block = $modelsData[$prov];
             $icon = $providerIcons[$prov] ?? 'openai.svg';
             $hasKey = hasApiKey($prov, $apiConfig, $providerApiKeys);
+            $isProviderEnabled = $providerStatuses[$prov] ?? $hasKey;
             $modelCount = isset($block['models']) && is_array($block['models']) ? count($block['models']) : 0;
           ?>
-            <section class="rounded-xl border border-neutral-700/50 bg-neutral-900/50 overflow-hidden">
+            <section class="provider-section rounded-xl border border-neutral-700/50 bg-neutral-900/50 overflow-hidden" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" data-models="<?php echo $modelCount; ?>" data-status="<?php echo $isProviderEnabled ? '1' : '0'; ?>">
               <!-- Provider Header -->
-              <div class="flex items-center justify-between px-4 py-3 bg-neutral-800/30 border-b border-neutral-700/30">
+              <div class="flex items-center justify-between px-4 py-3 bg-neutral-800/30 border-b border-neutral-700/30 cursor-pointer hover:bg-neutral-800/50 transition-colors" onclick="toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')">
                 <div class="flex items-center gap-3">
+                  <button class="collapse-btn text-neutral-500 hover:text-neutral-300 transition-colors" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
+                    <i class="fa-solid fa-chevron-down transition-transform"></i>
+                  </button>
                   <img src="../assets/images/providers/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" class="w-6 h-6" onerror="this.src='../assets/images/logo.svg'" />
                   <div>
                     <h2 class="text-base font-medium text-neutral-100 capitalize"><?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?></h2>
@@ -418,20 +755,24 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                     <?php endif; ?>
                   </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                   <?php if ($modelCount > 0): ?>
                     <span class="text-xs text-neutral-500 bg-neutral-800 px-2 py-1 rounded-full"><?php echo $modelCount; ?> modèle<?php echo $modelCount > 1 ? 's' : ''; ?></span>
                   <?php endif; ?>
+                  <!-- Test API Button -->
+                  <button onclick="testApi('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-500 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Tester la connexion">
+                    <i class="fa-solid fa-plug" id="testIcon_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"></i>
+                  </button>
                   <!-- Toggle Provider -->
                   <label class="toggle-switch" title="Activer/Désactiver ce provider">
-                    <input type="checkbox" <?php echo $hasKey ? 'checked' : ''; ?> onchange="toggleProvider('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
+                    <input type="checkbox" id="providerToggle_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $isProviderEnabled ? 'checked' : ''; ?> onchange="toggleProvider('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
                     <span class="toggle-slider"></span>
                   </label>
                 </div>
               </div>
 
-              <!-- Models List -->
-              <div class="p-4">
+              <!-- Models List (Collapsible) -->
+              <div class="collapse-content expanded p-4" id="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php if (isset($block['error'])): ?>
                   <div class="flex items-center gap-2 text-sm text-amber-300/80">
                     <i class="fa-solid fa-info-circle"></i>
@@ -446,20 +787,24 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                       $modelName = $m['name'] ?? $modelId;
                       $modelDesc = $m['description'] ?? '';
                       $modelData = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
+                      $isModelEnabled = $modelStatuses[$prov][$modelId] ?? true;
                     ?>
-                      <div class="flex items-center justify-between p-3 rounded-lg bg-neutral-800/40 hover:bg-neutral-800/60 transition-colors group">
+                      <div class="model-item flex items-center justify-between p-3 rounded-lg bg-neutral-800/40 hover:bg-neutral-800/60 transition-colors group" data-model-name="<?php echo htmlspecialchars(strtolower($modelName . ' ' . $modelId), ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                           <!-- Toggle Model -->
-                          <label class="toggle-switch shrink-0" title="Activer/Désactiver ce modèle">
-                            <input type="checkbox" checked onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
+                          <label class="toggle-switch toggle-switch-sm shrink-0" title="Activer/Désactiver ce modèle">
+                            <input type="checkbox" <?php echo $isModelEnabled ? 'checked' : ''; ?> onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
                             <span class="toggle-slider"></span>
                           </label>
                           <div class="min-w-0">
-                            <div class="text-sm text-neutral-200 font-medium truncate"><?php echo htmlspecialchars($modelName, ENT_QUOTES, 'UTF-8'); ?></div>
-                            <div class="text-xs text-neutral-500 truncate"><?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="text-sm text-neutral-200 font-medium truncate model-name"><?php echo htmlspecialchars($modelName, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="text-xs text-neutral-500 truncate model-id"><?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?></div>
                           </div>
                         </div>
                         <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onclick="copyToClipboard('<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-400 hover:text-green-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Copier l'ID">
+                            <i class="fa-solid fa-copy"></i>
+                          </button>
                           <button onclick='showModelDetails(<?php echo $modelData; ?>, "<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>")' class="p-2 text-neutral-400 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Voir les détails">
                             <i class="fa-solid fa-info-circle"></i>
                           </button>
@@ -541,6 +886,9 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                       <i class="fa-solid fa-eye"></i>
                     </button>
                   </div>
+                  <button onclick="testApiFromKey('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')" class="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors" title="Tester la connexion">
+                    <i class="fa-solid fa-plug" id="testKeyIcon_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"></i>
+                  </button>
                   <button onclick="saveApiKey('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')" class="px-4 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors" <?php echo !$tablesExist ? 'disabled title="Exécutez d\'abord la migration DB"' : ''; ?>>
                     <i class="fa-solid fa-save"></i>
                   </button>
@@ -647,6 +995,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
   <script>
     // Provider icons mapping
     const providerIcons = <?php echo json_encode($providerIcons); ?>;
+    const allProviders = <?php echo json_encode(array_diff(array_keys($modelsData ?? []), ['provider', 'timestamp'])); ?>;
 
     // Current modal model data
     let currentModalModel = null;
@@ -671,8 +1020,219 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       }
     }
 
+    // Filter models by search
+    function filterModels(query) {
+      const q = query.toLowerCase().trim();
+      const sections = document.querySelectorAll('.provider-section');
+
+      sections.forEach(section => {
+        const provider = section.dataset.provider.toLowerCase();
+        const models = section.querySelectorAll('.model-item');
+        let visibleCount = 0;
+
+        if (!q) {
+          section.style.display = '';
+          models.forEach(m => m.style.display = '');
+          return;
+        }
+
+        // Check if provider name matches
+        if (provider.includes(q)) {
+          section.style.display = '';
+          models.forEach(m => m.style.display = '');
+          return;
+        }
+
+        // Check individual models
+        models.forEach(model => {
+          const modelName = model.dataset.modelName || '';
+          if (modelName.includes(q)) {
+            model.style.display = '';
+            visibleCount++;
+          } else {
+            model.style.display = 'none';
+          }
+        });
+
+        section.style.display = visibleCount > 0 ? '' : 'none';
+      });
+    }
+
+    // Sort providers
+    function sortProviders(sortBy) {
+      const container = document.getElementById('providersContainer');
+      const sections = Array.from(container.querySelectorAll('.provider-section'));
+
+      sections.sort((a, b) => {
+        switch (sortBy) {
+          case 'models':
+            return parseInt(b.dataset.models) - parseInt(a.dataset.models);
+          case 'status':
+            return parseInt(b.dataset.status) - parseInt(a.dataset.status);
+          case 'alpha':
+          default:
+            return a.dataset.provider.localeCompare(b.dataset.provider);
+        }
+      });
+
+      sections.forEach(section => container.appendChild(section));
+    }
+
+    // Toggle bulk menu
+    function toggleBulkMenu() {
+      const dropdown = document.getElementById('bulkDropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    // Close bulk menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('bulkMenu');
+      if (!menu.contains(e.target)) {
+        document.getElementById('bulkDropdown').classList.add('hidden');
+      }
+    });
+
+    // Bulk toggle providers
+    async function bulkToggle(action) {
+      document.getElementById('bulkDropdown').classList.add('hidden');
+
+      const formData = new FormData();
+      formData.append('action', action);
+      formData.append('providers', JSON.stringify(allProviders));
+
+      try {
+        const response = await fetch('?ajax=bulk_toggle', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          // Update all toggles visually
+          document.querySelectorAll('[id^="providerToggle_"]').forEach(toggle => {
+            toggle.checked = (action === 'enable');
+          });
+        } else {
+          showToast(data.message || 'Erreur', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Erreur de connexion', 'error');
+      }
+    }
+
+    // Expand all providers
+    function expandAll() {
+      document.getElementById('bulkDropdown').classList.add('hidden');
+      document.querySelectorAll('.collapse-content').forEach(el => {
+        el.classList.add('expanded');
+      });
+      document.querySelectorAll('.collapse-btn i').forEach(icon => {
+        icon.style.transform = 'rotate(0deg)';
+      });
+    }
+
+    // Collapse all providers
+    function collapseAll() {
+      document.getElementById('bulkDropdown').classList.add('hidden');
+      document.querySelectorAll('.collapse-content').forEach(el => {
+        el.classList.remove('expanded');
+      });
+      document.querySelectorAll('.collapse-btn i').forEach(icon => {
+        icon.style.transform = 'rotate(-90deg)';
+      });
+    }
+
+    // Toggle provider collapse
+    function toggleProviderCollapse(provider) {
+      const content = document.getElementById('models_' + provider);
+      const btn = document.querySelector(`.collapse-btn[data-provider="${provider}"] i`);
+
+      if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        btn.style.transform = 'rotate(-90deg)';
+      } else {
+        content.classList.add('expanded');
+        btn.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Test API connection
+    async function testApi(provider) {
+      const icon = document.getElementById('testIcon_' + provider);
+      icon.className = 'fa-solid fa-spinner animate-spin';
+
+      const formData = new FormData();
+      formData.append('provider', provider);
+
+      try {
+        const response = await fetch('?ajax=test_api', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          icon.className = 'fa-solid fa-check text-green-400';
+          showToast(`${provider}: ${data.message} (${data.latency}ms)`, 'success');
+        } else {
+          icon.className = 'fa-solid fa-times text-red-400';
+          showToast(`${provider}: ${data.message}`, 'error');
+        }
+
+        // Reset icon after 3 seconds
+        setTimeout(() => {
+          icon.className = 'fa-solid fa-plug';
+        }, 3000);
+      } catch (err) {
+        console.error(err);
+        icon.className = 'fa-solid fa-times text-red-400';
+        showToast('Erreur de connexion', 'error');
+      }
+    }
+
+    // Export configuration
+    async function exportConfig() {
+      document.getElementById('bulkDropdown').classList.add('hidden');
+
+      try {
+        const response = await fetch('?ajax=export_config');
+        const data = await response.json();
+
+        if (data.success) {
+          const blob = new Blob([JSON.stringify(data.config, null, 2)], {
+            type: 'application/json'
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `nxtgenai_config_${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Configuration exportée', 'success');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Erreur lors de l\'export', 'error');
+      }
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('ID copié', 'success');
+      });
+    }
+
     // Toggle provider - sauvegarde en DB
     async function toggleProvider(provider, enabled) {
+      // Update visual state immediately
+      const section = document.querySelector(`.provider-section[data-provider="${provider}"]`);
+      if (section) {
+        section.dataset.status = enabled ? '1' : '0';
+      }
+
       try {
         const response = await fetch('../api/api_keys.php?action=toggle_provider', {
           method: 'POST',
@@ -689,6 +1249,9 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           showToast(enabled ? `Provider ${provider} activé` : `Provider ${provider} désactivé`, enabled ? 'success' : 'warning');
         } else {
           showToast(data.error || 'Erreur lors de la mise à jour', 'error');
+          // Revert toggle on error
+          const toggle = document.getElementById('providerToggle_' + provider);
+          if (toggle) toggle.checked = !enabled;
         }
       } catch (err) {
         console.error(err);
@@ -787,6 +1350,39 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       const icon = document.getElementById('refreshIcon');
       icon.classList.add('animate-spin');
       location.reload();
+    }
+
+    // Test API from key input
+    async function testApiFromKey(provider) {
+      const icon = document.getElementById('testKeyIcon_' + provider);
+      icon.className = 'fa-solid fa-spinner animate-spin';
+
+      const formData = new FormData();
+      formData.append('provider', provider);
+
+      try {
+        const response = await fetch('?ajax=test_api', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          icon.className = 'fa-solid fa-check';
+          showToast(`${provider}: Connexion réussie (${data.latency}ms)`, 'success');
+        } else {
+          icon.className = 'fa-solid fa-times';
+          showToast(`${provider}: ${data.message}`, 'error');
+        }
+
+        setTimeout(() => {
+          icon.className = 'fa-solid fa-plug';
+        }, 3000);
+      } catch (err) {
+        console.error(err);
+        icon.className = 'fa-solid fa-times';
+        showToast('Erreur de test', 'error');
+      }
     }
 
     // Toggle password visibility
