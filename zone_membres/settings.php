@@ -173,7 +173,6 @@ include 'header.php';
       <p class="text-xs text-neutral-500 mb-4">
         Ajoutez vos propres clés API pour utiliser les différents providers.
         Vos clés personnelles ont priorité sur les clés globales.
-        <span class="text-green-400"><i class="fa-solid fa-shield-halved mr-1"></i>Les clés sont chiffrées avec AES-256.</span>
       </p>
 
       <?php if (!$tablesExist): ?>
