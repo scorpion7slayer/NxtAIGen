@@ -16,9 +16,27 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../zone_membres/db.php';
+require_once __DIR__ . '/api_keys_helper.php';
 
-// Charger la configuration
-$config = require __DIR__ . '/config.php';
+// Charger la configuration depuis la DB avec fallback vers config.php
+$userId = $_SESSION['user_id'];
+$allConfigs = getAllApiConfigs($pdo, $userId);
+
+// Fallback vers config.php pour compatibilité
+$configFile = require __DIR__ . '/config.php';
+$config = [];
+foreach ($configFile as $key => $value) {
+  $config[$key] = $value;
+}
+
+// Override avec les valeurs de la DB si disponibles
+foreach ($allConfigs as $provider => $providerConfig) {
+  foreach ($providerConfig as $keyName => $keyValue) {
+    if (!empty($keyValue)) {
+      $config[$keyName] = $keyValue;
+    }
+  }
+}
 
 // Récupérer le provider demandé
 $provider = $_GET['provider'] ?? 'all';

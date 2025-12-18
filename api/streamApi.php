@@ -60,11 +60,30 @@ $files = isset($input['files']) ? $input['files'] : [];
 $provider = isset($input['provider']) ? $input['provider'] : 'openai';
 $model = isset($input['model']) ? $input['model'] : '';
 
-// Charger la configuration
-$config = require __DIR__ . '/config.php';
-
-// Préparer le contenu du message avec fichiers
+// Charger la configuration depuis la DB avec fallback vers config.php
+require_once __DIR__ . '/../zone_membres/db.php';
+require_once __DIR__ . '/api_keys_helper.php';
 require_once __DIR__ . '/helpers.php';
+
+// Récupérer les configurations de tous les providers pour l'utilisateur
+$userId = $_SESSION['user_id'];
+$allConfigs = getAllApiConfigs($pdo, $userId);
+
+// Fallback vers config.php pour compatibilité
+$configFile = require __DIR__ . '/config.php';
+$config = [];
+foreach ($configFile as $key => $value) {
+  $config[$key] = $value;
+}
+
+// Override avec les valeurs de la DB si disponibles
+foreach ($allConfigs as $providerName => $providerConfig) {
+  foreach ($providerConfig as $keyName => $keyValue) {
+    if (!empty($keyValue)) {
+      $config[$keyName] = $keyValue;
+    }
+  }
+}
 
 // Configuration par provider
 $streamConfigs = [
@@ -141,13 +160,19 @@ $apiKey = $streamConfig['key'];
 $apiUrl = $streamConfig['url'];
 $model = $model ?: $streamConfig['default_model'];
 
-// Gestion spéciale pour GitHub Copilot (OAuth token)
+// Gestion spéciale pour GitHub Copilot (OAuth token depuis la DB)
 if ($provider === 'github') {
-  if (!isset($_SESSION['github_token'])) {
-    sendSSE(['error' => 'GitHub Copilot: Connexion requise'], 'error');
+  // Récupérer le token GitHub depuis la base de données
+  $stmt = $pdo->prepare("SELECT github_token FROM users WHERE id = ?");
+  $stmt->execute([$userId]);
+  $userRow = $stmt->fetch();
+  $githubToken = $userRow['github_token'] ?? null;
+
+  if (empty($githubToken)) {
+    sendSSE(['error' => 'GitHub Copilot: Connexion requise. Connectez votre compte GitHub dans Paramètres.'], 'error');
     exit();
   }
-  $apiKey = $_SESSION['github_token'];
+  $apiKey = $githubToken;
 }
 
 // Vérifier la clé API (sauf Ollama)

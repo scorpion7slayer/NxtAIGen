@@ -4,6 +4,12 @@ if (isset($_SESSION['user_id'])) {
     header('Location: dashboard.php');
     exit();
 }
+
+// Générer un token CSRF si non existant
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 include 'header.php';
 ?>
 <main class="pt-20 pb-10 min-h-screen flex items-center justify-center px-4">
@@ -25,6 +31,7 @@ include 'header.php';
 
         <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-6">
             <form action="handle_register.php" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div>
                     <label for="username" class="block text-sm font-medium text-neutral-400 mb-2">Nom d'utilisateur</label>
                     <input type="text" id="username" name="username" required

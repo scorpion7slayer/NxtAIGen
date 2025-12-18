@@ -2,6 +2,15 @@
 session_start();
 require 'db.php';
 
+// Vérification CSRF
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+    header("Location: login.php?error=Token de sécurité invalide. Veuillez réessayer.");
+    exit;
+}
+
+// Régénérer le token CSRF après utilisation
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
 if (empty($_POST['username']) || empty($_POST['password'])) {
     header("Location: login.php?error=Veuillez remplir tous les champs");
     exit;
