@@ -554,6 +554,11 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
+    /* Stat number animation */
+    .stat-card p[id^="stat"] {
+      transition: transform 0.15s ease-out, color 0.15s ease-out;
+    }
+
     /* Modal backdrop */
     .modal-backdrop {
       background-color: rgba(0, 0, 0, 0.7);
@@ -611,7 +616,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             <i class="fa-solid fa-server text-blue-400"></i>
           </div>
           <div>
-            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_providers']; ?></p>
+            <p id="statTotalProviders" class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_providers']; ?></p>
             <p class="text-xs text-neutral-500">Providers</p>
           </div>
         </div>
@@ -622,7 +627,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             <i class="fa-solid fa-check-circle text-green-400"></i>
           </div>
           <div>
-            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_providers']; ?></p>
+            <p id="statActiveProviders" class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_providers']; ?></p>
             <p class="text-xs text-neutral-500">Actifs</p>
           </div>
         </div>
@@ -633,7 +638,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             <i class="fa-solid fa-robot text-purple-400"></i>
           </div>
           <div>
-            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_models']; ?></p>
+            <p id="statTotalModels" class="text-2xl font-bold text-neutral-100"><?php echo $stats['total_models']; ?></p>
             <p class="text-xs text-neutral-500">Modèles</p>
           </div>
         </div>
@@ -644,7 +649,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             <i class="fa-solid fa-bolt text-amber-400"></i>
           </div>
           <div>
-            <p class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_models']; ?></p>
+            <p id="statActiveModels" class="text-2xl font-bold text-neutral-100"><?php echo $stats['active_models']; ?></p>
             <p class="text-xs text-neutral-500">Disponibles</p>
           </div>
         </div>
@@ -1113,6 +1118,11 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           document.querySelectorAll('[id^="providerToggle_"]').forEach(toggle => {
             toggle.checked = (action === 'enable');
           });
+          // Update data-status attribute
+          document.querySelectorAll('.provider-section').forEach(section => {
+            section.dataset.status = (action === 'enable') ? '1' : '0';
+          });
+          updateStats(); // Mise à jour dynamique des stats
         } else {
           showToast(data.message || 'Erreur', 'error');
         }
@@ -1225,6 +1235,58 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       });
     }
 
+    // Update statistics dynamically
+    function updateStats() {
+      const sections = document.querySelectorAll('.provider-section');
+      let totalProviders = sections.length;
+      let activeProviders = 0;
+      let totalModels = 0;
+      let activeModels = 0;
+
+      sections.forEach(section => {
+        const providerToggle = section.querySelector('[id^="providerToggle_"]');
+        const isProviderActive = providerToggle ? providerToggle.checked : false;
+
+        if (isProviderActive) {
+          activeProviders++;
+        }
+
+        const modelToggles = section.querySelectorAll('.model-item input[type="checkbox"]');
+        totalModels += modelToggles.length;
+
+        modelToggles.forEach(toggle => {
+          if (toggle.checked && isProviderActive) {
+            activeModels++;
+          }
+        });
+      });
+
+      // Update DOM with animation
+      animateNumber('statTotalProviders', totalProviders);
+      animateNumber('statActiveProviders', activeProviders);
+      animateNumber('statTotalModels', totalModels);
+      animateNumber('statActiveModels', activeModels);
+    }
+
+    // Animate number change
+    function animateNumber(elementId, newValue) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+
+      const currentValue = parseInt(el.textContent) || 0;
+      if (currentValue === newValue) return;
+
+      // Quick flash animation
+      el.style.transform = 'scale(1.2)';
+      el.style.color = newValue > currentValue ? '#22c55e' : '#ef4444';
+
+      setTimeout(() => {
+        el.textContent = newValue;
+        el.style.transform = 'scale(1)';
+        el.style.color = '';
+      }, 150);
+    }
+
     // Toggle provider - sauvegarde en DB
     async function toggleProvider(provider, enabled) {
       // Update visual state immediately
@@ -1247,6 +1309,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         const data = await response.json();
         if (data.success) {
           showToast(enabled ? `Provider ${provider} activé` : `Provider ${provider} désactivé`, enabled ? 'success' : 'warning');
+          updateStats(); // Mise à jour dynamique des stats
         } else {
           showToast(data.error || 'Erreur lors de la mise à jour', 'error');
           // Revert toggle on error
@@ -1276,6 +1339,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         const data = await response.json();
         if (data.success) {
           showToast(enabled ? 'Modèle activé' : 'Modèle désactivé', enabled ? 'success' : 'warning');
+          updateStats(); // Mise à jour dynamique des stats
         } else {
           showToast(data.error || 'Erreur lors de la mise à jour', 'error');
         }
