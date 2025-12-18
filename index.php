@@ -214,6 +214,82 @@ if ($user) {
     .copy-btn.copied {
       color: #3fb950;
     }
+
+    /* Animation de chargement - 3 points */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .typing-indicator .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #10b981;
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out both;
+    }
+
+    .typing-indicator .dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .typing-indicator .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-indicator .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Texte "..." animé */
+    .thinking-text {
+      color: #9ca3af;
+      font-size: 0.875rem;
+      margin-left: 8px;
+    }
+
+    .thinking-text::after {
+      content: '';
+      animation: ellipsis 1.5s infinite;
+    }
+
+    @keyframes ellipsis {
+      0% {
+        content: '';
+      }
+
+      25% {
+        content: '.';
+      }
+
+      50% {
+        content: '..';
+      }
+
+      75% {
+        content: '...';
+      }
+
+      100% {
+        content: '';
+      }
+    }
   </style>
 </head>
 
@@ -504,6 +580,7 @@ if ($user) {
     // Variables pour la gestion de l'annulation
     let currentAbortController = null;
     let isStreaming = false;
+    let currentStreamingContent = ''; // Stocke le contenu brut du streaming en cours
 
     // Fonction pour basculer le bouton en mode annulation
     function setButtonCancelMode(cancel) {
@@ -532,16 +609,27 @@ if ($user) {
       const streamingEl = document.querySelector('.streaming-response:not(.done)');
       if (streamingEl) {
         streamingEl.classList.add('done');
-        if (streamingEl.textContent) {
-          streamingEl.innerHTML = renderMarkdown(streamingEl.textContent) + '<span class="text-gray-500 italic text-xs ml-2">(annulé)</span>';
-          streamingEl.querySelectorAll('pre code').forEach((block) => {
-            if (!block.dataset.highlighted) {
-              hljs.highlightElement(block);
-              block.dataset.highlighted = 'true';
-            }
-          });
+        // Supprimer le curseur de streaming
+        removeStreamingCursors(streamingEl);
+
+        // Remplacer "En cours..." par "Annulé" dans les blocs de code
+        streamingEl.querySelectorAll('.code-header .text-green-400').forEach(el => {
+          el.textContent = '⏹ Annulé';
+          el.classList.remove('text-green-400', 'animate-pulse');
+          el.classList.add('text-amber-400');
+        });
+
+        // Ajouter un indicateur d'annulation si du contenu existe
+        if (currentStreamingContent) {
+          const cancelBadge = document.createElement('div');
+          cancelBadge.className = 'text-amber-400 italic text-xs mt-2 flex items-center gap-1';
+          cancelBadge.innerHTML = '<i class="fa-solid fa-circle-stop"></i> Réponse interrompue';
+          streamingEl.appendChild(cancelBadge);
         }
       }
+
+      // Réinitialiser le contenu de streaming
+      currentStreamingContent = '';
     }
 
     // Fonction pour envoyer le message
@@ -609,10 +697,12 @@ if ($user) {
       chatContainer.innerHTML += `
         <div id="${loadingId}" class="flex justify-start">
           <div class="bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3">
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            <div class="flex items-center">
+              <div class="typing-indicator">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -635,38 +725,6 @@ if ($user) {
           });
         }
 
-        // Supprimer l'indicateur de chargement
-        document.getElementById(loadingId)?.remove();
-
-        // Créer le conteneur de réponse pour le streaming
-        const responseId = 'response-' + Date.now();
-        chatContainer.innerHTML += `
-          <div class="flex justify-start">
-            <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
-              <div id="${responseId}" class="text-gray-200 text-sm streaming-response"></div>
-            </div>
-          </div>
-        `;
-        const responseContainer = document.getElementById(responseId);
-        let fullResponse = '';
-        let renderTimeout = null;
-
-        // Fonction pour rendre le markdown avec debounce
-        function renderStreaming() {
-          // Rendre le markdown en temps réel
-          responseContainer.innerHTML = renderMarkdownStreaming(fullResponse);
-          // Appliquer highlight.js aux blocs de code complets
-          responseContainer.querySelectorAll('pre code').forEach((block) => {
-            if (!block.dataset.highlighted) {
-              hljs.highlightElement(block);
-              block.dataset.highlighted = 'true';
-            }
-          });
-          // Ajouter le curseur après le dernier texte
-          updateCursor(responseContainer);
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
         // Utiliser fetch avec streaming
         const response = await fetch('api/streamApi.php', {
           method: 'POST',
@@ -684,6 +742,39 @@ if ($user) {
 
         if (!response.ok) {
           throw new Error('Erreur de connexion');
+        }
+
+        // Supprimer l'indicateur de chargement maintenant que la connexion est établie
+        document.getElementById(loadingId)?.remove();
+
+        // Créer le conteneur de réponse pour le streaming
+        const responseId = 'response-' + Date.now();
+        chatContainer.innerHTML += `
+          <div class="flex justify-start">
+            <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+              <div id="${responseId}" class="text-gray-200 text-sm streaming-response"></div>
+            </div>
+          </div>
+        `;
+        const responseContainer = document.getElementById(responseId);
+        let fullResponse = '';
+        let renderTimeout = null;
+        currentStreamingContent = ''; // Réinitialiser le contenu global
+
+        // Fonction pour rendre le markdown avec debounce
+        function renderStreaming() {
+          // Rendre le markdown en temps réel
+          responseContainer.innerHTML = renderMarkdownStreaming(fullResponse);
+          // Appliquer highlight.js aux blocs de code complets
+          responseContainer.querySelectorAll('pre code').forEach((block) => {
+            if (!block.dataset.highlighted) {
+              hljs.highlightElement(block);
+              block.dataset.highlighted = 'true';
+            }
+          });
+          // Ajouter le curseur après le dernier texte
+          updateCursor(responseContainer);
+          chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         // Lire le stream SSE
@@ -714,6 +805,7 @@ if ($user) {
 
                 if (data.content) {
                   fullResponse += data.content;
+                  currentStreamingContent = fullResponse; // Synchroniser avec la variable globale
                   // Rendre le markdown en temps réel avec debounce
                   if (renderTimeout) clearTimeout(renderTimeout);
                   renderTimeout = setTimeout(renderStreaming, 50);
@@ -725,6 +817,7 @@ if ($user) {
                   // Réinitialiser le bouton et le curseur
                   setButtonCancelMode(false);
                   currentAbortController = null;
+                  currentStreamingContent = ''; // Réinitialiser
                   responseContainer.classList.add('done');
                   // Appliquer le rendu Markdown final
                   responseContainer.innerHTML = renderMarkdown(fullResponse);

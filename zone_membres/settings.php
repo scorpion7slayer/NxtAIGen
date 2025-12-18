@@ -91,12 +91,12 @@ include 'header.php';
   <div class="max-w-lg mx-auto">
     <!-- Titre -->
     <div class="mb-8">
-      <a href="dashboard.php" class="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-300 transition-colors text-sm mb-4">
+      <a href="dashboard.php" class="inline-flex items-center gap-2 text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300 transition-colors text-sm mb-4">
         <i class="fa-solid fa-arrow-left"></i>
         <span>Retour au dashboard</span>
       </a>
-      <h1 class="text-xl font-semibold text-neutral-200">Mes paramètres</h1>
-      <p class="text-sm text-neutral-500 mt-1">Gérez vos connexions et préférences</p>
+      <h1 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Mes paramètres</h1>
+      <p class="text-sm text-gray-500 dark:text-neutral-500 mt-1">Gérez vos connexions et préférences</p>
     </div>
 
     <?php if (isset($_GET['oauth_success'])): ?>
@@ -115,69 +115,69 @@ include 'header.php';
     <?php endif; ?>
 
     <!-- Section Connexions -->
-    <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-4 mb-6">
-      <h2 class="text-sm font-medium text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+    <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-4 mb-6 shadow-sm dark:shadow-none">
+      <h2 class="text-sm font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
         <i class="fa-solid fa-link"></i>
         Comptes connectés
       </h2>
 
       <!-- GitHub -->
-      <div class="bg-neutral-700/30 border border-neutral-600/30 rounded-xl p-4">
+      <div class="bg-gray-100 dark:bg-neutral-700/30 border border-gray-200 dark:border-neutral-600/30 rounded-xl p-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-lg bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
               <img src="../assets/images/providers/githubcopilot.svg" alt="GitHub" class="w-6 h-6">
             </div>
             <div>
-              <p class="text-sm font-medium text-neutral-200">GitHub</p>
+              <p class="text-sm font-medium text-gray-700 dark:text-neutral-200">GitHub</p>
               <?php if ($githubConnected): ?>
-                <p class="text-xs text-green-400 flex items-center gap-1">
+                <p class="text-xs text-green-500 dark:text-green-400 flex items-center gap-1">
                   <i class="fa-solid fa-check-circle"></i>
                   Connecté : @<?php echo htmlspecialchars($githubUsername, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
               <?php else: ?>
-                <p class="text-xs text-neutral-500">Non connecté</p>
+                <p class="text-xs text-gray-500 dark:text-neutral-500">Non connecté</p>
               <?php endif; ?>
             </div>
           </div>
 
           <?php if ($githubConnected): ?>
             <a href="../api/github/disconnect.php"
-              class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-400 transition-colors"
+              class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-500 dark:text-red-400 transition-colors"
               onclick="return confirm('Voulez-vous vraiment déconnecter votre compte GitHub ?');">
               <i class="fa-solid fa-unlink mr-1"></i>
               Déconnecter
             </a>
           <?php else: ?>
             <a href="../api/github/connect.php"
-              class="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-400 transition-colors">
+              class="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-600 dark:text-green-400 transition-colors">
               <i class="fa-brands fa-github mr-1"></i>
               Connecter
             </a>
           <?php endif; ?>
         </div>
 
-        <p class="mt-3 text-xs text-neutral-500">
+        <p class="mt-3 text-xs text-gray-500 dark:text-neutral-500">
           Connectez votre compte GitHub pour utiliser l'API GitHub Models avec les modèles GPT-4o, Claude, et plus.
         </p>
       </div>
     </div>
 
     <!-- Section Clés API -->
-    <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-4">
-      <h2 class="text-sm font-medium text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+    <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-4 shadow-sm dark:shadow-none">
+      <h2 class="text-sm font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
         <i class="fa-solid fa-key"></i>
         Clés API personnelles
       </h2>
 
-      <p class="text-xs text-neutral-500 mb-4">
+      <p class="text-xs text-gray-500 dark:text-neutral-500 mb-4">
         Ajoutez vos propres clés API pour utiliser les différents providers.
         Vos clés personnelles ont priorité sur les clés globales.
       </p>
 
       <?php if (!$tablesExist): ?>
         <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mb-4">
-          <p class="text-xs text-amber-400">
+          <p class="text-xs text-amber-500 dark:text-amber-400">
             <i class="fa-solid fa-warning mr-1"></i>
             Les tables de base de données n'ont pas été créées. Contactez l'administrateur.
           </p>
@@ -191,13 +191,13 @@ include 'header.php';
           $hasPersonalConfig = $hasPersonalKey || $hasPersonalSettings;
           $maskedKey = $hasPersonalKey ? maskKey($userApiKeys[$provKey][$provConfig['key']]['value']) : '';
         ?>
-          <div class="bg-neutral-700/20 rounded-xl p-3 border border-neutral-600/20">
+          <div class="bg-gray-100 dark:bg-neutral-700/20 rounded-xl p-3 border border-gray-200 dark:border-neutral-600/20">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
                 <img src="../assets/images/providers/<?php echo $provConfig['icon']; ?>" alt="<?php echo $provConfig['label']; ?>" class="w-5 h-5">
-                <span class="text-sm text-neutral-200"><?php echo htmlspecialchars($provConfig['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                <span class="text-sm text-gray-700 dark:text-neutral-200"><?php echo htmlspecialchars($provConfig['label'], ENT_QUOTES, 'UTF-8'); ?></span>
               </div>
-              <a href="<?php echo htmlspecialchars($provConfig['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="text-xs text-blue-400 hover:text-blue-300">
+              <a href="<?php echo htmlspecialchars($provConfig['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-300">
                 <i class="fa-solid fa-external-link"></i>
               </a>
             </div>
@@ -210,22 +210,22 @@ include 'header.php';
                   data-provider="<?php echo $provKey; ?>"
                   data-key-name="<?php echo $provConfig['key']; ?>"
                   placeholder="<?php echo $hasPersonalKey ? $maskedKey : 'Entrez votre clé API...'; ?>"
-                  class="w-full px-3 py-2 pr-10 text-sm bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-green-500/50"
+                  class="w-full px-3 py-2 pr-10 text-sm bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-800 dark:text-neutral-200 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:border-green-500/50"
                   <?php echo !$tablesExist ? 'disabled' : ''; ?> />
-                <button onclick="toggleApiVisibility('api_<?php echo $provKey; ?>', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300">
+                <button onclick="toggleApiVisibility('api_<?php echo $provKey; ?>', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer">
                   <i class="fa-solid fa-eye"></i>
                 </button>
               </div>
               <button
                 onclick="saveUserApiKey('<?php echo $provKey; ?>')"
-                class="px-3 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-3 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 <?php echo !$tablesExist ? 'disabled' : ''; ?>>
                 <i class="fa-solid fa-save"></i>
               </button>
               <?php if ($hasPersonalConfig): ?>
                 <button
                   onclick="deleteUserApiKey('<?php echo $provKey; ?>')"
-                  class="px-3 py-2 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                  class="px-3 py-2 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-500 dark:text-red-400 rounded-lg transition-colors cursor-pointer"
                   title="Supprimer ma configuration">
                   <i class="fa-solid fa-trash"></i>
                 </button>
@@ -239,7 +239,7 @@ include 'header.php';
                 $extraValue = $userSettings[$provKey][$extraKey] ?? '';
             ?>
                 <div class="mt-2">
-                  <label class="text-xs text-neutral-400 mb-1 block">
+                  <label class="text-xs text-gray-500 dark:text-neutral-400 mb-1 block">
                     <?php echo htmlspecialchars($extraConfig['label'], ENT_QUOTES, 'UTF-8'); ?>
                     <?php if ($extraConfig['required'] ?? false): ?><span class="text-red-400">*</span><?php endif; ?>
                   </label>
@@ -249,7 +249,7 @@ include 'header.php';
                     data-setting-key="<?php echo $extraKey; ?>"
                     placeholder="<?php echo htmlspecialchars($extraConfig['placeholder'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                     value="<?php echo htmlspecialchars($extraValue, ENT_QUOTES, 'UTF-8'); ?>"
-                    class="w-full px-3 py-2 text-sm bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-green-500/50"
+                    class="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-800 dark:text-neutral-200 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:border-green-500/50"
                     <?php echo !$tablesExist ? 'disabled' : ''; ?> />
                 </div>
             <?php
@@ -258,7 +258,7 @@ include 'header.php';
             ?>
 
             <?php if ($hasPersonalConfig): ?>
-              <p class="mt-2 text-xs text-green-400">
+              <p class="mt-2 text-xs text-green-500 dark:text-green-400">
                 <i class="fa-solid fa-check-circle mr-1"></i>
                 <?php if ($hasPersonalKey && $hasPersonalSettings): ?>
                   Clé et URL personnelles configurées
@@ -269,7 +269,7 @@ include 'header.php';
                 <?php endif; ?>
               </p>
             <?php else: ?>
-              <p class="mt-2 text-xs text-neutral-500">
+              <p class="mt-2 text-xs text-gray-500 dark:text-neutral-500">
                 <i class="fa-solid fa-info-circle mr-1"></i>Utilise la configuration globale si disponible
               </p>
             <?php endif; ?>
@@ -278,7 +278,7 @@ include 'header.php';
       </div>
 
       <div class="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-        <p class="text-xs text-blue-300">
+        <p class="text-xs text-blue-600 dark:text-blue-300">
           <i class="fa-solid fa-lightbulb mr-1"></i>
           <strong>Astuce :</strong> Vos clés personnelles vous permettent d'utiliser vos propres crédits API au lieu de ceux partagés.
         </p>
@@ -398,9 +398,9 @@ include 'header.php';
       toast.id = 'settingsToast';
       toast.className = 'fixed bottom-4 right-4 z-50 transform translate-y-20 opacity-0 transition-all duration-300';
       toast.innerHTML = `
-        <div class="flex items-center gap-3 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl shadow-lg">
+        <div class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-lg">
           <i id="toastIcon" class="fa-solid fa-info-circle"></i>
-          <span id="toastMsg" class="text-sm text-neutral-200"></span>
+          <span id="toastMsg" class="text-sm text-gray-700 dark:text-neutral-200"></span>
         </div>
       `;
       document.body.appendChild(toast);
