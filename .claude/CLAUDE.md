@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NxtGenAI is a multi-provider AI chat application built with vanilla PHP, MySQL, and JavaScript (no frameworks). It provides a unified interface for interacting with multiple AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Mistral, Hugging Face, OpenRouter, Perplexity, xAI, Moonshot, GitHub Copilot, and Ollama).
+NxtGenAI is a multi-provider AI chat application built with vanilla PHP, MySQL, and JavaScript. It provides a unified interface for interacting with multiple AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Mistral, Hugging Face, OpenRouter, Perplexity, xAI, Moonshot, GitHub Copilot, and Ollama).
 
 ## Development Environment
 
@@ -25,6 +25,13 @@ NxtGenAI is a multi-provider AI chat application built with vanilla PHP, MySQL, 
 - PHP: 8.4.14
 - Database name: `nxtgenai`
 - Database connection: `localhost:3306` (root user, no password by default)
+
+## Frameworks & Libraries
+
+- Tailwind CSS (via CDN)
+- Marked.js (Markdown rendering)
+- Highlight.js (Code syntax highlighting)
+- TikTok Sans font (custom font)
 
 ### Database Setup
 
