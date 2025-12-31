@@ -102,8 +102,6 @@ try {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <title>Paramètres Admin - NxtGenAI</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- Theme Manager -->
-  <script src="../assets/js/theme.js"></script>
   <style>
     @font-face {
       font-family: 'TikTok Sans';
@@ -175,14 +173,6 @@ try {
         <a href="../zone_membres/logout.php" class="text-sm text-gray-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
           <i class="fa-solid fa-sign-out-alt"></i>
         </a>
-        <!-- Bouton basculer thème -->
-        <button
-          data-theme-toggle
-          class="p-2 rounded-lg border border-gray-300 dark:border-neutral-700/50 bg-white dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700/50 text-gray-500 dark:text-neutral-400 transition-colors cursor-pointer"
-          title="Changer de thème">
-          <i class="fa-solid fa-sun theme-icon-sun hidden text-yellow-500"></i>
-          <i class="fa-solid fa-moon theme-icon-moon text-blue-400"></i>
-        </button>
       </nav>
     </div>
   </header>
