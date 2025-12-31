@@ -2,12 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Use MCP
+## Use MCP in this order
 
-- context7
-- exa
-- chrome for testing the web app
-- claude mem mcp
+1. claude mem mcp
+2. context7
+3. (only if context7 doesn't have or isn't made for) exa
+4. chrome mcp for testing the web app
 
 ## my Instructions
 
