@@ -90,7 +90,7 @@ if ($curlError) {
   echo "Réponse GitHub: " . json_encode($decoded, JSON_PRETTY_PRINT) . "\n";
 
   if (isset($decoded['error']) && $decoded['error'] === 'bad_verification_code') {
-    echo "\n✅ L'endpoint fonctionne correctement ! L'erreur 'bad_verification_code' est normale car le code est faux.\n";
+    echo "\n[OK] L'endpoint fonctionne correctement ! L'erreur 'bad_verification_code' est normale car le code est faux.\n";
   }
 }
 

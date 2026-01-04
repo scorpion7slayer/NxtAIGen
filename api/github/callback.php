@@ -92,6 +92,8 @@ if (isset($tokenResponse['error'])) {
 }
 
 $accessToken = $tokenResponse['access_token'] ?? null;
+$refreshToken = $tokenResponse['refresh_token'] ?? null; // GitHub peut fournir un refresh token
+$expiresIn = $tokenResponse['expires_in'] ?? 28800; // Par défaut 8 heures
 
 if (!$accessToken) {
   header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Token d\'accès non reçu'));
@@ -131,11 +133,15 @@ if (!isset($githubUser['id'])) {
 
 // Sauvegarder les informations GitHub dans la base de données
 try {
+  $expiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
+
   $stmt = $pdo->prepare("
         UPDATE users 
         SET github_id = ?, 
             github_username = ?, 
             github_token = ?, 
+            github_refresh_token = ?,
+            github_token_expires_at = ?,
             github_connected_at = NOW() 
         WHERE id = ?
     ");
@@ -144,6 +150,8 @@ try {
     $githubUser['id'],
     $githubUser['login'],
     $accessToken, // En production, chiffrez ce token !
+    $refreshToken,
+    $expiresAt,
     $_SESSION['user_id']
   ]);
 
@@ -157,7 +165,7 @@ try {
 } catch (PDOException $e) {
   // Vérifier si les colonnes existent
   if (strpos($e->getMessage(), 'Unknown column') !== false) {
-    header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Base de données non mise à jour. Exécutez la migration add_github_oauth.sql'));
+    header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Base de données non mise à jour. Exécutez la migration 002_github_oauth_improvements.sql'));
   } else {
     header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Erreur base de données: ' . $e->getMessage()));
   }

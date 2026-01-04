@@ -207,10 +207,14 @@ try {
         <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-6">
           <i class="fa-solid fa-gear text-purple-500 dark:text-purple-400 mr-2"></i>Options supplémentaires
         </h2>
-        <a href="models_manager.php" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/20 rounded-lg text-sm text-purple-600 dark:text-purple-400 font-medium transition-colors">
-          <i class="fa-solid fa-bars-progress text-purple-500 dark:text-purple-400 mr-2"></i>Gestion des modèles
-        </a>
-
+        <div class="flex flex-wrap gap-3">
+          <a href="models_manager.php" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/20 rounded-lg text-sm text-purple-600 dark:text-purple-400 font-medium transition-colors">
+            <i class="fa-solid fa-robot text-purple-500 dark:text-purple-400"></i>Gestion des modèles
+          </a>
+          <a href="rate_limits.php" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/20 rounded-lg text-sm text-amber-600 dark:text-amber-400 font-medium transition-colors">
+            <i class="fa-solid fa-gauge-high text-amber-500 dark:text-amber-400"></i>Rate Limiting
+          </a>
+        </div>
       </div>
       <!-- Tableau des utilisateurs -->
       <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-6 shadow-sm dark:shadow-none">

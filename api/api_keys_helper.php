@@ -72,14 +72,30 @@ function decryptValue($ciphertext, $pdo)
  */
 function getApiConfig($pdo, $provider, $userId = null)
 {
+  static $cache = [];
+  static $tablesExist = null;
+
+  $cacheKey = $provider . '_' . ($userId ?? 'global');
+
+  // Retourner le cache si disponible
+  if (isset($cache[$cacheKey])) {
+    return $cache[$cacheKey];
+  }
+
   $config = [];
 
   try {
-    // Vérifier si la table existe
-    $tableCheck = $pdo->query("SHOW TABLES LIKE 'api_keys_global'");
-    if ($tableCheck->rowCount() === 0) {
+    // Vérifier si la table existe (une seule fois)
+    if ($tablesExist === null) {
+      $tableCheck = $pdo->query("SHOW TABLES LIKE 'api_keys_global'");
+      $tablesExist = ($tableCheck->rowCount() > 0);
+    }
+
+    if (!$tablesExist) {
       // Tables pas encore créées, utiliser le fichier config.php
-      return getApiConfigFromFile($provider);
+      $config = getApiConfigFromFile($provider);
+      $cache[$cacheKey] = $config;
+      return $config;
     }
 
     // Charger les clés globales
@@ -123,13 +139,14 @@ function getApiConfig($pdo, $provider, $userId = null)
 
     // Fallback vers le fichier config.php si aucune clé en DB
     if (empty($config)) {
-      return getApiConfigFromFile($provider);
+      $config = getApiConfigFromFile($provider);
     }
   } catch (PDOException $e) {
     // En cas d'erreur, utiliser le fichier config.php
-    return getApiConfigFromFile($provider);
+    $config = getApiConfigFromFile($provider);
   }
 
+  $cache[$cacheKey] = $config;
   return $config;
 }
 
@@ -179,16 +196,82 @@ function getApiConfigFromFile($provider)
 
 /**
  * Charge toutes les configurations API pour tous les providers
+ * Optimisé: utilise une seule requête groupée au lieu de 12 x 4 requêtes
  */
 function getAllApiConfigs($pdo, $userId = null)
 {
-  $providers = ['openai', 'anthropic', 'ollama', 'gemini', 'deepseek', 'mistral', 'huggingface', 'openrouter', 'perplexity', 'xai', 'moonshot', 'github'];
-  $configs = [];
+  static $cache = [];
+  $cacheKey = 'all_' . ($userId ?? 'global');
 
-  foreach ($providers as $provider) {
-    $configs[$provider] = getApiConfig($pdo, $provider, $userId);
+  // Retourner le cache si disponible
+  if (isset($cache[$cacheKey])) {
+    return $cache[$cacheKey];
   }
 
+  $providers = ['openai', 'anthropic', 'ollama', 'gemini', 'deepseek', 'mistral', 'huggingface', 'openrouter', 'perplexity', 'xai', 'moonshot', 'github'];
+  $configs = array_fill_keys($providers, []);
+
+  try {
+    // Vérifier si les tables existent
+    $tableCheck = $pdo->query("SHOW TABLES LIKE 'api_keys_global'");
+    if ($tableCheck->rowCount() === 0) {
+      // Tables pas encore créées, utiliser le fichier config.php pour tous
+      foreach ($providers as $provider) {
+        $configs[$provider] = getApiConfigFromFile($provider);
+      }
+      $cache[$cacheKey] = $configs;
+      return $configs;
+    }
+
+    // 1. Charger toutes les clés globales en une seule requête
+    $globalStmt = $pdo->query("SELECT provider, key_name, key_value FROM api_keys_global WHERE is_active = 1");
+    while ($row = $globalStmt->fetch()) {
+      $configs[$row['provider']][$row['key_name']] = decryptValue($row['key_value'], $pdo);
+    }
+
+    // 2. Charger tous les settings globaux en une seule requête
+    $settingsStmt = $pdo->query("SELECT provider, setting_key, setting_value FROM provider_settings WHERE is_global = 1");
+    while ($row = $settingsStmt->fetch()) {
+      if (isset($configs[$row['provider']])) {
+        $configs[$row['provider']][$row['setting_key']] = $row['setting_value'];
+      }
+    }
+
+    // 3. Si un utilisateur est spécifié, charger ses clés personnelles
+    if ($userId !== null) {
+      $userStmt = $pdo->prepare("SELECT provider, key_name, key_value FROM api_keys_user WHERE user_id = ? AND is_active = 1");
+      $userStmt->execute([$userId]);
+      while ($row = $userStmt->fetch()) {
+        $decrypted = decryptValue($row['key_value'], $pdo);
+        if (!empty($decrypted) && isset($configs[$row['provider']])) {
+          $configs[$row['provider']][$row['key_name']] = $decrypted;
+        }
+      }
+
+      // Settings utilisateur
+      $userSettingsStmt = $pdo->prepare("SELECT provider, setting_key, setting_value FROM provider_settings WHERE is_global = 0 AND user_id = ?");
+      $userSettingsStmt->execute([$userId]);
+      while ($row = $userSettingsStmt->fetch()) {
+        if (!empty($row['setting_value']) && isset($configs[$row['provider']])) {
+          $configs[$row['provider']][$row['setting_key']] = $row['setting_value'];
+        }
+      }
+    }
+
+    // 4. Fallback vers config.php pour les providers sans config en DB
+    foreach ($providers as $provider) {
+      if (empty($configs[$provider])) {
+        $configs[$provider] = getApiConfigFromFile($provider);
+      }
+    }
+  } catch (PDOException $e) {
+    // En cas d'erreur, utiliser le fichier config.php pour tous
+    foreach ($providers as $provider) {
+      $configs[$provider] = getApiConfigFromFile($provider);
+    }
+  }
+
+  $cache[$cacheKey] = $configs;
   return $configs;
 }
 

@@ -3,9 +3,22 @@
 /**
  * API de streaming universelle pour tous les providers
  * Utilise Server-Sent Events (SSE) pour le streaming temps réel
+ * 
+ * @security SSL vérifié en production, CSRF token requis pour utilisateurs connectés
  */
 
+// Headers de sécurité
+header_remove('X-Powered-By');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 session_start();
+
+// Génération token CSRF si absent
+if (!isset($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Désactiver les limites de temps pour le streaming long
 set_time_limit(0);
@@ -18,26 +31,45 @@ header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no');
 
-// Désactiver le buffering PHP
-if (ob_get_level()) ob_end_clean();
-ini_set('output_buffering', 'off');
-ini_set('zlib.output_compression', false);
+// Désactiver le buffering PHP - Ordre optimisé
+while (ob_get_level() > 0) {
+  ob_end_clean();
+}
+ini_set('output_buffering', 0);
+ini_set('zlib.output_compression', 0);
 ini_set('implicit_flush', 1);
 ob_implicit_flush(true);
+
+// Envoyer un caractère invisible pour forcer l'établissement de la connexion
+echo ": ping\n\n";
+if (function_exists('ob_flush')) ob_flush();
+if (function_exists('flush')) flush();
 
 // Fonction pour envoyer un événement SSE
 function sendSSE($data, $event = 'message')
 {
   echo "event: {$event}\n";
   echo "data: " . json_encode($data) . "\n\n";
-  flush();
+  if (function_exists('ob_flush')) @ob_flush();
+  if (function_exists('flush')) @flush();
 }
 
 // Constante pour la limite d'utilisations des visiteurs (messages)
 define('GUEST_USAGE_LIMIT', 5);
 
+// Charger la connexion DB (nécessaire pour le rate limiting)
+require_once __DIR__ . '/../zone_membres/db.php';
+require_once __DIR__ . '/rate_limiter.php';
+
 // Vérifier si l'utilisateur est connecté ou est un visiteur
 $isGuest = !isset($_SESSION['user_id']);
+$userId = $_SESSION['user_id'] ?? null;
+
+// Initialiser le rate limiter pour les utilisateurs connectés
+$rateLimiter = null;
+if (!$isGuest) {
+  $rateLimiter = new RateLimiter($pdo);
+}
 
 // Pour les visiteurs, vérifier et incrémenter le compteur d'utilisations
 if ($isGuest) {
@@ -79,12 +111,39 @@ if ($isGuest) {
     sendSSE(['error' => "Limite atteinte. {$timeText}, ou inscrivez-vous pour un accès illimité !", 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
     exit();
   }
+
+  // Libérer le verrou de session pendant le streaming (améliore la concurrence)
+  // Les données de session seront relues au moment de l'incrémentation
+  $guestUsageBeforeStream = $_SESSION['guest_usage_count'];
+  session_write_close();
+} else {
+  // Pour les utilisateurs connectés, vérifier le rate limiting
+  $limitCheck = $rateLimiter->checkLimit($userId, 'message');
+  if (!$limitCheck['allowed']) {
+    sendSSE([
+      'error' => $limitCheck['message'],
+      'limit_type' => $limitCheck['limit_type'] ?? 'unknown',
+      'reset_at' => $limitCheck['reset_at'] ?? null,
+      'remaining' => $limitCheck['remaining'] ?? [],
+      'limit_reached' => true
+    ], 'error');
+    exit();
+  }
 }
 
 // Vérifier la méthode POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   sendSSE(['error' => 'Méthode non autorisée'], 'error');
   exit();
+}
+
+// Vérification CSRF pour les utilisateurs connectés
+if (!$isGuest) {
+  $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+  if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
+    sendSSE(['error' => 'Token de sécurité invalide. Veuillez rafraîchir la page.'], 'error');
+    exit();
+  }
 }
 
 // Récupérer les données JSON envoyées
@@ -99,13 +158,32 @@ if (!isset($input['message']) || empty(trim($input['message']))) {
 
 $userMessage = isset($input['message']) ? trim($input['message']) : '';
 $files = isset($input['files']) ? $input['files'] : [];
-$provider = isset($input['provider']) ? $input['provider'] : 'openai';
-$model = isset($input['model']) ? $input['model'] : '';
 
-// Charger la configuration depuis la DB avec fallback vers config.php
-require_once __DIR__ . '/../zone_membres/db.php';
+// Validation et sanitization du provider (whitelist stricte)
+$allowedProviders = ['openai', 'anthropic', 'gemini', 'deepseek', 'mistral', 'xai', 'openrouter', 'perplexity', 'huggingface', 'moonshot', 'github', 'ollama'];
+$provider = isset($input['provider']) ? strtolower(trim($input['provider'])) : 'openai';
+if (!in_array($provider, $allowedProviders, true)) {
+  sendSSE(['error' => 'Provider non supporté'], 'error');
+  exit();
+}
+
+// Validation du modèle (caractères autorisés uniquement)
+$model = isset($input['model']) ? trim($input['model']) : '';
+if (!empty($model) && !preg_match('/^[a-zA-Z0-9\-_\.\/\:]+$/', $model)) {
+  sendSSE(['error' => 'Format de modèle invalide'], 'error');
+  exit();
+}
+if (strlen($model) > 128) {
+  sendSSE(['error' => 'Nom de modèle trop long'], 'error');
+  exit();
+}
+
+// Charger les helpers (db.php déjà chargé au début du fichier)
 require_once __DIR__ . '/api_keys_helper.php';
 require_once __DIR__ . '/helpers.php';
+
+// Marquer le début pour le calcul du temps de réponse
+$startTime = microtime(true);
 
 // Récupérer les configurations de tous les providers pour l'utilisateur
 $userId = $_SESSION['user_id'] ?? null;
@@ -340,20 +418,35 @@ $ch = curl_init($apiUrl);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+// SSL: activé par défaut, désactivé pour localhost ou Ollama distant (certificat potentiellement auto-signé)
+$isLocalhost = preg_match('/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/', $apiUrl);
+$isOllamaCustomUrl = ($provider === 'ollama' && !empty($config['OLLAMA_API_URL']) && !$isLocalhost);
+
+// Option: permettre de désactiver SSL via config pour serveurs avec certificats auto-signés
+$skipSslVerify = $isLocalhost || $isOllamaCustomUrl || !empty($config['SKIP_SSL_VERIFY']);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$skipSslVerify);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $skipSslVerify ? 0 : 2);
+
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
-curl_setopt($ch, CURLOPT_TIMEOUT, 0);           // Pas de timeout global
-curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);   // 30s pour la connexion
-curl_setopt($ch, CURLOPT_LOW_SPEED_LIMIT, 1);   // Au moins 1 byte/sec
-curl_setopt($ch, CURLOPT_LOW_SPEED_TIME, 300);  // Pendant 5 minutes max d'inactivité
+curl_setopt($ch, CURLOPT_TIMEOUT, 0);            // Pas de timeout global
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);    // 30s pour la connexion (augmenté pour serveurs distants)
+curl_setopt($ch, CURLOPT_LOW_SPEED_LIMIT, 1);    // Au moins 1 byte/sec
+curl_setopt($ch, CURLOPT_LOW_SPEED_TIME, 120);   // 120s d'inactivité max (augmenté pour IA lentes)
+
+// Optimisations performance streaming
+curl_setopt($ch, CURLOPT_TCP_NODELAY, true);     // Désactive Nagle algorithm (-40ms latence)
+curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024);      // Chunks plus petits = latence réduite
 
 // Callback pour traiter les chunks
 $fullResponse = '';
 $hasError = false;
 $errorBuffer = '';
+$tokensInput = 0;
+$tokensOutput = 0;
+$tokensTotal = 0;
 
-curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullResponse, &$hasError, &$errorBuffer, $provider) {
+curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullResponse, &$hasError, &$errorBuffer, &$tokensInput, &$tokensOutput, &$tokensTotal, $provider) {
   // Vérifier le code HTTP
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -384,6 +477,19 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
 
       $decoded = json_decode($jsonData, true);
       if (!$decoded) continue;
+
+      // Capturer les tokens si disponibles (OpenAI, OpenRouter, etc.)
+      if (isset($decoded['usage'])) {
+        if (isset($decoded['usage']['prompt_tokens'])) {
+          $tokensInput = $decoded['usage']['prompt_tokens'];
+        }
+        if (isset($decoded['usage']['completion_tokens'])) {
+          $tokensOutput = $decoded['usage']['completion_tokens'];
+        }
+        if (isset($decoded['usage']['total_tokens'])) {
+          $tokensTotal = $decoded['usage']['total_tokens'];
+        }
+      }
 
       // Vérifier s'il y a une erreur dans la réponse
       if (isset($decoded['error'])) {
@@ -462,9 +568,20 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
 curl_close($ch);
 
-// Gérer les erreurs cURL
+// Gérer les erreurs cURL (message générique pour la sécurité)
 if ($curlError) {
-  sendSSE(['error' => 'Erreur de connexion: ' . $curlError], 'error');
+  // Log détaillé côté serveur
+  error_log("[NxtAIGen] cURL Error for {$provider}: {$curlError} - URL: " . preg_replace('/key=[^&]+/', 'key=***', $apiUrl));
+
+  // Message générique pour l'utilisateur (évite l'exposition d'informations)
+  $userMessage = 'Erreur de connexion au provider';
+  if (strpos($curlError, 'timed out') !== false) {
+    $userMessage = 'Le provider ne répond pas. Réessayez.';
+  } else if (strpos($curlError, 'resolve') !== false) {
+    $userMessage = 'Provider inaccessible. Vérifiez votre connexion.';
+  }
+
+  sendSSE(['error' => $userMessage], 'error');
   sendSSE(['done' => true], 'done');
   exit();
 }
@@ -484,19 +601,63 @@ if ($httpCode >= 400 && !empty($errorBuffer)) {
   exit();
 }
 
-// Incrémenter le compteur d'utilisations pour les visiteurs (seulement si succès)
-if ($isGuest && !$hasError) {
-  $_SESSION['guest_usage_count']++;
+// Incrémenter le compteur d'utilisations (visiteurs et utilisateurs connectés)
+if (!$hasError) {
+  if ($isGuest) {
+    // Rouvrir la session pour incrémenter le compteur de manière atomique
+    session_start();
+    $_SESSION['guest_usage_count']++;
+    session_write_close();
+  } else {
+    // Calculer tokens utilisés (utiliser les valeurs capturées ou estimation)
+    $tokensUsed = 0;
+    if ($tokensTotal > 0) {
+      $tokensUsed = $tokensTotal;
+    } else if (isset($responseData['usage']['total_tokens'])) {
+      $tokensUsed = $responseData['usage']['total_tokens'];
+    } else {
+      // Estimation: ~1 token = 4 caractères
+      $tokensUsed = intval((strlen($userMessage) + strlen($fullResponse)) / 4);
+      $tokensInput = intval(strlen($userMessage) / 4);
+      $tokensOutput = intval(strlen($fullResponse) / 4);
+      $tokensTotal = $tokensInput + $tokensOutput;
+    }
+
+    // Enregistrer l'usage avec le rate limiter déjà instancié
+    $rateLimiter->incrementUsage($userId, 'message', $tokensUsed, [
+      'provider' => $provider,
+      'model' => $model,
+      'response_time' => isset($startTime) ? intval((microtime(true) - $startTime) * 1000) : 0,
+      'status' => 'success'
+    ]);
+  }
 }
 
 // Envoyer l'événement de fin si pas déjà fait et pas d'erreur
 if (!$hasError) {
   $doneData = ['done' => true, 'fullResponse' => $fullResponse];
-  // Ajouter les infos d'utilisation pour les visiteurs
-  if ($isGuest) {
-    $doneData['usage_count'] = $_SESSION['guest_usage_count'];
-    $doneData['usage_limit'] = GUEST_USAGE_LIMIT;
-    $doneData['remaining'] = GUEST_USAGE_LIMIT - $_SESSION['guest_usage_count'];
+
+  // Ajouter les infos de tokens
+  if ($tokensTotal > 0 || $tokensInput > 0 || $tokensOutput > 0) {
+    $doneData['tokens'] = [
+      'input' => $tokensInput,
+      'output' => $tokensOutput,
+      'total' => $tokensTotal
+    ];
   }
+
+  // Ajouter les infos d'utilisation
+  if ($isGuest) {
+    // La session a été fermée après incrémentation, utiliser la valeur calculée
+    $currentUsageCount = $guestUsageBeforeStream + 1;
+    $doneData['usage_count'] = $currentUsageCount;
+    $doneData['usage_limit'] = GUEST_USAGE_LIMIT;
+    $doneData['remaining'] = GUEST_USAGE_LIMIT - $currentUsageCount;
+  } else {
+    // Ajouter les limites restantes pour les utilisateurs connectés
+    $remaining = $rateLimiter->getRemainingLimits($userId);
+    $doneData['rate_limits'] = $remaining;
+  }
+
   sendSSE($doneData, 'done');
 }

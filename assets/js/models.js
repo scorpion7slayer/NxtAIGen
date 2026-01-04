@@ -71,12 +71,51 @@ const ModelManager = {
     // Cache des modèles
     cache: {},
     cacheExpiry: 5 * 60 * 1000, // 5 minutes
+    localStorageKey: "nxtgenai_models_cache",
+
+    // Liste plate de tous les modèles (pour le bottom sheet mobile)
+    models: [],
+
+    /**
+     * Initialise le cache depuis localStorage
+     */
+    initCache() {
+        try {
+            const stored = localStorage.getItem(this.localStorageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Valider que le cache n'est pas trop vieux (max 30 min)
+                const maxAge = 30 * 60 * 1000;
+                Object.keys(parsed).forEach((provider) => {
+                    if (Date.now() - parsed[provider].timestamp < maxAge) {
+                        this.cache[provider] = parsed[provider];
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn("Erreur lecture cache modèles:", e);
+        }
+    },
+
+    /**
+     * Sauvegarde le cache dans localStorage
+     */
+    saveCache() {
+        try {
+            localStorage.setItem(
+                this.localStorageKey,
+                JSON.stringify(this.cache),
+            );
+        } catch (e) {
+            console.warn("Erreur sauvegarde cache modèles:", e);
+        }
+    },
 
     /**
      * Charge les modèles pour un provider spécifique
      */
     async loadModels(provider) {
-        // Vérifier le cache
+        // Vérifier le cache (mémoire d'abord)
         const cached = this.cache[provider];
         if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
             return cached.data;
@@ -86,11 +125,12 @@ const ModelManager = {
             const response = await fetch(`api/models.php?provider=${provider}`);
             const data = await response.json();
 
-            // Mettre en cache
+            // Mettre en cache (mémoire + localStorage)
             this.cache[provider] = {
                 data: data,
                 timestamp: Date.now(),
             };
+            this.saveCache();
 
             return data;
         } catch (error) {
@@ -280,17 +320,70 @@ const ModelManager = {
 
         menuContent.innerHTML = html;
 
+        // Construire la liste plate des modèles pour le bottom sheet mobile
+        this.buildFlatModelsList(allModels);
+
         // Réattacher les événements
         this.attachModelEvents();
+
+        // Émettre un événement pour signaler que les modèles sont chargés
+        document.dispatchEvent(
+            new CustomEvent("modelsLoaded", {
+                detail: { models: this.models },
+            }),
+        );
 
         // Bouton refresh
         document
             .getElementById("refreshModelsBtn")
             ?.addEventListener("click", async (e) => {
                 e.stopPropagation();
-                this.cache = {}; // Vider le cache
+                this.cache = {}; // Vider le cache mémoire
+                localStorage.removeItem(this.localStorageKey); // Vider le cache localStorage
                 await this.refreshModelMenu();
             });
+    },
+
+    /**
+     * Construit une liste plate de tous les modèles (pour le bottom sheet mobile)
+     */
+    buildFlatModelsList(allModels) {
+        this.models = [];
+        const seenIds = new Set();
+
+        // Ordre des providers
+        const providerOrder = [
+            "openai",
+            "anthropic",
+            "gemini",
+            "deepseek",
+            "mistral",
+            "xai",
+            "perplexity",
+            "openrouter",
+            "huggingface",
+            "moonshot",
+            "github",
+            "ollama",
+        ];
+
+        for (const provider of providerOrder) {
+            const data = allModels[provider];
+            if (data && data.models && data.models.length > 0) {
+                for (const model of data.models) {
+                    const id = model.id.toLowerCase();
+                    if (!seenIds.has(id)) {
+                        seenIds.add(id);
+                        this.models.push({
+                            provider: provider,
+                            model: model.id,
+                            display: model.name || model.id,
+                            description: model.description || "",
+                        });
+                    }
+                }
+            }
+        }
     },
 
     /**
@@ -307,10 +400,19 @@ const ModelManager = {
                     display: this.dataset.display,
                 };
 
-                // Mettre à jour l'affichage
+                // Mettre à jour l'affichage desktop
                 document.getElementById("modelIcon").src = this.dataset.icon;
                 document.getElementById("modelName").textContent =
                     this.dataset.display;
+
+                // Mettre à jour l'affichage mobile
+                const mobileModelIcon =
+                    document.getElementById("mobileModelIcon");
+                const mobileModelName =
+                    document.getElementById("mobileModelName");
+                if (mobileModelIcon) mobileModelIcon.src = this.dataset.icon;
+                if (mobileModelName)
+                    mobileModelName.textContent = this.dataset.display;
 
                 // Fermer le menu
                 const modelMenu = document.getElementById("modelMenu");
@@ -335,6 +437,9 @@ const ModelManager = {
      * Initialise le gestionnaire de modèles
      */
     init() {
+        // Restaurer le cache depuis localStorage
+        this.initCache();
+
         // Charger les modèles au premier clic sur le menu
         const modelSelectorBtn = document.getElementById("modelSelectorBtn");
         let firstOpen = true;
@@ -355,3 +460,6 @@ const ModelManager = {
 document.addEventListener("DOMContentLoaded", () => {
     ModelManager.init();
 });
+
+// Exposer ModelManager globalement pour le bottom sheet mobile
+window.modelManager = ModelManager;

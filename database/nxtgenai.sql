@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : dim. 04 jan. 2026 à 06:49
+-- Généré le : dim. 04 jan. 2026 à 10:42
 -- Version du serveur : 9.5.0
 -- Version de PHP : 8.4.14
 
@@ -249,6 +249,35 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `usage_tracking`
+--
+
+DROP TABLE IF EXISTS `usage_tracking`;
+CREATE TABLE IF NOT EXISTS `usage_tracking` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int UNSIGNED NOT NULL COMMENT 'ID de l''utilisateur (0 = visiteur)',
+  `action_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'message' COMMENT 'Type d''action (message, image, etc.)',
+  `provider` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Provider utilisé (openai, anthropic, etc.)',
+  `model` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Modèle utilisé (gpt-4, claude-3, etc.)',
+  `tokens_used` int UNSIGNED NOT NULL DEFAULT '0' COMMENT 'Tokens consommés',
+  `cost_estimate` decimal(10,6) NOT NULL DEFAULT '0.000000' COMMENT 'Coût estimé en USD',
+  `response_time` int UNSIGNED NOT NULL DEFAULT '0' COMMENT 'Temps de réponse en ms',
+  `status` enum('success','error','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'success' COMMENT 'Statut de la requête',
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Message d''erreur si échec',
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Adresse IP du client',
+  `user_agent` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'User-Agent du navigateur',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_tracking` (`user_id`,`created_at`),
+  KEY `idx_provider_model` (`provider`,`model`),
+  KEY `idx_date_range` (`created_at`),
+  KEY `idx_status` (`status`),
+  KEY `idx_ip_address` (`ip_address`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tracking détaillé de toutes les utilisations API';
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `users`
 --
 
@@ -259,9 +288,21 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `user_plan` enum('free','basic','premium','custom') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'free' COMMENT 'Plan de l''utilisateur',
+  `daily_limit` int NOT NULL DEFAULT '10' COMMENT 'Limite de messages par jour (-1 = illimité)',
+  `hourly_limit` int NOT NULL DEFAULT '3' COMMENT 'Limite de messages par heure (-1 = illimité)',
+  `monthly_limit` int NOT NULL DEFAULT '200' COMMENT 'Limite de messages par mois (-1 = illimité)',
+  `current_daily_count` int NOT NULL DEFAULT '0' COMMENT 'Compteur actuel journalier',
+  `current_hourly_count` int NOT NULL DEFAULT '0' COMMENT 'Compteur actuel horaire',
+  `current_monthly_count` int NOT NULL DEFAULT '0' COMMENT 'Compteur actuel mensuel',
+  `last_daily_reset` timestamp NULL DEFAULT NULL COMMENT 'Dernière réinitialisation journalière',
+  `last_hourly_reset` timestamp NULL DEFAULT NULL COMMENT 'Dernière réinitialisation horaire',
+  `last_monthly_reset` timestamp NULL DEFAULT NULL COMMENT 'Dernière réinitialisation mensuelle',
   `github_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `github_username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `github_token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `github_refresh_token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Refresh token GitHub OAuth',
+  `github_token_expires_at` timestamp NULL DEFAULT NULL COMMENT 'Date d''expiration du token GitHub',
   `github_connected_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -270,15 +311,19 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `unique_username` (`username`),
   UNIQUE KEY `unique_email` (`email`),
   KEY `idx_is_admin` (`is_admin`),
-  KEY `idx_github_id` (`github_id`)
+  KEY `idx_github_id` (`github_id`),
+  KEY `idx_user_plan` (`user_plan`),
+  KEY `idx_daily_usage` (`current_daily_count`,`last_daily_reset`),
+  KEY `idx_hourly_usage` (`current_hourly_count`,`last_hourly_reset`),
+  KEY `idx_github_token_expiry` (`github_token_expires_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `is_admin`, `github_id`, `github_username`, `github_token`, `github_connected_at`, `created_at`, `updated_at`, `last_login`) VALUES
-(1, 'test', 'test@mail.com', '$2y$12$45P2ElKK6YBzynz0wJhyPeHuvVh1VjDOfVuQMrD8xC14HfAvgiyF2', 1, NULL, NULL, NULL, NULL, '2025-12-11 09:50:14', '2025-12-11 09:50:59', NULL);
+INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `is_admin`, `user_plan`, `daily_limit`, `hourly_limit`, `monthly_limit`, `current_daily_count`, `current_hourly_count`, `current_monthly_count`, `last_daily_reset`, `last_hourly_reset`, `last_monthly_reset`, `github_id`, `github_username`, `github_token`, `github_refresh_token`, `github_token_expires_at`, `github_connected_at`, `created_at`, `updated_at`, `last_login`) VALUES
+(1, 'test', 'test@mail.com', '$2y$12$45P2ElKK6YBzynz0wJhyPeHuvVh1VjDOfVuQMrD8xC14HfAvgiyF2', 1, 'premium', -1, -1, -1, 0, 0, 0, '2026-01-04 10:41:16', '2026-01-04 10:41:16', '2026-01-04 10:41:16', NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-11 09:50:14', '2025-12-11 09:50:59', NULL);
 
 --
 -- Contraintes pour les tables déchargées
