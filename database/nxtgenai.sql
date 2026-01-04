@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : jeu. 18 déc. 2025 à 13:30
+-- Généré le : dim. 04 jan. 2026 à 06:49
 -- Version du serveur : 9.5.0
 -- Version de PHP : 8.4.14
 
@@ -42,21 +42,21 @@ CREATE TABLE IF NOT EXISTS `api_keys_global` (
   UNIQUE KEY `unique_provider_key` (`provider`,`key_name`),
   KEY `idx_provider` (`provider`),
   KEY `idx_is_active` (`is_active`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `api_keys_global`
 --
 
 INSERT INTO `api_keys_global` (`id`, `provider`, `key_name`, `key_value`, `is_active`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 'ollama', 'OLLAMA_API_KEY', '+f3HLmrX2hlbk2bjNpDv4mOHqf5D8q0HAxVNHVWzORTCl8EOE41JM+iywBhUecKkBPXtcDOC9RUIr6oett5cEB96jIAQWIT9UiRHE1m8QNE=', 1, '2025-12-18 09:51:56', '2025-12-18 10:01:51', 1, 1),
+(1, 'ollama', 'OLLAMA_API_KEY', 'KzuCOPCa52bLZzD+gHUImjhsb89Jb+SK6HVrNPTTLfrvlVn/W6yIcMBlwNK+HUGE8f19KyggFeIBcTMJ14Rmx7UDtnlLMPS66as8b8r3ykE=', 1, '2025-12-18 09:51:56', '2025-12-18 13:41:43', 1, 1),
 (2, 'openai', 'OPENAI_API_KEY', '70klhy6L3BTPU+aWQoUoxu8DN3ZeXnD1qstlwqpLaIRmNmVe1QvaOr4PPff8PKkCFNqqhLKd9Ofc/gkhQqc/oC0JtpQcprI4Ttz4/82sS1Euo7Wjbv14gg0foviLpk/8TuSiwTRlFjU1hVlf3xbjBmOZHZbWQ8U67DjzEUWKjCDqpOtxQGD9Ld2QvJkIvTNH2viXMl8Pu8RO8gTYxEPx28HDEMKcUiei97NOb3OhN7rb1LsTIdr0D+tMMXmmPrL3', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
 (3, 'anthropic', 'ANTHROPIC_API_KEY', '43oY/bfwwVSmKZu4JewP/tQfY7SOVtUEXvVTA5hlNhJbpbE3atffj4rU3zl7XJ5k/D6bhTqXoYGqLPMbIakX2uBToXBY3+q+EV3mYPSBDOIQxAeL0tOD0jTefJW6fr05zNJHCXQ4ap9I4ctZzwy3qi4yMzRfY2T02XA3MdsKZrk=', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
 (4, 'deepseek', 'DEEPSEEK_API_KEY', 'CMEATXks1KappTi4R/Ckocpx0wxqy9zA1S3APgFi79v2LS22eXA6DiWtvRbwIATSeoilPrSqUxnqlVURP0CKNQ==', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
 (5, 'mistral', 'MISTRAL_API_KEY', '7FQhGrwuD3Y9Zsgw7UJbRahqCZIcBMR7284FJapc5E/do3CSH3hLCixvOGgCmCrTfmnVsw6LuSXxX6Rul8R2ag==', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
 (6, 'huggingface', 'HUGGINGFACE_API_KEY', 'RDOnYJQopYU25nH/D0ciobi7XpAaw/VIH5es33+fkGZ2HXOUB28slwQVSkrtkpjLgJuf62Fk5XXOBD1Mo5kgog==', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
 (7, 'openrouter', 'OPENROUTER_API_KEY', 'v1UDdoKEIj7qaxUpT0JDjlb6BRVXAXpSO0qYe+QfwFtZ3ZjvvSUfiQ6YxAGnneaJ0KQIA2eCDkDP9PnghtvV4cXEFCg26ZUJ2IpbaUOtSZYrbx7EonM4+3KRi2qPW5Nx', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
-(8, 'xai', 'XAI_API_KEY', 'XNQZTkISIdc7QBxgMZZ+bz7HZj0yq2Jmn4aePbhViErUBjqYS+Uy6ce1X6nCRfDAfnzsxNFVz5JceozF53Eafa25f4uXbGOrETYg5q+YHBaUmY2x9S553vIng+jLlbC+Q7WhXrPjQTTVBsm0bids0w==', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1),
+(8, 'xai', 'XAI_API_KEY', '', 1, '2025-12-18 09:51:56', '2025-12-18 13:57:38', 1, 1),
 (9, 'moonshot', 'MOONSHOT_API_KEY', 'lmGQCN6j7XFlMLWr6tg4uTozt1S96F6xiL4F1w7Ozybs+lsCuhCTTI0mDO/cWIsaqPxlq7eCbHMsh7p6LRYYHcsUOvUg6L62ZTKIfOe8hHA=', 1, '2025-12-18 09:51:56', '2025-12-18 09:51:56', 1, 1);
 
 -- --------------------------------------------------------
@@ -159,7 +159,14 @@ CREATE TABLE IF NOT EXISTS `models_status` (
   UNIQUE KEY `unique_provider_model` (`provider`,`model_id`),
   KEY `idx_provider` (`provider`),
   KEY `idx_is_enabled` (`is_enabled`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `models_status`
+--
+
+INSERT INTO `models_status` (`id`, `provider`, `model_id`, `is_enabled`, `updated_at`, `updated_by`) VALUES
+(1, 'anthropic', 'claude-sonnet-4-5-20250929', 1, '2025-12-18 14:02:21', 1);
 
 -- --------------------------------------------------------
 
@@ -181,14 +188,14 @@ CREATE TABLE IF NOT EXISTS `provider_settings` (
   UNIQUE KEY `unique_provider_setting` (`provider`,`setting_key`,`is_global`,`user_id`),
   KEY `idx_provider` (`provider`),
   KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `provider_settings`
 --
 
 INSERT INTO `provider_settings` (`id`, `provider`, `setting_key`, `setting_value`, `is_global`, `user_id`, `created_at`, `updated_at`) VALUES
-(6, 'ollama', 'OLLAMA_API_URL', 'https://ia-api-oollama.serverscorpion1601.site', 1, NULL, '2025-12-18 10:01:51', '2025-12-18 10:01:51');
+(8, 'ollama', 'OLLAMA_API_URL', 'https://ia-api-oollama.serverscorpion1601.site', 1, NULL, '2025-12-18 13:41:43', '2025-12-18 13:41:43');
 
 -- --------------------------------------------------------
 
@@ -206,7 +213,17 @@ CREATE TABLE IF NOT EXISTS `provider_status` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_provider` (`provider`),
   KEY `idx_is_enabled` (`is_enabled`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `provider_status`
+--
+
+INSERT INTO `provider_status` (`id`, `provider`, `is_enabled`, `updated_at`, `updated_by`) VALUES
+(1, 'xai', 0, '2025-12-18 13:57:10', 1),
+(2, 'moonshot', 0, '2025-12-18 13:56:26', 1),
+(3, 'huggingface', 0, '2025-12-18 13:56:38', 1),
+(6, 'anthropic', 1, '2025-12-18 14:16:59', 1);
 
 -- --------------------------------------------------------
 
@@ -254,7 +271,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `unique_email` (`email`),
   KEY `idx_is_admin` (`is_admin`),
   KEY `idx_github_id` (`github_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `users`
