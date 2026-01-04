@@ -595,7 +595,10 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       </a>
       <nav class="flex items-center gap-4">
         <a href="settings.php" class="text-sm text-neutral-400 hover:text-blue-400 transition-colors">
-          <i class="fa-solid fa-cog mr-1.5"></i>Paramètres
+          <i class="fa-solid fa-shield-halved mr-1.5"></i>Admin
+        </a>
+        <a href="rate_limits.php" class="text-sm text-neutral-400 hover:text-amber-400 transition-colors">
+          <i class="fa-solid fa-gauge-high mr-1.5"></i>Rate Limits
         </a>
         <div class="w-px h-4 bg-neutral-700"></div>
         <span class="text-sm text-neutral-400"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>

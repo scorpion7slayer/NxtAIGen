@@ -18,6 +18,10 @@
  */
 
 return [
+  // === OPTIONS GLOBALES ===
+  // Désactiver la vérification SSL (pour WAMP sans CA bundle configuré)
+  'SKIP_SSL_VERIFY' => true,
+
   // === PROVIDERS CONFIGURÉS ===
   'OLLAMA_API_KEY' => 'REDACTED_OLLAMA_API_KEY',
   'OLLAMA_API_URL' => 'https://REDACTED_OLLAMA_SERVER_URL',

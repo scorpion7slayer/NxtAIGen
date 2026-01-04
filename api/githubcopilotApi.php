@@ -1,10 +1,16 @@
 <?php
 
 /**
- * GitHub Copilot API Integration
+ * GitHub Copilot API Integration - Version améliorée
  * Documentation: https://docs.github.com/en/copilot
  * Utilise le token OAuth GitHub de l'utilisateur avec abonnement Copilot Pro/Pro+
  * Endpoint: https://api.githubcopilot.com/chat/completions
+ * 
+ * Améliorations:
+ * - Refresh automatique du token OAuth si expiré
+ * - Vérification de l'abonnement Copilot
+ * - Meilleure gestion des erreurs OAuth
+ * - Messages d'erreur contextuels
  */
 
 session_start();
@@ -38,14 +44,14 @@ if (!isset($input['message']) || empty(trim($input['message']))) {
 $userMessage = isset($input['message']) ? trim($input['message']) : '';
 $files = isset($input['files']) ? $input['files'] : [];
 
-// Récupérer le token GitHub de l'utilisateur connecté
+// Charger le helper OAuth
 require_once __DIR__ . '/../zone_membres/db.php';
+require_once __DIR__ . '/github/oauth_helper.php';
 
-$stmt = $pdo->prepare("SELECT github_token FROM users WHERE id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch();
+$oauthHelper = new GitHubCopilotOAuth($pdo);
 
-$GITHUB_TOKEN = $user['github_token'] ?? null;
+// Récupérer le token (avec refresh automatique si expiré)
+$GITHUB_TOKEN = $oauthHelper->getToken($_SESSION['user_id']);
 
 // Si pas de token utilisateur, essayer le token global
 if (empty($GITHUB_TOKEN)) {
@@ -56,10 +62,29 @@ if (empty($GITHUB_TOKEN)) {
 if (empty($GITHUB_TOKEN)) {
   http_response_code(401);
   echo json_encode([
-    'error' => 'Compte GitHub non connecté. Allez dans Paramètres pour connecter votre compte GitHub.',
-    'action' => 'connect_github'
+    'error' => 'Compte GitHub non connecté ou token expiré.',
+    'action' => 'connect_github',
+    'details' => 'Allez dans Paramètres → GitHub → Connecter pour autoriser l\'accès à Copilot.',
+    'required_scopes' => ['copilot', 'user:read']
   ]);
   exit();
+}
+
+// Vérifier l'abonnement Copilot (optionnel, peut être désactivé pour performances)
+$checkSubscription = $input['check_subscription'] ?? false;
+if ($checkSubscription) {
+  $subscription = $oauthHelper->hasCopilotSubscription($GITHUB_TOKEN);
+
+  if (!$subscription['has_subscription']) {
+    http_response_code(403);
+    echo json_encode([
+      'error' => 'Abonnement GitHub Copilot requis',
+      'action' => 'subscribe_copilot',
+      'details' => 'GitHub Copilot nécessite un abonnement Pro ou Pro+. Souscrivez sur github.com/github-copilot',
+      'subscription_status' => $subscription
+    ]);
+    exit();
+  }
 }
 
 // Autodétection du modèle si non fourni
@@ -71,10 +96,8 @@ if (!isset($input['model']) || empty($input['model'])) {
   if (isset($modelsData['models']) && !empty($modelsData['models'])) {
     $model = $modelsData['models'][0]['id']; // Premier modèle disponible
   } else {
-    // Fallback si l'autodétection échoue
-    http_response_code(500);
-    echo json_encode(['error' => 'Impossible de détecter les modèles GitHub Copilot disponibles']);
-    exit();
+    // Fallback vers un modèle par défaut
+    $model = 'gpt-4o'; // Copilot utilise GPT-4o par défaut
   }
 } else {
   $model = $input['model'];
@@ -93,10 +116,12 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
   'Accept: application/json',
   'Authorization: Bearer ' . $GITHUB_TOKEN,
   'Editor-Version: vscode/1.95.0',
-  'Editor-Plugin-Version: copilot/1.0.0',
+  'Editor-Plugin-Version: copilot-chat/0.22.4', // Version mise à jour
   'Copilot-Integration-Id: vscode-chat',
-  'User-Agent: NxtGenAI/1.0'
+  'User-Agent: NxtGenAI/1.0',
+  'X-GitHub-Api-Version: 2024-11-01' // Version API explicite
 ]);
+
 // Préparer le contenu du message avec fichiers
 require_once __DIR__ . '/helpers.php';
 $messageContent = prepareOpenAIMessageContent($userMessage, $files);
@@ -107,7 +132,8 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
     ['role' => 'user', 'content' => $messageContent]
   ],
   'stream' => false,
-  'max_tokens' => 4096
+  'max_tokens' => 4096,
+  'temperature' => 0.7
 ]));
 
 $response = curl_exec($ch);
@@ -126,15 +152,49 @@ if ($curlError) {
 $responseData = json_decode($response, true);
 
 if ($httpCode !== 200) {
+  $errorMessage = 'Erreur inconnue';
+  $errorDetails = [];
+
+  if (isset($responseData['error'])) {
+    if (is_array($responseData['error'])) {
+      $errorMessage = $responseData['error']['message'] ?? $errorMessage;
+      $errorDetails = $responseData['error'];
+    } else {
+      $errorMessage = $responseData['error'];
+    }
+  } elseif (isset($responseData['message'])) {
+    $errorMessage = $responseData['message'];
+  }
+
+  // Erreurs spécifiques GitHub Copilot
+  if ($httpCode === 401) {
+    $errorMessage = 'Token GitHub invalide ou expiré. Reconnectez votre compte GitHub dans les paramètres.';
+    $errorDetails['action'] = 'reconnect_github';
+  } elseif ($httpCode === 403) {
+    $errorMessage = 'Accès refusé. Vérifiez que vous avez un abonnement GitHub Copilot actif.';
+    $errorDetails['action'] = 'check_subscription';
+  } elseif ($httpCode === 429) {
+    $errorMessage = 'Limite de taux atteinte. Veuillez réessayer dans quelques instants.';
+    $errorDetails['retry_after'] = $responseData['retry_after'] ?? 60;
+  }
+
   http_response_code($httpCode);
-  echo json_encode(['error' => 'Erreur API: ' . ($responseData['message'] ?? $responseData['error']['message'] ?? 'Erreur inconnue')]);
+  echo json_encode([
+    'error' => $errorMessage,
+    'details' => $errorDetails,
+    'http_code' => $httpCode
+  ]);
   exit();
 }
 
 // Extraire le message de la réponse
 $assistantMessage = $responseData['choices'][0]['message']['content'] ?? 'Pas de réponse';
+$tokensUsed = $responseData['usage']['total_tokens'] ?? null;
 
 echo json_encode([
   'success' => true,
-  'message' => $assistantMessage
+  'message' => $assistantMessage,
+  'model' => $model,
+  'tokens_used' => $tokensUsed,
+  'provider' => 'github_copilot'
 ]);
