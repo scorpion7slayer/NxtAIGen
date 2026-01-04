@@ -41,6 +41,20 @@ $isGuest = !isset($_SESSION['user_id']);
 
 // Pour les visiteurs, vérifier et incrémenter le compteur d'utilisations
 if ($isGuest) {
+  // Initialiser le timestamp de première utilisation si nécessaire
+  if (!isset($_SESSION['guest_first_usage_time'])) {
+    $_SESSION['guest_first_usage_time'] = time();
+    $_SESSION['guest_usage_count'] = 0;
+  }
+
+  // Vérifier si 24h se sont écoulées depuis la première utilisation
+  $timeSinceFirstUsage = time() - $_SESSION['guest_first_usage_time'];
+  if ($timeSinceFirstUsage >= 86400) { // 86400 secondes = 24 heures
+    // Réinitialiser le compteur et le timestamp
+    $_SESSION['guest_usage_count'] = 0;
+    $_SESSION['guest_first_usage_time'] = time();
+  }
+
   // Initialiser le compteur de visiteur si nécessaire
   if (!isset($_SESSION['guest_usage_count'])) {
     $_SESSION['guest_usage_count'] = 0;
@@ -48,7 +62,21 @@ if ($isGuest) {
 
   // Vérifier si la limite est atteinte
   if ($_SESSION['guest_usage_count'] >= GUEST_USAGE_LIMIT) {
-    sendSSE(['error' => 'Limite atteinte. Inscrivez-vous pour continuer à utiliser NxtGenAI gratuitement !', 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
+    $timeRemaining = 86400 - (time() - $_SESSION['guest_first_usage_time']);
+    $hours = floor($timeRemaining / 3600);
+    $minutes = floor(($timeRemaining % 3600) / 60);
+    $seconds = $timeRemaining % 60;
+
+    $timeText = '';
+    if ($hours > 0) {
+      $timeText = "Réinitialisation dans {$hours}h {$minutes}min {$seconds}s";
+    } else if ($minutes > 0) {
+      $timeText = "Réinitialisation dans {$minutes}min {$seconds}s";
+    } else {
+      $timeText = "Réinitialisation dans {$seconds}s";
+    }
+
+    sendSSE(['error' => "Limite atteinte. {$timeText}, ou inscrivez-vous pour un accès illimité !", 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
     exit();
   }
 }
