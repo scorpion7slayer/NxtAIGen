@@ -8,6 +8,24 @@ define('GUEST_USAGE_LIMIT', 5);
 // Récupérer les informations utilisateur si connecté
 $user = null;
 $isGuest = !isset($_SESSION['user_id']);
+
+// Gestion du système de réinitialisation 24h pour les visiteurs
+if ($isGuest) {
+  // Initialiser le timestamp de première utilisation si nécessaire
+  if (!isset($_SESSION['guest_first_usage_time'])) {
+    $_SESSION['guest_first_usage_time'] = time();
+    $_SESSION['guest_usage_count'] = 0;
+  }
+
+  // Vérifier si 24h se sont écoulées depuis la première utilisation
+  $timeSinceFirstUsage = time() - $_SESSION['guest_first_usage_time'];
+  if ($timeSinceFirstUsage >= 86400) { // 86400 secondes = 24 heures
+    // Réinitialiser le compteur et le timestamp
+    $_SESSION['guest_usage_count'] = 0;
+    $_SESSION['guest_first_usage_time'] = time();
+  }
+}
+
 $guestUsageCount = $_SESSION['guest_usage_count'] ?? 0;
 
 if (isset($_SESSION['user_id'])) {
@@ -68,8 +86,15 @@ if ($user) {
       font-weight: 700;
     }
 
+    /* Police Noto Color Emoji pour afficher tous les emojis (drapeaux, etc.) */
+    @font-face {
+      font-family: 'Noto Color Emoji';
+      src: url('assets/fonts/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf') format('truetype');
+      font-display: swap;
+    }
+
     * {
-      font-family: 'TikTok Sans', system-ui, sans-serif;
+      font-family: 'TikTok Sans', 'Noto Color Emoji', system-ui, sans-serif;
     }
 
     body {
@@ -296,6 +321,45 @@ if ($user) {
         content: '';
       }
     }
+
+    /* Scrollbar personnalisée */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+
+    *::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: #1f2937;
+      border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+
+    *::-webkit-scrollbar-thumb:active {
+      background: #10b981;
+    }
+
+    /* Scrollbar pour les blocs de code */
+    pre::-webkit-scrollbar-thumb {
+      background: #374151;
+    }
+
+    pre::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
   </style>
 </head>
 
@@ -315,14 +379,24 @@ if ($user) {
   <div id="welcomeMessage" class="justify-center mb-6 text-center max-w-2xl text-gray-400/90">
     Posez-moi une question pour commencer.
     <?php if ($isGuest): ?>
+      <?php
+      $remaining = GUEST_USAGE_LIMIT - $guestUsageCount;
+      $timeRemaining = 86400 - (time() - ($_SESSION['guest_first_usage_time'] ?? time()));
+      ?>
       <div id="guestUsageInfo" class="mt-3 text-sm">
         <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
           <i class="fa-solid fa-gift"></i>
-          <span id="usageText"><?php echo (GUEST_USAGE_LIMIT - $guestUsageCount); ?> essai<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?> gratuit<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?> restant<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?></span>
+          <span id="usageText"><?php echo $remaining; ?> essai<?php echo ($remaining > 1) ? 's' : ''; ?> gratuit<?php echo ($remaining > 1) ? 's' : ''; ?> restant<?php echo ($remaining > 1) ? 's' : ''; ?></span>
         </span>
-        <p class="mt-2 text-xs text-gray-500">
-          <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
-        </p>
+        <?php if ($remaining === 0): ?>
+          <p class="mt-2 text-xs text-gray-500">
+            <span id="resetTimer" data-reset-time="<?php echo $timeRemaining; ?>"></span> • <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+          </p>
+        <?php else: ?>
+          <p class="mt-2 text-xs text-gray-500">
+            <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+          </p>
+        <?php endif; ?>
       </div>
     <?php endif; ?>
   </div>
@@ -361,10 +435,19 @@ if ($user) {
           </button>
           <?php if ($isGuest): ?>
             <!-- Badge utilisations restantes pour visiteurs -->
-            <div id="usageBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs" title="Essais gratuits restants">
-              <i class="fa-solid fa-bolt"></i>
-              <span id="usageBadgeCount"><?php echo (GUEST_USAGE_LIMIT - $guestUsageCount); ?>/<?php echo GUEST_USAGE_LIMIT; ?></span>
-            </div>
+            <?php $remainingBadge = GUEST_USAGE_LIMIT - $guestUsageCount; ?>
+            <?php if ($remainingBadge === 0): ?>
+              <?php $timeRemainingBadge = 86400 - (time() - ($_SESSION['guest_first_usage_time'] ?? time())); ?>
+              <div id="usageBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs" title="Réinitialisation des essais gratuits">
+                <i class="fa-solid fa-clock"></i>
+                <span id="usageBadgeCount" data-timer="true" data-reset-time="<?php echo $timeRemainingBadge; ?>"></span>
+              </div>
+            <?php else: ?>
+              <div id="usageBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs" title="Essais gratuits restants">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="usageBadgeCount"><?php echo $remainingBadge; ?>/<?php echo GUEST_USAGE_LIMIT; ?></span>
+              </div>
+            <?php endif; ?>
           <?php endif; ?>
         </div>
 
@@ -559,6 +642,74 @@ if ($user) {
     const guestUsageLimit = <?php echo GUEST_USAGE_LIMIT; ?>;
     let guestUsageCount = <?php echo $guestUsageCount; ?>;
 
+    // Timer de réinitialisation pour les visiteurs
+    if (isGuest) {
+      // Timer dans le message d'accueil
+      const resetTimer = document.getElementById('resetTimer');
+      if (resetTimer) {
+        let timeRemaining = parseInt(resetTimer.dataset.resetTime);
+
+        function updateResetTimer() {
+          if (timeRemaining <= 0) {
+            resetTimer.innerHTML = '<i class="fa-solid fa-rotate-right text-green-400"></i> Réinitialisation disponible - rechargez la page';
+            return;
+          }
+
+          const hours = Math.floor(timeRemaining / 3600);
+          const minutes = Math.floor((timeRemaining % 3600) / 60);
+          const seconds = timeRemaining % 60;
+
+          let timeText = '';
+          if (hours > 0) {
+            timeText = `${hours}h ${minutes}min ${seconds}s`;
+          } else if (minutes > 0) {
+            timeText = `${minutes}min ${seconds}s`;
+          } else {
+            timeText = `${seconds}s`;
+          }
+
+          resetTimer.innerHTML = `<i class="fa-solid fa-clock text-amber-400"></i> Réinitialisation dans ${timeText}`;
+
+          timeRemaining--;
+        }
+
+        updateResetTimer();
+        setInterval(updateResetTimer, 1000);
+      }
+
+      // Timer dans le badge
+      const usageBadgeCount = document.getElementById('usageBadgeCount');
+      if (usageBadgeCount && usageBadgeCount.dataset.timer === 'true') {
+        let badgeTimeRemaining = parseInt(usageBadgeCount.dataset.resetTime);
+
+        function updateBadgeTimer() {
+          if (badgeTimeRemaining <= 0) {
+            usageBadgeCount.textContent = 'Rechargez';
+            return;
+          }
+
+          const hours = Math.floor(badgeTimeRemaining / 3600);
+          const minutes = Math.floor((badgeTimeRemaining % 3600) / 60);
+          const seconds = badgeTimeRemaining % 60;
+
+          let timeText = '';
+          if (hours > 0) {
+            timeText = `${hours}h ${minutes}m`;
+          } else if (minutes > 0) {
+            timeText = `${minutes}m ${seconds}s`;
+          } else {
+            timeText = `${seconds}s`;
+          }
+
+          usageBadgeCount.textContent = timeText;
+          badgeTimeRemaining--;
+        }
+
+        updateBadgeTimer();
+        setInterval(updateBadgeTimer, 1000);
+      }
+    }
+
     // État du modèle sélectionné (global pour models.js)
     let selectedModel = {
       provider: 'openai',
@@ -673,21 +824,81 @@ if ($user) {
 
       // Mettre à jour le badge dans la barre d'outils
       if (usageBadgeCount) {
-        usageBadgeCount.textContent = `${remaining}/${guestUsageLimit}`;
         if (remaining <= 0) {
+          // Transformer le badge en timer si pas déjà fait
+          if (!usageBadgeCount.dataset.timer) {
+            usageBadgeCount.dataset.timer = 'true';
+            usageBadgeCount.dataset.resetTime = '86400'; // 24h par défaut
+
+            // Changer l'icône
+            const badgeIcon = usageBadge.querySelector('i');
+            if (badgeIcon) {
+              badgeIcon.className = 'fa-solid fa-clock';
+            }
+
+            // Démarrer le timer
+            let badgeTimeRem = 86400;
+            const updateBadge = () => {
+              if (badgeTimeRem <= 0) {
+                usageBadgeCount.textContent = 'Rechargez';
+                return;
+              }
+              const hours = Math.floor(badgeTimeRem / 3600);
+              const minutes = Math.floor((badgeTimeRem % 3600) / 60);
+              const seconds = badgeTimeRem % 60;
+              let timeText = hours > 0 ? `${hours}h ${minutes}m` : (minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`);
+              usageBadgeCount.textContent = timeText;
+              badgeTimeRem--;
+            };
+            updateBadge();
+            setInterval(updateBadge, 1000);
+          }
+
           usageBadge.classList.remove('bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
           usageBadge.classList.add('bg-red-500/10', 'border-red-500/20', 'text-red-400');
-        } else if (remaining === 1) {
-          usageBadge.classList.remove('bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
-          usageBadge.classList.add('bg-orange-500/10', 'border-orange-500/20', 'text-orange-400');
+        } else {
+          usageBadgeCount.textContent = `${remaining}/${guestUsageLimit}`;
+          if (remaining === 1) {
+            usageBadge.classList.remove('bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
+            usageBadge.classList.add('bg-orange-500/10', 'border-orange-500/20', 'text-orange-400');
+          }
         }
       }
 
       if (usageText) {
         if (remaining <= 0) {
-          usageText.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Limite atteinte`;
+          usageText.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Plus d'essais disponibles`;
           usageText.parentElement.classList.remove('bg-amber-500/10', 'border-amber-500/30', 'text-amber-400');
           usageText.parentElement.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-400');
+
+          // Afficher le timer si pas déjà visible
+          const timerParagraph = guestUsageInfo.querySelector('p');
+          const resetTimer = document.getElementById('resetTimer');
+          if (!resetTimer && timerParagraph) {
+            // Calculer le temps restant (approximatif)
+            const timeRemaining = 86400; // Par défaut 24h, sera mis à jour par le serveur
+            timerParagraph.innerHTML = '<span id="resetTimer" data-reset-time="' + timeRemaining + '"></span> • <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité';
+
+            // Réinitialiser le timer
+            const newResetTimer = document.getElementById('resetTimer');
+            if (newResetTimer) {
+              let timeRem = parseInt(newResetTimer.dataset.resetTime);
+              const updateTimer = () => {
+                if (timeRem <= 0) {
+                  newResetTimer.innerHTML = '<i class="fa-solid fa-rotate-right text-green-400"></i> Réinitialisation disponible - rechargez la page';
+                  return;
+                }
+                const hours = Math.floor(timeRem / 3600);
+                const minutes = Math.floor((timeRem % 3600) / 60);
+                const seconds = timeRem % 60;
+                let timeText = hours > 0 ? `${hours}h ${minutes}min ${seconds}s` : (minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`);
+                newResetTimer.innerHTML = `<i class="fa-solid fa-clock text-amber-400"></i> Réinitialisation dans ${timeText}`;
+                timeRem--;
+              };
+              updateTimer();
+              setInterval(updateTimer, 1000);
+            }
+          }
         } else {
           usageText.textContent = `${remaining} essai${remaining > 1 ? 's' : ''} gratuit${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`;
         }
@@ -696,6 +907,9 @@ if ($user) {
 
     // Fonction pour afficher le message de limite atteinte
     function showLimitReachedMessage(chatContainer) {
+      const resetTimerEl = document.getElementById('resetTimer');
+      const timeInfo = resetTimerEl ? resetTimerEl.textContent : 'quelques heures';
+
       chatContainer.innerHTML += `
         <div class="flex justify-start">
           <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl rounded-bl-md px-4 py-4 max-w-[85%]">
@@ -706,7 +920,7 @@ if ($user) {
               <div>
                 <p class="text-amber-300 font-medium mb-1">Limite d'essais atteinte</p>
                 <p class="text-gray-300 text-sm mb-3">Vous avez utilisé vos ${guestUsageLimit} essais gratuits.</p>
-                <p class="text-gray-400 text-sm mb-3">Créez un compte gratuit pour continuer à utiliser NxtGenAI sans limite !</p>
+                <p class="text-gray-400 text-sm mb-3">${timeInfo}, ou créez un compte gratuit pour un accès illimité !</p>
                 <div class="flex gap-2">
                   <a href="zone_membres/register.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition-colors">
                     <i class="fa-solid fa-user-plus"></i>
