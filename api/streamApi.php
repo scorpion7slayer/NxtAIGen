@@ -33,10 +33,24 @@ function sendSSE($data, $event = 'message')
   flush();
 }
 
-// Vérifier l'authentification
-if (!isset($_SESSION['user_id'])) {
-  sendSSE(['error' => 'Non authentifié'], 'error');
-  exit();
+// Constante pour la limite d'utilisations des visiteurs (messages)
+define('GUEST_USAGE_LIMIT', 5);
+
+// Vérifier si l'utilisateur est connecté ou est un visiteur
+$isGuest = !isset($_SESSION['user_id']);
+
+// Pour les visiteurs, vérifier et incrémenter le compteur d'utilisations
+if ($isGuest) {
+  // Initialiser le compteur de visiteur si nécessaire
+  if (!isset($_SESSION['guest_usage_count'])) {
+    $_SESSION['guest_usage_count'] = 0;
+  }
+
+  // Vérifier si la limite est atteinte
+  if ($_SESSION['guest_usage_count'] >= GUEST_USAGE_LIMIT) {
+    sendSSE(['error' => 'Limite atteinte. Inscrivez-vous pour continuer à utiliser NxtGenAI gratuitement !', 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
+    exit();
+  }
 }
 
 // Vérifier la méthode POST
@@ -66,8 +80,8 @@ require_once __DIR__ . '/api_keys_helper.php';
 require_once __DIR__ . '/helpers.php';
 
 // Récupérer les configurations de tous les providers pour l'utilisateur
-$userId = $_SESSION['user_id'];
-$allConfigs = getAllApiConfigs($pdo, $userId);
+$userId = $_SESSION['user_id'] ?? null;
+$allConfigs = $userId ? getAllApiConfigs($pdo, $userId) : [];
 
 // Fallback vers config.php pour compatibilité
 $configFile = require __DIR__ . '/config.php';
@@ -162,6 +176,11 @@ $model = $model ?: $streamConfig['default_model'];
 
 // Gestion spéciale pour GitHub Copilot (OAuth token depuis la DB)
 if ($provider === 'github') {
+  // GitHub Copilot nécessite une connexion
+  if ($isGuest) {
+    sendSSE(['error' => 'GitHub Copilot nécessite un compte. Inscrivez-vous pour l\'utiliser.'], 'error');
+    exit();
+  }
   // Récupérer le token GitHub depuis la base de données
   $stmt = $pdo->prepare("SELECT github_token FROM users WHERE id = ?");
   $stmt->execute([$userId]);
@@ -437,7 +456,19 @@ if ($httpCode >= 400 && !empty($errorBuffer)) {
   exit();
 }
 
+// Incrémenter le compteur d'utilisations pour les visiteurs (seulement si succès)
+if ($isGuest && !$hasError) {
+  $_SESSION['guest_usage_count']++;
+}
+
 // Envoyer l'événement de fin si pas déjà fait et pas d'erreur
 if (!$hasError) {
-  sendSSE(['done' => true, 'fullResponse' => $fullResponse], 'done');
+  $doneData = ['done' => true, 'fullResponse' => $fullResponse];
+  // Ajouter les infos d'utilisation pour les visiteurs
+  if ($isGuest) {
+    $doneData['usage_count'] = $_SESSION['guest_usage_count'];
+    $doneData['usage_limit'] = GUEST_USAGE_LIMIT;
+    $doneData['remaining'] = GUEST_USAGE_LIMIT - $_SESSION['guest_usage_count'];
+  }
+  sendSSE($doneData, 'done');
 }

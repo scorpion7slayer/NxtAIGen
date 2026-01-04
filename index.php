@@ -2,8 +2,14 @@
 session_start();
 require_once 'zone_membres/db.php';
 
+// Constante pour la limite de messages visiteurs (doit correspondre à streamApi.php)
+define('GUEST_USAGE_LIMIT', 5);
+
 // Récupérer les informations utilisateur si connecté
 $user = null;
+$isGuest = !isset($_SESSION['user_id']);
+$guestUsageCount = $_SESSION['guest_usage_count'] ?? 0;
+
 if (isset($_SESSION['user_id'])) {
   $stmt = $pdo->prepare("SELECT id, username, email FROM users WHERE id = ?");
   $stmt->execute([$_SESSION['user_id']]);
@@ -308,6 +314,17 @@ if ($user) {
   <!-- Message d'accueil -->
   <div id="welcomeMessage" class="justify-center mb-6 text-center max-w-2xl text-gray-400/90">
     Posez-moi une question pour commencer.
+    <?php if ($isGuest): ?>
+      <div id="guestUsageInfo" class="mt-3 text-sm">
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
+          <i class="fa-solid fa-gift"></i>
+          <span id="usageText"><?php echo (GUEST_USAGE_LIMIT - $guestUsageCount); ?> essai<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?> gratuit<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?> restant<?php echo ((GUEST_USAGE_LIMIT - $guestUsageCount) > 1) ? 's' : ''; ?></span>
+        </span>
+        <p class="mt-2 text-xs text-gray-500">
+          <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+        </p>
+      </div>
+    <?php endif; ?>
   </div>
   <div class="w-full max-w-2xl">
     <!-- Zone de saisie -->
@@ -342,6 +359,13 @@ if ($user) {
                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </button>
+          <?php if ($isGuest): ?>
+            <!-- Badge utilisations restantes pour visiteurs -->
+            <div id="usageBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs" title="Essais gratuits restants">
+              <i class="fa-solid fa-bolt"></i>
+              <span id="usageBadgeCount"><?php echo (GUEST_USAGE_LIMIT - $guestUsageCount); ?>/<?php echo GUEST_USAGE_LIMIT; ?></span>
+            </div>
+          <?php endif; ?>
         </div>
 
         <!-- Icônes droite -->
@@ -530,6 +554,11 @@ if ($user) {
     </div>
   </div>
   <script>
+    // État utilisateur
+    const isGuest = <?php echo $isGuest ? 'true' : 'false'; ?>;
+    const guestUsageLimit = <?php echo GUEST_USAGE_LIMIT; ?>;
+    let guestUsageCount = <?php echo $guestUsageCount; ?>;
+
     // État du modèle sélectionné (global pour models.js)
     let selectedModel = {
       provider: 'openai',
@@ -632,12 +661,87 @@ if ($user) {
       currentStreamingContent = '';
     }
 
+    // Fonction pour mettre à jour l'affichage des utilisations restantes (visiteurs)
+    function updateGuestUsageDisplay() {
+      if (!isGuest) return;
+
+      const remaining = guestUsageLimit - guestUsageCount;
+      const usageText = document.getElementById('usageText');
+      const guestUsageInfo = document.getElementById('guestUsageInfo');
+      const usageBadge = document.getElementById('usageBadge');
+      const usageBadgeCount = document.getElementById('usageBadgeCount');
+
+      // Mettre à jour le badge dans la barre d'outils
+      if (usageBadgeCount) {
+        usageBadgeCount.textContent = `${remaining}/${guestUsageLimit}`;
+        if (remaining <= 0) {
+          usageBadge.classList.remove('bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
+          usageBadge.classList.add('bg-red-500/10', 'border-red-500/20', 'text-red-400');
+        } else if (remaining === 1) {
+          usageBadge.classList.remove('bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
+          usageBadge.classList.add('bg-orange-500/10', 'border-orange-500/20', 'text-orange-400');
+        }
+      }
+
+      if (usageText) {
+        if (remaining <= 0) {
+          usageText.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Limite atteinte`;
+          usageText.parentElement.classList.remove('bg-amber-500/10', 'border-amber-500/30', 'text-amber-400');
+          usageText.parentElement.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-400');
+        } else {
+          usageText.textContent = `${remaining} essai${remaining > 1 ? 's' : ''} gratuit${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`;
+        }
+      }
+    }
+
+    // Fonction pour afficher le message de limite atteinte
+    function showLimitReachedMessage(chatContainer) {
+      chatContainer.innerHTML += `
+        <div class="flex justify-start">
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl rounded-bl-md px-4 py-4 max-w-[85%]">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-gift text-amber-400"></i>
+              </div>
+              <div>
+                <p class="text-amber-300 font-medium mb-1">Limite d'essais atteinte</p>
+                <p class="text-gray-300 text-sm mb-3">Vous avez utilisé vos ${guestUsageLimit} essais gratuits.</p>
+                <p class="text-gray-400 text-sm mb-3">Créez un compte gratuit pour continuer à utiliser NxtGenAI sans limite !</p>
+                <div class="flex gap-2">
+                  <a href="zone_membres/register.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-user-plus"></i>
+                    S'inscrire gratuitement
+                  </a>
+                  <a href="zone_membres/login.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm transition-colors">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    Se connecter
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
     // Fonction pour envoyer le message
     async function sendMessage() {
       const message = messageInput.value.trim();
       const hasFiles = attachedFiles.length > 0;
 
       if (!message && !hasFiles) return;
+
+      // Vérifier la limite pour les visiteurs avant d'envoyer
+      if (isGuest && guestUsageCount >= guestUsageLimit) {
+        // Masquer le message de bienvenue, le logo et afficher le chat
+        document.getElementById('welcomeMessage').classList.add('hidden');
+        document.getElementById('logoContainer').classList.add('hidden');
+        const chatContainer = document.getElementById('chatContainer');
+        chatContainer.classList.remove('hidden');
+        showLimitReachedMessage(chatContainer);
+        return;
+      }
 
       // Masquer le message de bienvenue, le logo et afficher le chat
       document.getElementById('welcomeMessage').classList.add('hidden');
@@ -800,6 +904,12 @@ if ($user) {
 
                 if (data.error) {
                   responseContainer.innerHTML = `<span class="text-red-400">Erreur: ${escapeHtml(data.error)}</span>`;
+                  // Si limite atteinte, afficher le message d'inscription
+                  if (data.limit_reached && isGuest) {
+                    guestUsageCount = data.usage_count || guestUsageLimit;
+                    updateGuestUsageDisplay();
+                    setTimeout(() => showLimitReachedMessage(chatContainer), 500);
+                  }
                   break;
                 }
 
@@ -828,6 +938,12 @@ if ($user) {
                       block.dataset.highlighted = 'true';
                     }
                   });
+
+                  // Mettre à jour le compteur d'utilisations pour les visiteurs
+                  if (isGuest && data.usage_count !== undefined) {
+                    guestUsageCount = data.usage_count;
+                    updateGuestUsageDisplay();
+                  }
                 }
               } catch (e) {
                 // Ignorer les erreurs de parsing JSON
