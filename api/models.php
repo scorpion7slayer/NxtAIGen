@@ -3,37 +3,36 @@
 /**
  * API d'autodétection des modèles
  * Récupère dynamiquement les modèles disponibles pour chaque provider
+ * Accessible aux visiteurs (utilise les clés globales) et aux utilisateurs connectés
  */
 
 session_start();
 header('Content-Type: application/json');
 
-// Vérifier l'authentification
-if (!isset($_SESSION['user_id'])) {
-  http_response_code(401);
-  echo json_encode(['error' => 'Non authentifié']);
-  exit();
-}
-
 require_once __DIR__ . '/../zone_membres/db.php';
 require_once __DIR__ . '/api_keys_helper.php';
 
-// Charger la configuration depuis la DB avec fallback vers config.php
-$userId = $_SESSION['user_id'];
-$allConfigs = getAllApiConfigs($pdo, $userId);
+// Vérifier si l'utilisateur est connecté
+$isGuest = !isset($_SESSION['user_id']);
+$userId = $_SESSION['user_id'] ?? null;
 
-// Fallback vers config.php pour compatibilité
+// Charger la configuration depuis config.php (clés globales)
 $configFile = require __DIR__ . '/config.php';
 $config = [];
 foreach ($configFile as $key => $value) {
   $config[$key] = $value;
 }
 
-// Override avec les valeurs de la DB si disponibles
-foreach ($allConfigs as $provider => $providerConfig) {
-  foreach ($providerConfig as $keyName => $keyValue) {
-    if (!empty($keyValue)) {
-      $config[$keyName] = $keyValue;
+// Si l'utilisateur est connecté, fusionner avec ses clés personnelles
+if (!$isGuest && $userId) {
+  $allConfigs = getAllApiConfigs($pdo, $userId);
+
+  // Override avec les valeurs de la DB si disponibles
+  foreach ($allConfigs as $provider => $providerConfig) {
+    foreach ($providerConfig as $keyName => $keyValue) {
+      if (!empty($keyValue)) {
+        $config[$keyName] = $keyValue;
+      }
     }
   }
 }
@@ -45,11 +44,14 @@ $provider = $_GET['provider'] ?? 'all';
 $ollamaBaseUrl = $_GET['base_url'] ?? $config['OLLAMA_API_URL'] ?? 'http://localhost:11434';
 $ollamaBaseUrl = rtrim($ollamaBaseUrl, '/');
 
-// Récupérer le token GitHub de l'utilisateur si disponible
-$stmt = $pdo->prepare("SELECT github_token FROM users WHERE id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch();
-$userGithubToken = $user['github_token'] ?? null;
+// Récupérer le token GitHub de l'utilisateur si connecté
+$userGithubToken = null;
+if (!$isGuest && $userId) {
+  $stmt = $pdo->prepare("SELECT github_token FROM users WHERE id = ?");
+  $stmt->execute([$userId]);
+  $user = $stmt->fetch();
+  $userGithubToken = $user['github_token'] ?? null;
+}
 
 /**
  * Fonction helper pour les requêtes cURL

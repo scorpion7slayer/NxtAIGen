@@ -346,10 +346,8 @@ const ModelManager = {
             }
         });
 
-        // Ou charger immédiatement si l'utilisateur est connecté
-        if (document.querySelector("#profileButton")) {
-            this.refreshModelMenu();
-        }
+        // Charger les modèles immédiatement pour tous les utilisateurs (connectés ou non)
+        this.refreshModelMenu();
     },
 };
 
