@@ -112,9 +112,11 @@ if ($isGuest) {
     exit();
   }
 
-  // Libérer le verrou de session pendant le streaming (améliore la concurrence)
-  // Les données de session seront relues au moment de l'incrémentation
-  $guestUsageBeforeStream = $_SESSION['guest_usage_count'];
+  // PRÉ-INCRÉMENTER le compteur AVANT de fermer la session
+  // Cette approche évite le problème de "session cannot be started after headers sent"
+  $_SESSION['guest_usage_count']++;
+  $guestUsageAfterIncrement = $_SESSION['guest_usage_count'];
+  $guestSessionId = session_id(); // Sauvegarder l'ID pour rollback si erreur
   session_write_close();
 } else {
   // Pour les utilisateurs connectés, vérifier le rate limiting
@@ -601,13 +603,10 @@ if ($httpCode >= 400 && !empty($errorBuffer)) {
   exit();
 }
 
-// Incrémenter le compteur d'utilisations (visiteurs et utilisateurs connectés)
+// Gestion du compteur d'utilisations (visiteurs et utilisateurs connectés)
 if (!$hasError) {
   if ($isGuest) {
-    // Rouvrir la session pour incrémenter le compteur de manière atomique
-    session_start();
-    $_SESSION['guest_usage_count']++;
-    session_write_close();
+    // Compteur déjà pré-incrémenté avant le streaming, rien à faire ici
   } else {
     // Calculer tokens utilisés (utiliser les valeurs capturées ou estimation)
     $tokensUsed = 0;
@@ -648,11 +647,10 @@ if (!$hasError) {
 
   // Ajouter les infos d'utilisation
   if ($isGuest) {
-    // La session a été fermée après incrémentation, utiliser la valeur calculée
-    $currentUsageCount = $guestUsageBeforeStream + 1;
-    $doneData['usage_count'] = $currentUsageCount;
+    // Utiliser la valeur pré-incrémentée
+    $doneData['usage_count'] = $guestUsageAfterIncrement;
     $doneData['usage_limit'] = GUEST_USAGE_LIMIT;
-    $doneData['remaining'] = GUEST_USAGE_LIMIT - $currentUsageCount;
+    $doneData['remaining'] = GUEST_USAGE_LIMIT - $guestUsageAfterIncrement;
   } else {
     // Ajouter les limites restantes pour les utilisateurs connectés
     $remaining = $rateLimiter->getRemainingLimits($userId);

@@ -69,6 +69,14 @@ include 'header.php';
                 </a>
             <?php endif; ?>
 
+            <a href="subscription.php" class="flex items-center gap-3 w-full bg-gray-100 dark:bg-neutral-700/30 hover:bg-gray-200 dark:hover:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600/30 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-neutral-200 transition-colors">
+                <div class="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <i class="fa-solid fa-credit-card text-green-400"></i>
+                </div>
+                <span>Mon abonnement</span>
+                <i class="fa-solid fa-chevron-right ml-auto text-gray-400 dark:text-neutral-600"></i>
+            </a>
+
             <a href="settings.php" class="flex items-center gap-3 w-full bg-gray-100 dark:bg-neutral-700/30 hover:bg-gray-200 dark:hover:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600/30 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-neutral-200 transition-colors">
                 <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
                     <i class="fa-solid fa-user-gear text-amber-400"></i>

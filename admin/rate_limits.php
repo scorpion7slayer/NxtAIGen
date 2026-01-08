@@ -35,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $plans = [
       'free' => ['daily' => 10, 'hourly' => 3, 'monthly' => 200],
       'basic' => ['daily' => 50, 'hourly' => 10, 'monthly' => 1000],
-      'premium' => ['daily' => -1, 'hourly' => -1, 'monthly' => -1]
+      'premium' => ['daily' => 200, 'hourly' => 50, 'monthly' => 5000],
+      'ultra' => ['daily' => -1, 'hourly' => 100, 'monthly' => -1]
     ];
 
     if (isset($plans[$newPlan])) {
@@ -107,6 +108,7 @@ $stats = $pdo->query("
     SUM(CASE WHEN user_plan = 'free' THEN 1 ELSE 0 END) as free_users,
     SUM(CASE WHEN user_plan = 'basic' THEN 1 ELSE 0 END) as basic_users,
     SUM(CASE WHEN user_plan = 'premium' THEN 1 ELSE 0 END) as premium_users,
+    SUM(CASE WHEN user_plan = 'ultra' THEN 1 ELSE 0 END) as ultra_users,
     SUM(current_daily_count) as total_daily_usage,
     SUM(current_monthly_count) as total_monthly_usage
   FROM users
@@ -120,24 +122,87 @@ $stats = $pdo->query("
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestion Rate Limiting - Admin NxtGenAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+  <style>
+    /* Scrollbar fine et discrète */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+    }
+
+    *::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(75, 85, 99, 0.5);
+      border-radius: 3px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.8);
+    }
+
+    /* Bouton retour en haut */
+    #scrollToTopBtn {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    }
+
+    #scrollToTopBtn.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #scrollToTopBtn:hover {
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
 
-<body class="bg-neutral-900 text-gray-200">
-  <div class="container mx-auto px-4 py-8 max-w-7xl">
+<body class="bg-neutral-900 text-gray-200 overflow-x-hidden">
+  <div class="container mx-auto px-4 py-8 max-w-7xl overflow-x-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-white">⏱️ Gestion Rate Limiting</h1>
-      <div class="flex gap-3">
-        <a href="settings.php" class="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg hover:bg-neutral-700 transition-colors">
-          <i class="fa-solid fa-shield-halved mr-2"></i>Admin
+    <div class="flex items-center justify-between gap-4 mb-8">
+      <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white flex items-center">
+        <img src="../assets/images/rate_limit_header.svg" alt="Rate Limiting" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mr-2" />
+        <span class="hidden md:inline">Gestion Rate Limiting</span>
+        <span class="md:hidden">Rate Limits</span>
+      </h1>
+      <!-- Navigation Desktop -->
+      <div class="hidden md:flex gap-2">
+        <a href="settings.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+          <i class="fa-solid fa-shield-halved mr-1.5 text-blue-400"></i>Admin
         </a>
-        <a href="models_manager.php" class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-500 transition-colors">
-          <i class="fa-solid fa-robot mr-2"></i>Modèles
+        <a href="models_manager.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+          <i class="fa-solid fa-robot mr-1.5 text-purple-400"></i>Modèles
         </a>
-        <a href="../index.php" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition-colors">
-          <i class="fa-solid fa-home mr-2"></i>Accueil
+        <a href="../index.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+          <i class="fa-solid fa-home mr-1.5 text-green-400"></i>Accueil
         </a>
+      </div>
+      <!-- Navigation Mobile - Menu hamburger -->
+      <div class="md:hidden relative">
+        <button onclick="toggleNavMenu()" class="p-2.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+          <a href="settings.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-shield-halved text-blue-400 w-5 mr-2"></i>Admin
+          </a>
+          <a href="models_manager.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-robot text-purple-400 w-5 mr-2"></i>Modèles
+          </a>
+          <a href="../index.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-home text-green-400 w-5 mr-2"></i>Accueil
+          </a>
+        </div>
       </div>
     </div>
 
@@ -151,31 +216,35 @@ $stats = $pdo->query("
     <?php endif; ?>
 
     <!-- Statistiques globales -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-4">
-        <div class="text-neutral-400 text-sm mb-1">Total utilisateurs</div>
-        <div class="text-2xl font-bold"><?= $stats['total_users'] ?></div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+      <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-3 sm:p-4">
+        <div class="text-neutral-400 text-xs sm:text-sm mb-1">Total utilisateurs</div>
+        <div class="text-xl sm:text-2xl font-bold"><?= $stats['total_users'] ?></div>
       </div>
-      <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-        <div class="text-blue-400 text-sm mb-1">Plan Free</div>
-        <div class="text-2xl font-bold text-blue-400"><?= $stats['free_users'] ?></div>
+      <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 sm:p-4">
+        <div class="text-blue-400 text-xs sm:text-sm mb-1">Plan Free</div>
+        <div class="text-xl sm:text-2xl font-bold text-blue-400"><?= $stats['free_users'] ?></div>
       </div>
-      <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-        <div class="text-purple-400 text-sm mb-1">Plan Basic</div>
-        <div class="text-2xl font-bold text-purple-400"><?= $stats['basic_users'] ?></div>
+      <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 sm:p-4">
+        <div class="text-purple-400 text-xs sm:text-sm mb-1">Plan Basic</div>
+        <div class="text-xl sm:text-2xl font-bold text-purple-400"><?= $stats['basic_users'] ?></div>
       </div>
-      <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-        <div class="text-amber-400 text-sm mb-1">Plan Premium</div>
-        <div class="text-2xl font-bold text-amber-400"><?= $stats['premium_users'] ?></div>
+      <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 sm:p-4">
+        <div class="text-amber-400 text-xs sm:text-sm mb-1">Plan Premium</div>
+        <div class="text-xl sm:text-2xl font-bold text-amber-400"><?= $stats['premium_users'] ?></div>
+      </div>
+      <div class="bg-rose-500/10 border border-rose-500/30 rounded-lg p-3 sm:p-4 col-span-2 sm:col-span-1">
+        <div class="text-rose-400 text-xs sm:text-sm mb-1">Plan Ultra</div>
+        <div class="text-xl sm:text-2xl font-bold text-rose-400"><?= $stats['ultra_users'] ?></div>
       </div>
     </div>
 
     <!-- Légende des plans -->
-    <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-6 mb-8">
-      <h2 class="text-xl font-semibold mb-4"><i class="fa-solid fa-list-check mr-2 text-green-500"></i>Plans disponibles</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-4 sm:p-6 mb-8">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4"><i class="fa-solid fa-list-check mr-2 text-green-500"></i>Plans disponibles</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-          <h3 class="text-blue-400 font-semibold mb-2">🆓 Free</h3>
+          <h3 class="text-blue-400 font-semibold mb-2"><i class="fa-solid fa-gift mr-1"></i>Free</h3>
           <ul class="space-y-1 text-sm text-neutral-300">
             <li>• 3 messages/heure</li>
             <li>• 10 messages/jour</li>
@@ -193,9 +262,17 @@ $stats = $pdo->query("
         <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
           <h3 class="text-amber-400 font-semibold mb-2"><i class="fa-solid fa-crown mr-1"></i>Premium</h3>
           <ul class="space-y-1 text-sm text-neutral-300">
-            <li>• ∞ Illimité</li>
-            <li>• ∞ Illimité</li>
-            <li>• ∞ Illimité</li>
+            <li>• 50 messages/heure</li>
+            <li>• 200 messages/jour</li>
+            <li>• 5000 messages/mois</li>
+          </ul>
+        </div>
+        <div class="bg-rose-500/10 border border-rose-500/30 rounded-lg p-4">
+          <h3 class="text-rose-400 font-semibold mb-2"><i class="fa-solid fa-rocket mr-1"></i>Ultra</h3>
+          <ul class="space-y-1 text-sm text-neutral-300">
+            <li>• 100 messages/heure</li>
+            <li>• ∞ Illimité/jour</li>
+            <li>• ∞ Illimité/mois</li>
           </ul>
         </div>
       </div>
@@ -230,6 +307,7 @@ $stats = $pdo->query("
                                                                               'free' => 'bg-blue-500/20 text-blue-400',
                                                                               'basic' => 'bg-purple-500/20 text-purple-400',
                                                                               'premium' => 'bg-amber-500/20 text-amber-400',
+                                                                              'ultra' => 'bg-rose-500/20 text-rose-400',
                                                                               default => 'bg-neutral-500/20 text-neutral-400'
                                                                             };
                                                                             ?>">
@@ -252,19 +330,43 @@ $stats = $pdo->query("
                   <span class="text-neutral-400 font-mono"><?= $user['monthly_limit'] == -1 ? '∞' : $user['monthly_limit'] ?></span>
                 </td>
                 <td class="p-4 text-right">
-                  <button onclick="openPlanModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', '<?= $user['user_plan'] ?>')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors">
-                    <i class="fa-solid fa-pen mr-1"></i>Modifier
-                  </button>
-                  <button onclick="openCustomModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', <?= $user['hourly_limit'] ?>, <?= $user['daily_limit'] ?>, <?= $user['monthly_limit'] ?>)" class="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded text-sm transition-colors ml-1">
-                    <i class="fa-solid fa-sliders mr-1"></i>Personnaliser
-                  </button>
-                  <form method="POST" class="inline" onsubmit="return confirm('Réinitialiser les compteurs pour <?= htmlspecialchars($user['username']) ?> ?')">
-                    <input type="hidden" name="action" value="reset_limits">
-                    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                    <button type="submit" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded text-sm transition-colors ml-1">
-                      <i class="fa-solid fa-rotate-right mr-1"></i>Reset
+                  <!-- Version Desktop -->
+                  <div class="hidden md:flex items-center justify-end gap-2">
+                    <button onclick="openPlanModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', '<?= $user['user_plan'] ?>')" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors">
+                      <i class="fa-solid fa-pen mr-1.5 text-blue-400"></i>Modifier
                     </button>
-                  </form>
+                    <button onclick="openCustomModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', <?= $user['hourly_limit'] ?>, <?= $user['daily_limit'] ?>, <?= $user['monthly_limit'] ?>)" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors">
+                      <i class="fa-solid fa-sliders mr-1.5 text-purple-400"></i>Personnaliser
+                    </button>
+                    <form method="POST" class="inline" onsubmit="return confirm('Réinitialiser les compteurs pour <?= htmlspecialchars($user['username']) ?> ?')">
+                      <input type="hidden" name="action" value="reset_limits">
+                      <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                      <button type="submit" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors">
+                        <i class="fa-solid fa-rotate-right mr-1.5 text-amber-400"></i>Reset
+                      </button>
+                    </form>
+                  </div>
+                  <!-- Version Mobile - Menu 3 points -->
+                  <div class="md:hidden relative">
+                    <button onclick="toggleActionsMenu(<?= $user['id'] ?>)" class="p-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div id="actionsMenu-<?= $user['id'] ?>" class="hidden absolute right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                      <button onclick="openPlanModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', '<?= $user['user_plan'] ?>'); closeAllMenus();" class="w-full px-4 py-2.5 text-left text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-pen text-blue-400 w-4"></i>Modifier
+                      </button>
+                      <button onclick="openCustomModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', <?= $user['hourly_limit'] ?>, <?= $user['daily_limit'] ?>, <?= $user['monthly_limit'] ?>); closeAllMenus();" class="w-full px-4 py-2.5 text-left text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-purple-400 w-4"></i>Personnaliser
+                      </button>
+                      <form method="POST" onsubmit="return confirm('Réinitialiser les compteurs pour <?= htmlspecialchars($user['username']) ?> ?')">
+                        <input type="hidden" name="action" value="reset_limits">
+                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                        <button type="submit" class="w-full px-4 py-2.5 text-left text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors flex items-center gap-2">
+                          <i class="fa-solid fa-rotate-right text-amber-400 w-4"></i>Reset
+                        </button>
+                      </form>
+                    </div>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -286,7 +388,7 @@ $stats = $pdo->query("
           <label class="flex items-center p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg cursor-pointer hover:bg-blue-500/20 transition-colors">
             <input type="radio" name="plan" value="free" class="mr-3">
             <div>
-              <div class="font-semibold text-blue-400">🆓 Free</div>
+              <div class="font-semibold text-blue-400"><i class="fa-solid fa-gift mr-1"></i>Free</div>
               <div class="text-xs text-neutral-400">3/h • 10/j • 200/mois</div>
             </div>
           </label>
@@ -303,7 +405,15 @@ $stats = $pdo->query("
             <input type="radio" name="plan" value="premium" class="mr-3">
             <div>
               <div class="font-semibold text-amber-400"><i class="fa-solid fa-crown mr-1"></i>Premium</div>
-              <div class="text-xs text-neutral-400">Illimité</div>
+              <div class="text-xs text-neutral-400">50/h • 200/j • 5000/mois</div>
+            </div>
+          </label>
+
+          <label class="flex items-center p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg cursor-pointer hover:bg-rose-500/20 transition-colors">
+            <input type="radio" name="plan" value="ultra" class="mr-3">
+            <div>
+              <div class="font-semibold text-rose-400"><i class="fa-solid fa-rocket mr-1"></i>Ultra</div>
+              <div class="text-xs text-neutral-400">100/h • Illimité</div>
             </div>
           </label>
         </div>
@@ -399,7 +509,57 @@ $stats = $pdo->query("
     document.getElementById('customModal').addEventListener('click', function(e) {
       if (e.target === this) closeCustomModal();
     });
+
+    // Menu actions mobile
+    function toggleActionsMenu(userId) {
+      closeAllMenus();
+      const menu = document.getElementById(`actionsMenu-${userId}`);
+      menu.classList.toggle('hidden');
+    }
+
+    function closeAllMenus() {
+      document.querySelectorAll('[id^="actionsMenu-"]').forEach(menu => {
+        menu.classList.add('hidden');
+      });
+      document.getElementById('navMenu')?.classList.add('hidden');
+    }
+
+    // Menu navigation mobile
+    function toggleNavMenu() {
+      closeAllMenus();
+      document.getElementById('navMenu').classList.toggle('hidden');
+    }
+
+    // Fermer le menu en cliquant ailleurs
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('[id^="actionsMenu-"]') && !e.target.closest('button[onclick^="toggleActionsMenu"]') &&
+        !e.target.closest('#navMenu') && !e.target.closest('button[onclick="toggleNavMenu()"]')) {
+        closeAllMenus();
+      }
+    });
+
+    // Bouton retour en haut
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 200) {
+        scrollToTopBtn.classList.add('visible');
+      } else {
+        scrollToTopBtn.classList.remove('visible');
+      }
+    });
+
+    scrollToTopBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   </script>
+
+  <!-- Bouton retour en haut -->
+  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
 </body>
 
 </html>

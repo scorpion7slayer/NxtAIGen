@@ -582,18 +582,35 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     ::-webkit-scrollbar-thumb:hover {
       background: #525252;
     }
+
+    /* Bouton retour en haut */
+    #scrollToTopBtn {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    }
+
+    #scrollToTopBtn.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #scrollToTopBtn:hover {
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 
-<body class="min-h-screen text-neutral-400">
+<body class="min-h-screen text-neutral-400 overflow-x-hidden">
   <!-- Header -->
   <header class="fixed top-0 left-0 right-0 z-50 bg-[oklch(21%_0.006_285.885)]/90 backdrop-blur-md border-b border-neutral-700/50">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-neutral-200 hover:text-white transition-colors">
         <img src="../assets/images/logo.svg" alt="NxtGenAI" class="w-7 h-7" />
-        <span>NxtGenAI</span>
+        <span class="hidden sm:inline">NxtGenAI</span>
       </a>
-      <nav class="flex items-center gap-4">
+      <!-- Navigation Desktop -->
+      <nav class="hidden md:flex items-center gap-4">
         <a href="settings.php" class="text-sm text-neutral-400 hover:text-blue-400 transition-colors">
           <i class="fa-solid fa-shield-halved mr-1.5"></i>Admin
         </a>
@@ -606,6 +623,31 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           <i class="fa-solid fa-sign-out-alt"></i>
         </a>
       </nav>
+      <!-- Navigation Mobile - Menu hamburger -->
+      <div class="md:hidden relative">
+        <button onclick="toggleNavMenu()" class="p-2.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[180px] py-1">
+          <div class="px-4 py-2 border-b border-neutral-700">
+            <span class="text-sm font-medium text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
+          </div>
+          <a href="settings.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-shield-halved text-blue-400 w-5 mr-2"></i>Admin
+          </a>
+          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-gauge-high text-amber-400 w-5 mr-2"></i>Rate Limits
+          </a>
+          <a href="../index.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+            <i class="fa-solid fa-home text-green-400 w-5 mr-2"></i>Accueil
+          </a>
+          <div class="border-t border-neutral-700 mt-1 pt-1">
+            <a href="../zone_membres/logout.php" class="block px-4 py-3 text-sm text-red-400 hover:bg-neutral-700 transition-colors">
+              <i class="fa-solid fa-sign-out-alt w-5 mr-2"></i>Déconnexion
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -694,6 +736,11 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
               <i class="fa-solid fa-ellipsis-v"></i>
             </button>
             <div id="bulkDropdown" class="hidden absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-10">
+              <!-- Actualiser (visible uniquement sur mobile dans ce menu) -->
+              <button onclick="refreshModels(); toggleBulkMenu();" class="md:hidden w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
+                <i class="fa-solid fa-refresh text-cyan-400"></i>Actualiser
+              </button>
+              <hr class="md:hidden border-neutral-700 my-1" />
               <button onclick="bulkToggle('enable')" class="w-full px-4 py-2 text-sm text-left text-neutral-300 hover:bg-neutral-700 flex items-center gap-2">
                 <i class="fa-solid fa-toggle-on text-green-400"></i>Tout activer
               </button>
@@ -713,10 +760,10 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
               </button>
             </div>
           </div>
-          <!-- Refresh -->
-          <button onclick="refreshModels()" class="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
+          <!-- Refresh (visible uniquement sur desktop, en mobile c'est dans le bulk menu) -->
+          <button onclick="refreshModels()" class="hidden md:flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
             <i class="fa-solid fa-refresh" id="refreshIcon"></i>
-            <span class="hidden md:inline">Actualiser</span>
+            <span>Actualiser</span>
           </button>
         </div>
       </div>
@@ -1579,7 +1626,28 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        closeModal();
+        closeNavMenu();
+      }
+    });
+
+    // Navigation mobile menu
+    function toggleNavMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('hidden');
+    }
+
+    function closeNavMenu() {
+      const menu = document.getElementById('navMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+
+    // Fermer les menus au clic extérieur
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('[onclick*="toggleNavMenu"]') && !e.target.closest('#navMenu')) {
+        closeNavMenu();
+      }
     });
 
     // Initialize toggle states from localStorage
@@ -1589,8 +1657,30 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
       // Apply saved provider states
       // (States are initialized on page load based on API key presence)
+
+      // Bouton retour en haut
+      const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 200) {
+          scrollToTopBtn.classList.add('visible');
+        } else {
+          scrollToTopBtn.classList.remove('visible');
+        }
+      });
+
+      scrollToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
     });
   </script>
+
+  <!-- Bouton retour en haut -->
+  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
 </body>
 
 </html>

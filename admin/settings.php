@@ -154,17 +154,63 @@ try {
     .dark ::selection {
       background: #404040;
     }
+
+    /* Scrollbar fine et discrète */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+    }
+
+    *::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(75, 85, 99, 0.5);
+      border-radius: 3px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.8);
+    }
+
+    /* Menu dropdown z-index élevé */
+    [id^="userActionsMenu-"] {
+      z-index: 100 !important;
+    }
+
+    /* Bouton retour en haut */
+    #scrollToTopBtn {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    }
+
+    #scrollToTopBtn.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #scrollToTopBtn:hover {
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 
-<body class="min-h-screen text-gray-600 dark:text-neutral-400">
+<body class="min-h-screen text-gray-600 dark:text-neutral-400 overflow-x-hidden">
   <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[oklch(21%_0.006_285.885)]/90 backdrop-blur-md border-b border-gray-200 dark:border-neutral-700/50">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-gray-800 dark:text-neutral-200 hover:text-gray-900 dark:hover:text-white transition-colors">
         <img src="../assets/images/logo.svg" alt="NxtGenAI" class="w-7 h-7" />
-        <span>NxtGenAI</span>
+        <span class="hidden sm:inline">NxtGenAI</span>
       </a>
-      <nav class="flex items-center gap-4">
+      <!-- Navigation Desktop -->
+      <nav class="hidden md:flex items-center gap-4">
         <span class="text-sm text-gray-500 dark:text-neutral-400"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
         <div class="w-px h-4 bg-gray-300 dark:bg-neutral-700"></div>
         <a href="../zone_membres/dashboard.php" class="text-sm text-gray-500 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
@@ -174,6 +220,34 @@ try {
           <i class="fa-solid fa-sign-out-alt"></i>
         </a>
       </nav>
+      <!-- Navigation Mobile - Menu hamburger -->
+      <div class="md:hidden relative">
+        <button onclick="toggleNavMenu()" class="p-2.5 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-600 dark:text-neutral-300 transition-colors">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-[180px] py-1">
+          <div class="px-4 py-2 border-b border-gray-100 dark:border-neutral-700">
+            <span class="text-sm font-medium text-gray-700 dark:text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+          </div>
+          <a href="models_manager.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-robot text-purple-500 dark:text-purple-400 w-5 mr-2"></i>Modèles
+          </a>
+          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-gauge-high text-amber-500 dark:text-amber-400 w-5 mr-2"></i>Rate Limits
+          </a>
+          <a href="../zone_membres/dashboard.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-user text-green-500 w-5 mr-2"></i>Compte
+          </a>
+          <a href="../index.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-home text-blue-500 w-5 mr-2"></i>Accueil
+          </a>
+          <div class="border-t border-gray-100 dark:border-neutral-700 mt-1 pt-1">
+            <a href="../zone_membres/logout.php" class="block px-4 py-3 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+              <i class="fa-solid fa-sign-out-alt w-5 mr-2"></i>Déconnexion
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -225,7 +299,7 @@ try {
         <?php if (empty($users)): ?>
           <p class="text-gray-500 dark:text-neutral-400 text-center py-8">Aucun utilisateur trouvé.</p>
         <?php else: ?>
-          <div class="overflow-x-auto">
+          <div class="overflow-visible">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-200 dark:border-neutral-700/50">
@@ -269,19 +343,37 @@ try {
                     </td>
                     <td class="py-3 px-4 text-right">
                       <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                        <div class="flex items-center justify-end gap-2">
-                          <button type="button" class="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/20 rounded-lg text-xs text-purple-600 dark:text-purple-400 transition-colors cursor-pointer"
+                        <!-- Desktop: boutons visibles -->
+                        <div class="hidden lg:flex items-center justify-end gap-2">
+                          <button type="button" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-xs text-neutral-300 hover:text-white transition-colors cursor-pointer"
                             onclick="openConfirmModal('toggle_admin', <?php echo $user['id']; ?>, '<?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?> cet utilisateur ?', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')">
-                            <?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?>
+                            <i class="fa-solid fa-<?php echo $user['is_admin'] ? 'arrow-down' : 'arrow-up'; ?> mr-1.5 text-purple-400"></i><?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?>
                           </button>
-                          <button type="button" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/20 rounded-lg text-xs text-amber-600 dark:text-amber-400 transition-colors cursor-pointer"
+                          <button type="button" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-xs text-neutral-300 hover:text-white transition-colors cursor-pointer"
                             onclick="openResetModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')">
-                            Réinitialiser MDP
+                            <i class="fa-solid fa-key mr-1.5 text-amber-400"></i>MDP
                           </button>
-                          <button type="button" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/20 rounded-lg text-xs text-red-500 dark:text-red-400 transition-colors cursor-pointer"
+                          <button type="button" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-xs text-neutral-300 hover:text-white transition-colors cursor-pointer"
                             onclick="openConfirmModal('delete_user', <?php echo $user['id']; ?>, 'Êtes-vous sûr ? Cette action est irréversible.', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')">
-                            Supprimer
+                            <i class="fa-solid fa-trash mr-1.5 text-red-400"></i>Supprimer
                           </button>
+                        </div>
+                        <!-- Mobile: menu 3 points -->
+                        <div class="lg:hidden relative">
+                          <button onclick="toggleUserActionsMenu(<?php echo $user['id']; ?>)" class="p-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                          </button>
+                          <div id="userActionsMenu-<?php echo $user['id']; ?>" class="hidden absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                            <button onclick="closeAllUserMenus(); openConfirmModal('toggle_admin', <?php echo $user['id']; ?>, '<?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?> cet utilisateur ?', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                              <i class="fa-solid fa-<?php echo $user['is_admin'] ? 'arrow-down' : 'arrow-up'; ?> text-purple-400 w-5 mr-2"></i><?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?>
+                            </button>
+                            <button onclick="closeAllUserMenus(); openResetModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                              <i class="fa-solid fa-key text-amber-400 w-5 mr-2"></i>Réinitialiser MDP
+                            </button>
+                            <button onclick="closeAllUserMenus(); openConfirmModal('delete_user', <?php echo $user['id']; ?>, 'Êtes-vous sûr ? Cette action est irréversible.', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                              <i class="fa-solid fa-trash w-5 mr-2"></i>Supprimer
+                            </button>
+                          </div>
                         </div>
                       <?php else: ?>
                         <span class="text-xs text-gray-400 dark:text-neutral-500">—</span>
@@ -356,6 +448,40 @@ try {
   </div>
 
   <script>
+    // Navigation mobile menu
+    function toggleNavMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('hidden');
+    }
+
+    function closeNavMenu() {
+      const menu = document.getElementById('navMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+
+    // User actions menu (mobile)
+    function toggleUserActionsMenu(userId) {
+      closeAllUserMenus();
+      const menu = document.getElementById('userActionsMenu-' + userId);
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function closeAllUserMenus() {
+      document.querySelectorAll('[id^="userActionsMenu-"]').forEach(menu => {
+        menu.classList.add('hidden');
+      });
+    }
+
+    // Fermer les menus au clic extérieur
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('[onclick*="toggleNavMenu"]') && !e.target.closest('#navMenu')) {
+        closeNavMenu();
+      }
+      if (!e.target.closest('[onclick*="toggleUserActionsMenu"]') && !e.target.closest('[id^="userActionsMenu-"]')) {
+        closeAllUserMenus();
+      }
+    });
+
     // Modal de confirmation
     function openConfirmModal(action, userId, message, username) {
       document.getElementById('confirmAction').value = action;
@@ -417,7 +543,29 @@ try {
         closeResetModal();
       }
     });
+
+    // Bouton retour en haut
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 200) {
+        scrollToTopBtn.classList.add('visible');
+      } else {
+        scrollToTopBtn.classList.remove('visible');
+      }
+    });
+
+    scrollToTopBtn.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   </script>
+
+  <!-- Bouton retour en haut -->
+  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
 </body>
 
 </html>
