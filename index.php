@@ -33,6 +33,13 @@ if ($isGuest) {
 
 $guestUsageCount = $_SESSION['guest_usage_count'] ?? 0;
 
+// ===== GDPR Cookie Consent =====
+$cookieConsentGiven = isset($_COOKIE['nxtgenai_consent']);
+$cookieConsent = null;
+if ($cookieConsentGiven) {
+  $cookieConsent = json_decode($_COOKIE['nxtgenai_consent'], true);
+}
+
 if (isset($_SESSION['user_id'])) {
   $stmt = $pdo->prepare("SELECT id, username, email FROM users WHERE id = ?");
   $stmt->execute([$_SESSION['user_id']]);
@@ -73,10 +80,22 @@ if ($user) {
   <!-- Marked.js pour le parsing Markdown -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.4/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Variables globales pour les scripts externes -->
+  <script>
+    window.isGuest = <?php echo $isGuest ? 'true' : 'false'; ?>;
+    window.guestUsageLimit = <?php echo GUEST_USAGE_LIMIT; ?>;
+  </script>
   <script src="assets/js/models.js" defer></script>
   <script src="assets/js/rate_limit_widget.js" defer></script>
   <title>NxtGenAI</title>
   <style>
+    /* Fix pour le scroll - empêcher le body de s'étendre */
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     @font-face {
       font-family: 'TikTok Sans';
       src: url('assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
@@ -201,7 +220,7 @@ if ($user) {
       font-style: italic;
     }
 
-    /* Curseur de streaming : rectangle plein style terminal/cmd */
+    /* Curseur de streaming */
     .streaming-cursor {
       display: inline-block;
       width: 0.6em;
@@ -415,6 +434,8 @@ if ($user) {
     .conversation-sidebar {
       width: 280px;
       min-width: 280px;
+      z-index: 40;
+      position: relative;
     }
 
     .conversation-sidebar[data-collapsed="true"] {
@@ -586,6 +607,11 @@ if ($user) {
       transform: rotate(180deg);
     }
 
+    /* Position par défaut du profil (desktop) - reste en bas à gauche, derrière la sidebar */
+    .profile-desktop-position {
+      left: 0.5rem;
+    }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
       .conversation-sidebar {
@@ -639,6 +665,7 @@ if ($user) {
       flex: 1;
       max-height: none;
       margin-bottom: 1rem;
+      min-height: 0;
     }
 
     #mainContent.chat-active #inputWrapper {
@@ -737,7 +764,7 @@ if ($user) {
       box-shadow: none !important;
     }
 
-    /* ===== MOBILE INPUT - VERSION DISTINCTE (style Perplexity) ===== */
+    /* ===== MOBILE INPUT - VERSION DISTINCTE ===== */
 
     /* Par défaut: mobile caché, desktop visible */
     #mobileInputContainer {
@@ -788,26 +815,26 @@ if ($user) {
         padding: 0 1rem;
       }
 
-      /* Style container mobile - style Perplexity */
+      /* Style container mobile - similaire au desktop */
       #mobileInputBox {
-        background: rgba(55, 65, 81, 0.5);
+        background: rgba(31, 41, 55, 0.5);
         border: 1px solid rgba(75, 85, 99, 0.5);
-        border-radius: 1.5rem;
-        padding: 0.875rem 1rem;
+        border-radius: 1rem;
+        padding: 1rem;
         width: 100%;
       }
 
-      /* Input mobile - clean et simple */
+      /* Input mobile - style desktop */
       #mobileMessageInput {
         width: 100%;
         background: transparent;
         border: none;
         outline: none;
-        color: #e5e7eb;
+        color: #d1d5db;
         font-size: 1rem;
         /* 16px évite zoom iOS */
         padding: 0;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
       }
 
       #mobileMessageInput::placeholder {
@@ -925,8 +952,25 @@ if ($user) {
         color: #e5e7eb;
       }
 
-      /* Cacher le bouton sidebar sur mobile */
+      /* Bouton historique sur mobile - visible en haut à gauche */
       #openSidebarBtn {
+        display: flex !important;
+        position: fixed !important;
+        top: 0.75rem !important;
+        left: 0.75rem !important;
+        padding: 0.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50% !important;
+        background: rgba(31, 41, 55, 0.9) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+      }
+
+      /* Cacher le bouton historique quand sidebar ouverte sur mobile */
+      #openSidebarBtn.hidden {
         display: none !important;
       }
 
@@ -937,26 +981,42 @@ if ($user) {
         top: 0.75rem !important;
         left: auto !important;
         right: 0.75rem !important;
+        width: auto !important;
+      }
+
+      /* Surcharger la classe desktop */
+      #profileContainer.profile-desktop-position {
+        left: auto !important;
       }
 
       #profileContainer .flex.items-center.gap-2 {
         flex-direction: row;
+        gap: 0.5rem !important;
       }
 
-      #profileContainer a {
-        padding: 0.375rem 0.75rem !important;
-        font-size: 0.75rem !important;
+      /* Boutons auth en rond sur mobile */
+      #profileContainer a.rounded-full {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
       }
 
-      /* Profile button (connecté) - plus compact */
-      #profileButton {
-        padding: 0.375rem 0.5rem !important;
+      #profileContainer a.rounded-full span {
+        display: none !important;
       }
 
-      #profileButton .w-10 {
-        width: 2rem !important;
-        height: 2rem !important;
-        font-size: 0.75rem;
+      #profileContainer a.rounded-full i {
+        margin: 0 !important;
+      }
+
+      /* Profile button (connecté) - dimensions gérées globalement */
+      /* Cacher l'indicateur chevron sur mobile */
+      #profileButton #profileIcon {
+        display: none !important;
       }
 
       /* Menu profil sur mobile - s'afficher en dessous */
@@ -1016,10 +1076,7 @@ if ($user) {
         display: none;
       }
 
-      /* Profile container mobile */
-      #profileContainer {
-        left: 0.5rem !important;
-      }
+      /* Profile container mobile - position gérée via right (défini plus haut) */
 
       /* Menu modèles - repositionné pour mobile */
       #modelMenu {
@@ -1403,30 +1460,16 @@ if ($user) {
       background: rgba(55, 65, 81, 0.8);
     }
 
-    /* ===== OVERRIDE MOBILE - Cacher menus desktop ===== */
-    @media (max-width: 640px) {
+    /* ===== OVERRIDE MOBILE/TABLETTE - Cacher menus desktop ===== */
+    @media (max-width: 800px) {
 
-      /* Cacher le menu modèles desktop sur mobile */
+      /* Cacher le menu modèles desktop sur mobile/tablette */
       #modelMenu {
         display: none !important;
       }
 
-      /* Cacher le menu profil desktop sur mobile */
+      /* Cacher le menu profil desktop sur mobile/tablette */
       #profileMenu {
-        display: none !important;
-      }
-
-      /* Style du bouton profil mobile */
-      #profileButton {
-        padding: 0.5rem !important;
-      }
-
-      #profileButton .w-10 {
-        width: 2.25rem !important;
-        height: 2.25rem !important;
-      }
-
-      #profileButton #profileIcon {
         display: none !important;
       }
 
@@ -1442,13 +1485,413 @@ if ($user) {
     }
 
     /* Cacher le trigger auth sur desktop */
-    @media (min-width: 641px) {
+    @media (min-width: 801px) {
 
       #mobileAuthTrigger,
       #mobileModelSheet,
       #mobileProfileSheet,
       #mobileAuthSheet {
         display: none !important;
+      }
+    }
+
+    /* ===== TABLETTE (641px - 1024px) ===== */
+    @media (min-width: 641px) and (max-width: 1024px) {
+
+      /* Sidebar plus étroite sur tablette */
+      .conversation-sidebar {
+        width: 240px;
+        min-width: 240px;
+      }
+
+      /* Ajuster la position du profil */
+      .profile-desktop-position {
+        left: calc(240px + 0.5rem);
+      }
+
+      /* Zone de saisie adaptée */
+      #inputWrapper {
+        max-width: 90%;
+      }
+
+      /* Chat container plus large */
+      #chatContainer {
+        max-width: 90%;
+      }
+    }
+
+    /* ===== BOUTON PROFIL - TOUJOURS ROND (toutes tailles) ===== */
+    #profileButton {
+      width: 3rem;
+      height: 3rem;
+      min-width: 3rem;
+      min-height: 3rem;
+      border-radius: 9999px !important;
+      padding: 0 !important;
+    }
+
+    /* Sur mobile, légèrement plus petit */
+    @media (max-width: 640px) {
+      #profileButton {
+        width: 2.5rem;
+        height: 2.5rem;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+      }
+    }
+
+    /* ===== GDPR COOKIE CONSENT BANNER ===== */
+    #cookieConsentBanner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: linear-gradient(to top, rgba(33, 33, 33, 0.98), rgba(33, 33, 33, 0.95));
+      border-top: 1px solid rgba(66, 66, 66, 0.8);
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
+    }
+
+    #cookieConsentBanner.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #cookieConsentBanner.hiding {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+
+    .cookie-banner-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .cookie-banner-text {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .cookie-banner-text h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f3f4f6;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cookie-banner-text h3 i {
+      color: #10b981;
+    }
+
+    .cookie-banner-text p {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .cookie-banner-text a {
+      color: #10b981;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .cookie-banner-text a:hover {
+      color: #34d399;
+    }
+
+    .cookie-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .cookie-btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .cookie-btn-accept {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .cookie-btn-accept:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .cookie-btn-reject {
+      background: rgba(75, 85, 99, 0.5);
+      color: #d1d5db;
+    }
+
+    .cookie-btn-reject:hover {
+      background: rgba(75, 85, 99, 0.8);
+    }
+
+    .cookie-btn-settings {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid rgba(75, 85, 99, 0.5);
+    }
+
+    .cookie-btn-settings:hover {
+      background: rgba(75, 85, 99, 0.3);
+      color: #e5e7eb;
+      border-color: rgba(107, 114, 128, 0.6);
+    }
+
+    /* Modal paramètres cookies */
+    #cookieSettingsModal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #cookieSettingsModal.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .cookie-settings-content {
+      background: #1f2937;
+      border: 1px solid rgba(75, 85, 99, 0.5);
+      border-radius: 1rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.3s ease;
+    }
+
+    #cookieSettingsModal.visible .cookie-settings-content {
+      transform: scale(1) translateY(0);
+    }
+
+    .cookie-settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    .cookie-settings-header h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #f3f4f6;
+      margin: 0;
+    }
+
+    .cookie-settings-close {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .cookie-settings-close:hover {
+      background: rgba(75, 85, 99, 0.5);
+      color: #f3f4f6;
+    }
+
+    .cookie-settings-body {
+      padding: 1.5rem;
+    }
+
+    .cookie-category {
+      padding: 1rem;
+      background: rgba(55, 65, 81, 0.3);
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .cookie-category:last-child {
+      margin-bottom: 0;
+    }
+
+    .cookie-category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .cookie-category-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .cookie-category-desc {
+      font-size: 0.8125rem;
+      color: #9ca3af;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Toggle switch */
+    .cookie-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .cookie-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .cookie-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(75, 85, 99, 0.5);
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+    }
+
+    .cookie-toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    .cookie-toggle input:checked+.cookie-toggle-slider {
+      background: #10b981;
+    }
+
+    .cookie-toggle input:checked+.cookie-toggle-slider::before {
+      transform: translateX(20px);
+    }
+
+    .cookie-toggle input:disabled+.cookie-toggle-slider {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .cookie-toggle input:disabled+.cookie-toggle-slider::before {
+      background: #d1d5db;
+    }
+
+    .cookie-settings-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    /* Mobile responsive cookie banner */
+    @media (max-width: 640px) {
+      #cookieConsentBanner {
+        padding: 1rem;
+      }
+
+      .cookie-banner-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+
+      .cookie-banner-text {
+        min-width: 100%;
+      }
+
+      .cookie-banner-text h3 {
+        justify-content: center;
+      }
+
+      .cookie-banner-actions {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .cookie-btn {
+        flex: 1;
+        min-width: 80px;
+      }
+    }
+
+    /* ===== BOUTON DESCENDRE EN BAS DU CHAT ===== */
+    #scrollToBottomBtn {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    }
+
+    #scrollToBottomBtn.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* Desktop: centré */
+    @media (min-width: 769px) {
+      #scrollToBottomBtn {
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+      }
+
+      #scrollToBottomBtn.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Mobile/Tablette: aligné à droite */
+    @media (max-width: 768px) {
+      #scrollToBottomBtn {
+        right: 1rem;
+        left: auto;
       }
     }
   </style>
@@ -1588,6 +2031,10 @@ if ($user) {
             <i class="fa-solid fa-gear" aria-hidden="true"></i>
             <span>Paramètres</span>
           </a>
+          <a href="zone_membres/subscription.php" class="mobile-profile-item">
+            <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+            <span>Abonnements</span>
+          </a>
           <?php if ($isAdmin): ?>
             <a href="admin/settings.php" class="mobile-profile-item">
               <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
@@ -1641,8 +2088,13 @@ if ($user) {
       aria-live="polite"
       aria-atomic="false"
       aria-label="Conversation avec l'assistant IA"
-      class="w-full max-w-2xl mb-4 flex-1 overflow-y-auto space-y-4 hidden transition-all duration-500 ease-out">
+      class="w-full max-w-2xl mb-4 flex-1 overflow-y-auto space-y-4 hidden transition-all duration-500 ease-out min-h-0">
     </div>
+
+    <!-- Bouton descendre en bas du chat -->
+    <button id="scrollToBottomBtn" class="fixed z-40 bottom-32 w-10 h-10 rounded-full bg-gray-700/80 hover:bg-gray-600 border border-gray-600/50 text-gray-300 hover:text-white shadow-lg backdrop-blur-sm transition-all duration-200 cursor-pointer flex items-center justify-center" aria-label="Descendre en bas de la conversation">
+      <i class="fa-solid fa-chevron-down text-sm"></i>
+    </button>
 
     <!-- Message d'accueil -->
     <div id="welcomeMessage" class="justify-center mb-6 text-center max-w-2xl text-gray-400/90 transition-all duration-500 ease-out">
@@ -1694,18 +2146,7 @@ if ($user) {
             <!-- Bouton ampoule -->
             <button
               class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+              <i class="fa-solid fa-lightbulb"></i>
             </button>
             <?php if ($isGuest): ?>
               <!-- Badge utilisations restantes pour visiteurs -->
@@ -1767,19 +2208,7 @@ if ($user) {
               aria-disabled="true"
               disabled
               class="p-2 rounded-lg text-gray-600 cursor-not-allowed focus:outline-none">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
+              <i class="fa-solid fa-globe"></i>
             </button>
 
             <!-- Trombone -->
@@ -1788,19 +2217,7 @@ if ($user) {
               aria-label="Joindre un fichier"
               aria-describedby="fileTypesAllowed"
               class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
+              <i class="fa-solid fa-paperclip"></i>
             </button>
             <span id="fileTypesAllowed" class="sr-only">Formats acceptés: images, PDF, Word, texte, CSV, JSON, XML, Markdown. Taille max: 10 MB</span>
             <!-- Input file caché -->
@@ -1817,19 +2234,7 @@ if ($user) {
               aria-label="Dicter un message (reconnaissance vocale)"
               aria-pressed="false"
               class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
+              <i class="fa-solid fa-microphone-lines"></i>
             </button>
 
             <!-- Bouton envoyer -->
@@ -1839,18 +2244,7 @@ if ($user) {
               aria-label="Envoyer le message"
               aria-disabled="true"
               class="p-2 rounded-lg bg-gray-700 text-gray-400 transition-all duration-300 ease-in-out cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+              <i class="fa-solid fa-paper-plane"></i>
             </button>
           </div>
         </div>
@@ -1910,7 +2304,7 @@ if ($user) {
       </div>
     </div>
 
-    <!-- ===== ZONE DE SAISIE MOBILE (style Perplexity) ===== -->
+    <!-- ===== ZONE DE SAISIE MOBILE ===== -->
     <div id="mobileInputContainer" aria-label="Zone de saisie mobile">
       <!-- Container principal mobile -->
       <div id="mobileInputBox">
@@ -1939,18 +2333,19 @@ if ($user) {
               </svg>
             </button>
 
+            <!-- Bouton recherche web (désactivé) -->
+            <button id="mobileWebSearchButton" class="mobile-icon-btn" aria-label="Recherche web (non disponible)" aria-disabled="true" disabled style="opacity: 0.4; cursor: not-allowed;">
+              <i class="fa-solid fa-globe"></i>
+            </button>
+
             <!-- Bouton joindre fichier -->
             <button id="mobileAttachButton" class="mobile-icon-btn" aria-label="Joindre un fichier">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
+              <i class="fa-solid fa-paperclip"></i>
             </button>
 
             <!-- Bouton micro -->
             <button id="mobileMicButton" class="mobile-icon-btn" aria-label="Dicter un message" aria-pressed="false">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
+              <i class="fa-solid fa-microphone-lines"></i>
             </button>
 
             <?php if ($isGuest): ?>
@@ -1965,9 +2360,7 @@ if ($user) {
 
           <!-- Bouton envoyer mobile -->
           <button id="mobileSendButton" disabled aria-label="Envoyer le message" aria-disabled="true">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <i class="fa-solid fa-paper-plane"></i>
           </button>
         </div>
       </div>
@@ -1975,7 +2368,7 @@ if ($user) {
     <!-- ===== FIN ZONE MOBILE ===== -->
 
     <!-- profil -->
-    <div class="fixed bottom-2 z-30" style="left: calc(280px + 0.5rem);" id="profileContainer">
+    <div class="fixed bottom-2 z-30 profile-desktop-position" id="profileContainer">
       <?php if ($user): ?>
         <!-- Menu déroulant (utilisateur connecté) -->
         <div
@@ -1998,6 +2391,10 @@ if ($user) {
               <i class="fa-solid fa-gear w-4"></i>
               <span>Paramètres</span>
             </a>
+            <a href="zone_membres/subscription.php" class="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-gray-700/50 transition-colors">
+              <i class="fa-solid fa-credit-card w-4"></i>
+              <span>Abonnements</span>
+            </a>
             <?php if ($isAdmin): ?>
               <a
                 href="admin/settings.php"
@@ -2017,16 +2414,19 @@ if ($user) {
         </div>
 
         <!-- Bouton avatar (utilisateur connecté) -->
-        <div
+        <button
           id="profileButton"
-          class="flex items-center gap-2 rounded-full border border-gray-700/50 px-3 py-2 hover:bg-gray-700/50 cursor-pointer transition-colors">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-medium">
-            <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
-          </div>
-          <i
+          aria-label="Menu profil"
+          aria-haspopup="true"
+          aria-expanded="false"
+          class="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+          <span class="text-white font-semibold text-lg"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span>
+          <span
             id="profileIcon"
-            class="fa-solid fa-angle-up text-gray-400 transition-transform duration-300 ease-in-out rotate-180"></i>
-        </div>
+            class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gray-800 rounded-full flex items-center justify-center border-2 border-gray-700">
+            <i class="fa-solid fa-chevron-down text-[8px] text-gray-400 transition-transform duration-300 ease-in-out"></i>
+          </span>
+        </button>
       <?php else: ?>
         <!-- Boutons connexion/inscription (non connecté) -->
         <div class="flex items-center gap-2">
@@ -2055,9 +2455,7 @@ if ($user) {
   </main>
 
   <script>
-    // État utilisateur
-    const isGuest = <?php echo $isGuest ? 'true' : 'false'; ?>;
-    const guestUsageLimit = <?php echo GUEST_USAGE_LIMIT; ?>;
+    // État utilisateur (isGuest et guestUsageLimit déjà définis dans le head)
     let guestUsageCount = <?php echo $guestUsageCount; ?>;
 
     // Timer de réinitialisation pour les visiteurs
@@ -2270,6 +2668,53 @@ if ($user) {
       });
       chatObserver.observe(chatContainer, {
         childList: true,
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      // ===== BOUTON DESCENDRE EN BAS DU CHAT =====
+      const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+      // Fonction pour vérifier si l'utilisateur est proche du bas
+      function isNearBottom() {
+        const threshold = 150; // pixels du bas
+        return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < threshold;
+      }
+
+      // Fonction pour mettre à jour la visibilité du bouton
+      function updateScrollToBottomBtn() {
+        const isVisible = !chatContainer.classList.contains('hidden');
+        const hasContent = chatContainer.scrollHeight > chatContainer.clientHeight;
+        const notNearBottom = !isNearBottom();
+
+        if (isVisible && hasContent && notNearBottom) {
+          scrollToBottomBtn.classList.add('visible');
+        } else {
+          scrollToBottomBtn.classList.remove('visible');
+        }
+      }
+
+      // Écouter le scroll du chat
+      chatContainer.addEventListener('scroll', updateScrollToBottomBtn);
+
+      // Clic sur le bouton -> descendre en bas
+      if (scrollToBottomBtn) {
+        scrollToBottomBtn.addEventListener('click', function() {
+          chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      // Mettre à jour quand le contenu change
+      const scrollBtnObserver = new MutationObserver(function() {
+        // Petit délai pour laisser le DOM se mettre à jour
+        setTimeout(updateScrollToBottomBtn, 100);
+      });
+      scrollBtnObserver.observe(chatContainer, {
+        childList: true,
+        subtree: true,
         attributes: true,
         attributeFilter: ['class']
       });
@@ -3536,6 +3981,11 @@ if ($user) {
       let isMenuOpen = false;
 
       profileButton.addEventListener("click", function(e) {
+        // Sur mobile/tablette, laisser le handler mobile gérer l'événement
+        if (window.innerWidth <= 800) {
+          return; // Le handler avec capture:true ouvrira le bottom sheet
+        }
+
         e.stopPropagation();
         isMenuOpen = !isMenuOpen;
 
@@ -3613,7 +4063,7 @@ if ($user) {
     if (sidebarCollapsed) {
       conversationSidebar.dataset.collapsed = 'true';
       openSidebarBtn.classList.remove('hidden');
-      if (profileContainer) {
+      if (profileContainer && window.innerWidth >= 640) {
         profileContainer.style.left = '0.5rem';
       }
     }
@@ -3635,10 +4085,7 @@ if ($user) {
         overlay.classList.toggle('visible', isCollapsed);
       }
 
-      // Ajuster la position du profil
-      if (profileContainer) {
-        profileContainer.style.left = isCollapsed ? 'calc(280px + 0.5rem)' : '0.5rem';
-      }
+      // Le profil reste fixe en bas à gauche, derrière la sidebar (z-index 30 < 40)
     }
 
     toggleSidebarBtn.addEventListener('click', toggleSidebar);
@@ -4335,12 +4782,12 @@ if ($user) {
       });
     }
 
-    // Modifier le comportement du bouton profil sur mobile
+    // Modifier le comportement du bouton profil sur mobile/tablette
     <?php if ($user): ?>
       const profileButtonEl = document.getElementById('profileButton');
       if (profileButtonEl) {
         profileButtonEl.addEventListener('click', function(e) {
-          if (window.innerWidth <= 640) {
+          if (window.innerWidth <= 800) {
             e.preventDefault();
             e.stopPropagation();
             openMobileProfileSheet();
@@ -4421,14 +4868,279 @@ if ($user) {
     setupSwipeToClose('mobileAuthSheet', closeMobileAuthSheet);
 
     // Synchroniser l'affichage du modèle quand models.js charge
-    document.addEventListener('modelsLoaded', function() {
+    document.addEventListener('modelsLoaded', function(e) {
       syncModelDisplay();
       // Recharger le cache mobile
       if (typeof modelManager !== 'undefined' && modelManager.models) {
         mobileModelsCache = modelManager.models;
       }
+      // Pré-rendre la liste mobile si le sheet existe
+      const mobileList = document.getElementById('mobileModelList');
+      if (mobileList && mobileModelsCache && mobileModelsCache.length > 0) {
+        renderMobileModelList(mobileModelsCache);
+      }
+    });
+
+    // ===== GDPR COOKIE CONSENT MANAGEMENT =====
+    const CookieConsent = {
+      cookieName: 'nxtgenai_consent',
+      cookieExpireDays: 365,
+
+      // Vérifier si le consentement existe
+      hasConsent: function() {
+        return this.getCookie(this.cookieName) !== null;
+      },
+
+      // Lire un cookie
+      getCookie: function(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          try {
+            return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+          } catch (e) {
+            return null;
+          }
+        }
+        return null;
+      },
+
+      // Sauvegarder le consentement
+      saveConsent: function(preferences) {
+        const consent = {
+          necessary: true, // Toujours true
+          analytics: preferences.analytics || false,
+          marketing: preferences.marketing || false,
+          timestamp: new Date().toISOString()
+        };
+
+        const expires = new Date();
+        expires.setDate(expires.getDate() + this.cookieExpireDays);
+
+        // Déterminer si on est en HTTPS pour le flag Secure
+        const isSecure = window.location.protocol === 'https:';
+        const secureFlag = isSecure ? '; Secure' : '';
+
+        document.cookie = `${this.cookieName}=${encodeURIComponent(JSON.stringify(consent))}; expires=${expires.toUTCString()}; path=/${secureFlag}; SameSite=Lax`;
+
+        return consent;
+      },
+
+      // Accepter tous les cookies
+      acceptAll: function() {
+        const consent = this.saveConsent({
+          analytics: true,
+          marketing: true
+        });
+        this.hideBanner();
+        this.onConsentChange(consent);
+      },
+
+      // Refuser les cookies non essentiels
+      rejectAll: function() {
+        const consent = this.saveConsent({
+          analytics: false,
+          marketing: false
+        });
+        this.hideBanner();
+        this.onConsentChange(consent);
+      },
+
+      // Sauvegarder les préférences personnalisées
+      savePreferences: function() {
+        const analytics = document.getElementById('cookieAnalytics')?.checked || false;
+        const marketing = document.getElementById('cookieMarketing')?.checked || false;
+        const consent = this.saveConsent({
+          analytics,
+          marketing
+        });
+        this.closeSettings();
+        this.hideBanner();
+        this.onConsentChange(consent);
+      },
+
+      // Afficher le bandeau
+      showBanner: function() {
+        const banner = document.getElementById('cookieConsentBanner');
+        if (banner) {
+          // Petit délai pour l'animation d'entrée
+          setTimeout(() => {
+            banner.classList.add('visible');
+          }, 300);
+        }
+      },
+
+      // Masquer le bandeau
+      hideBanner: function() {
+        const banner = document.getElementById('cookieConsentBanner');
+        if (banner) {
+          banner.classList.remove('visible');
+          banner.classList.add('hiding');
+          setTimeout(() => {
+            banner.classList.remove('hiding');
+            banner.style.display = 'none';
+          }, 400);
+        }
+      },
+
+      // Ouvrir la modal des paramètres
+      openSettings: function() {
+        const modal = document.getElementById('cookieSettingsModal');
+        if (modal) {
+          modal.classList.add('visible');
+          document.body.style.overflow = 'hidden';
+
+          // Pré-remplir avec les préférences actuelles
+          const current = this.getCookie(this.cookieName);
+          if (current) {
+            const analyticsCheckbox = document.getElementById('cookieAnalytics');
+            const marketingCheckbox = document.getElementById('cookieMarketing');
+            if (analyticsCheckbox) analyticsCheckbox.checked = current.analytics || false;
+            if (marketingCheckbox) marketingCheckbox.checked = current.marketing || false;
+          }
+        }
+      },
+
+      // Fermer la modal des paramètres
+      closeSettings: function() {
+        const modal = document.getElementById('cookieSettingsModal');
+        if (modal) {
+          modal.classList.remove('visible');
+          document.body.style.overflow = '';
+        }
+      },
+
+      // Callback quand le consentement change
+      onConsentChange: function(consent) {
+        console.log('[GDPR] Consentement mis à jour:', consent);
+        // Ici vous pouvez charger/bloquer les scripts selon le consentement
+        // Exemple: if (consent.analytics) { loadGoogleAnalytics(); }
+      },
+
+      // Initialisation
+      init: function() {
+        if (!this.hasConsent()) {
+          this.showBanner();
+        }
+
+        // Gestionnaires d'événements
+        document.getElementById('cookieAcceptAll')?.addEventListener('click', () => this.acceptAll());
+        document.getElementById('cookieRejectAll')?.addEventListener('click', () => this.rejectAll());
+        document.getElementById('cookieOpenSettings')?.addEventListener('click', () => this.openSettings());
+        document.getElementById('cookieSettingsClose')?.addEventListener('click', () => this.closeSettings());
+        document.getElementById('cookieSavePreferences')?.addEventListener('click', () => this.savePreferences());
+
+        // Fermer modal au clic sur le backdrop
+        document.getElementById('cookieSettingsModal')?.addEventListener('click', (e) => {
+          if (e.target.id === 'cookieSettingsModal') {
+            this.closeSettings();
+          }
+        });
+
+        // Fermer modal avec Escape
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            const modal = document.getElementById('cookieSettingsModal');
+            if (modal?.classList.contains('visible')) {
+              this.closeSettings();
+            }
+          }
+        });
+      }
+    };
+
+    // Initialiser le gestionnaire de cookies au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+      CookieConsent.init();
     });
   </script>
+
+  <!-- GDPR Cookie Consent Banner -->
+  <?php if (!$cookieConsentGiven): ?>
+    <div id="cookieConsentBanner" role="dialog" aria-labelledby="cookieConsentTitle" aria-describedby="cookieConsentDesc">
+      <div class="cookie-banner-content">
+        <div class="cookie-banner-text">
+          <h3 id="cookieConsentTitle"><i class="fa-solid fa-cookie-bite"></i> Nous utilisons des cookies</h3>
+          <p id="cookieConsentDesc">
+            Ce site utilise des cookies pour améliorer votre expérience, analyser le trafic et personnaliser le contenu.
+            En cliquant sur "Accepter tout", vous consentez à l'utilisation de tous les cookies.
+            <a href="#" onclick="return false;">Politique de confidentialité</a>
+          </p>
+        </div>
+        <div class="cookie-banner-actions">
+          <button type="button" id="cookieRejectAll" class="cookie-btn cookie-btn-reject">
+            Refuser
+          </button>
+          <button type="button" id="cookieOpenSettings" class="cookie-btn cookie-btn-settings">
+            <i class="fa-solid fa-sliders"></i> Paramètres
+          </button>
+          <button type="button" id="cookieAcceptAll" class="cookie-btn cookie-btn-accept">
+            <i class="fa-solid fa-check"></i> Accepter tout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Paramètres Cookies -->
+    <div id="cookieSettingsModal" role="dialog" aria-labelledby="cookieSettingsTitle" aria-modal="true">
+      <div class="cookie-settings-content">
+        <div class="cookie-settings-header">
+          <h3 id="cookieSettingsTitle">Paramètres des cookies</h3>
+          <button type="button" id="cookieSettingsClose" class="cookie-settings-close" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="cookie-settings-body">
+          <!-- Cookies nécessaires (toujours actifs) -->
+          <div class="cookie-category">
+            <div class="cookie-category-header">
+              <span class="cookie-category-title">Cookies essentiels</span>
+              <label class="cookie-toggle">
+                <input type="checkbox" checked disabled>
+                <span class="cookie-toggle-slider"></span>
+              </label>
+            </div>
+            <p class="cookie-category-desc">
+              Ces cookies sont indispensables au fonctionnement du site. Ils permettent la navigation, la connexion et l'accès aux fonctionnalités de base.
+            </p>
+          </div>
+
+          <!-- Cookies analytiques -->
+          <div class="cookie-category">
+            <div class="cookie-category-header">
+              <span class="cookie-category-title">Cookies analytiques</span>
+              <label class="cookie-toggle">
+                <input type="checkbox" id="cookieAnalytics">
+                <span class="cookie-toggle-slider"></span>
+              </label>
+            </div>
+            <p class="cookie-category-desc">
+              Ces cookies nous aident à comprendre comment les visiteurs interagissent avec le site en collectant des informations anonymes.
+            </p>
+          </div>
+
+          <!-- Cookies marketing -->
+          <div class="cookie-category">
+            <div class="cookie-category-header">
+              <span class="cookie-category-title">Cookies marketing</span>
+              <label class="cookie-toggle">
+                <input type="checkbox" id="cookieMarketing">
+                <span class="cookie-toggle-slider"></span>
+              </label>
+            </div>
+            <p class="cookie-category-desc">
+              Ces cookies sont utilisés pour afficher des publicités pertinentes et mesurer l'efficacité des campagnes publicitaires.
+            </p>
+          </div>
+        </div>
+        <div class="cookie-settings-footer">
+          <button type="button" id="cookieSavePreferences" class="cookie-btn cookie-btn-accept">
+            <i class="fa-solid fa-check"></i> Enregistrer mes préférences
+          </button>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
 </body>
 
 </html>

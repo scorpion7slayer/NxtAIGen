@@ -143,16 +143,16 @@ include 'header.php';
 
           <?php if ($githubConnected): ?>
             <a href="../api/github/disconnect.php"
-              class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-500 dark:text-red-400 transition-colors"
+              class="px-2 sm:px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-500 dark:text-red-400 transition-colors flex items-center"
               onclick="return confirm('Voulez-vous vraiment déconnecter votre compte GitHub ?');">
-              <i class="fa-solid fa-unlink mr-1"></i>
-              Déconnecter
+              <i class="fa-solid fa-unlink sm:mr-1"></i>
+              <span class="hidden sm:inline">Déconnecter</span>
             </a>
           <?php else: ?>
             <a href="../api/github/connect.php"
-              class="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-600 dark:text-green-400 transition-colors">
-              <i class="fa-brands fa-github mr-1"></i>
-              Connecter
+              class="px-2 sm:px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-600 dark:text-green-400 transition-colors flex items-center">
+              <i class="fa-brands fa-github sm:mr-1"></i>
+              <span class="hidden sm:inline">Connecter</span>
             </a>
           <?php endif; ?>
         </div>

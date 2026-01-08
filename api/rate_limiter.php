@@ -217,7 +217,8 @@ class RateLimiter
    */
   private function getNextResetTime($type, $lastReset)
   {
-    $time = strtotime($lastReset);
+    // Si lastReset est NULL (nouvel utilisateur), utiliser le timestamp actuel
+    $time = $lastReset !== null ? strtotime($lastReset) : time();
     switch ($type) {
       case 'hourly':
         return date('Y-m-d H:i:s', $time + 3600);
