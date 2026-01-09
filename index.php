@@ -1860,40 +1860,6 @@ if ($user) {
         min-width: 80px;
       }
     }
-
-    /* ===== BOUTON DESCENDRE EN BAS DU CHAT ===== */
-    #scrollToBottomBtn {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(10px);
-      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    }
-
-    #scrollToBottomBtn.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    /* Desktop: centré */
-    @media (min-width: 769px) {
-      #scrollToBottomBtn {
-        left: 50%;
-        transform: translateX(-50%) translateY(10px);
-      }
-
-      #scrollToBottomBtn.visible {
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-
-    /* Mobile/Tablette: aligné à droite */
-    @media (max-width: 768px) {
-      #scrollToBottomBtn {
-        right: 1rem;
-        left: auto;
-      }
-    }
   </style>
 </head>
 
@@ -2090,11 +2056,6 @@ if ($user) {
       aria-label="Conversation avec l'assistant IA"
       class="w-full max-w-2xl mb-4 flex-1 overflow-y-auto space-y-4 hidden transition-all duration-500 ease-out min-h-0">
     </div>
-
-    <!-- Bouton descendre en bas du chat -->
-    <button id="scrollToBottomBtn" class="fixed z-40 bottom-32 w-10 h-10 rounded-full bg-gray-700/80 hover:bg-gray-600 border border-gray-600/50 text-gray-300 hover:text-white shadow-lg backdrop-blur-sm transition-all duration-200 cursor-pointer flex items-center justify-center" aria-label="Descendre en bas de la conversation">
-      <i class="fa-solid fa-chevron-down text-sm"></i>
-    </button>
 
     <!-- Message d'accueil -->
     <div id="welcomeMessage" class="justify-center mb-6 text-center max-w-2xl text-gray-400/90 transition-all duration-500 ease-out">
@@ -2668,53 +2629,6 @@ if ($user) {
       });
       chatObserver.observe(chatContainer, {
         childList: true,
-        attributes: true,
-        attributeFilter: ['class']
-      });
-
-      // ===== BOUTON DESCENDRE EN BAS DU CHAT =====
-      const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-
-      // Fonction pour vérifier si l'utilisateur est proche du bas
-      function isNearBottom() {
-        const threshold = 150; // pixels du bas
-        return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < threshold;
-      }
-
-      // Fonction pour mettre à jour la visibilité du bouton
-      function updateScrollToBottomBtn() {
-        const isVisible = !chatContainer.classList.contains('hidden');
-        const hasContent = chatContainer.scrollHeight > chatContainer.clientHeight;
-        const notNearBottom = !isNearBottom();
-
-        if (isVisible && hasContent && notNearBottom) {
-          scrollToBottomBtn.classList.add('visible');
-        } else {
-          scrollToBottomBtn.classList.remove('visible');
-        }
-      }
-
-      // Écouter le scroll du chat
-      chatContainer.addEventListener('scroll', updateScrollToBottomBtn);
-
-      // Clic sur le bouton -> descendre en bas
-      if (scrollToBottomBtn) {
-        scrollToBottomBtn.addEventListener('click', function() {
-          chatContainer.scrollTo({
-            top: chatContainer.scrollHeight,
-            behavior: 'smooth'
-          });
-        });
-      }
-
-      // Mettre à jour quand le contenu change
-      const scrollBtnObserver = new MutationObserver(function() {
-        // Petit délai pour laisser le DOM se mettre à jour
-        setTimeout(updateScrollToBottomBtn, 100);
-      });
-      scrollBtnObserver.observe(chatContainer, {
-        childList: true,
-        subtree: true,
         attributes: true,
         attributeFilter: ['class']
       });
