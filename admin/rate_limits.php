@@ -123,47 +123,6 @@ $stats = $pdo->query("
   <title>Gestion Rate Limiting - Admin NxtGenAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
-  <style>
-    /* Scrollbar fine et discrète */
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-    }
-
-    *::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-
-    *::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    *::-webkit-scrollbar-thumb {
-      background: rgba(75, 85, 99, 0.5);
-      border-radius: 3px;
-    }
-
-    *::-webkit-scrollbar-thumb:hover {
-      background: rgba(75, 85, 99, 0.8);
-    }
-
-    /* Bouton retour en haut */
-    #scrollToTopBtn {
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    }
-
-    #scrollToTopBtn.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    #scrollToTopBtn:hover {
-      transform: translateY(-2px);
-    }
-  </style>
 </head>
 
 <body class="bg-neutral-900 text-gray-200 overflow-x-hidden">
@@ -537,29 +496,7 @@ $stats = $pdo->query("
         closeAllMenus();
       }
     });
-
-    // Bouton retour en haut
-    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-    window.addEventListener('scroll', function() {
-      if (window.scrollY > 200) {
-        scrollToTopBtn.classList.add('visible');
-      } else {
-        scrollToTopBtn.classList.remove('visible');
-      }
-    });
-
-    scrollToTopBtn.addEventListener('click', function() {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
   </script>
-
-  <!-- Bouton retour en haut -->
-  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
-    <i class="fa-solid fa-chevron-up"></i>
-  </button>
 </body>
 
 </html>

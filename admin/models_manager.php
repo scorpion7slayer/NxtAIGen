@@ -582,22 +582,6 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     ::-webkit-scrollbar-thumb:hover {
       background: #525252;
     }
-
-    /* Bouton retour en haut */
-    #scrollToTopBtn {
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    }
-
-    #scrollToTopBtn.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    #scrollToTopBtn:hover {
-      transform: translateY(-2px);
-    }
   </style>
 </head>
 
@@ -1657,30 +1641,8 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
       // Apply saved provider states
       // (States are initialized on page load based on API key presence)
-
-      // Bouton retour en haut
-      const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-      window.addEventListener('scroll', function() {
-        if (window.scrollY > 200) {
-          scrollToTopBtn.classList.add('visible');
-        } else {
-          scrollToTopBtn.classList.remove('visible');
-        }
-      });
-
-      scrollToTopBtn.addEventListener('click', function() {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      });
     });
   </script>
-
-  <!-- Bouton retour en haut -->
-  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
-    <i class="fa-solid fa-chevron-up"></i>
-  </button>
 </body>
 
 </html>

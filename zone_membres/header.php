@@ -50,30 +50,6 @@
         ::selection {
             background: #404040;
         }
-
-        /* Scrollbar fine et discrète */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-        }
-
-        *::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        *::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background: rgba(75, 85, 99, 0.5);
-            border-radius: 3px;
-        }
-
-        *::-webkit-scrollbar-thumb:hover {
-            background: rgba(75, 85, 99, 0.8);
-        }
     </style>
 </head>
 

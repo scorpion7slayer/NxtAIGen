@@ -154,51 +154,6 @@ try {
     .dark ::selection {
       background: #404040;
     }
-
-    /* Scrollbar fine et discrète */
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-    }
-
-    *::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-
-    *::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    *::-webkit-scrollbar-thumb {
-      background: rgba(75, 85, 99, 0.5);
-      border-radius: 3px;
-    }
-
-    *::-webkit-scrollbar-thumb:hover {
-      background: rgba(75, 85, 99, 0.8);
-    }
-
-    /* Menu dropdown z-index élevé */
-    [id^="userActionsMenu-"] {
-      z-index: 100 !important;
-    }
-
-    /* Bouton retour en haut */
-    #scrollToTopBtn {
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    }
-
-    #scrollToTopBtn.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    #scrollToTopBtn:hover {
-      transform: translateY(-2px);
-    }
   </style>
 </head>
 
@@ -299,7 +254,7 @@ try {
         <?php if (empty($users)): ?>
           <p class="text-gray-500 dark:text-neutral-400 text-center py-8">Aucun utilisateur trouvé.</p>
         <?php else: ?>
-          <div class="overflow-visible">
+          <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-200 dark:border-neutral-700/50">
@@ -543,29 +498,7 @@ try {
         closeResetModal();
       }
     });
-
-    // Bouton retour en haut
-    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-    window.addEventListener('scroll', function() {
-      if (window.scrollY > 200) {
-        scrollToTopBtn.classList.add('visible');
-      } else {
-        scrollToTopBtn.classList.remove('visible');
-      }
-    });
-
-    scrollToTopBtn.addEventListener('click', function() {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
   </script>
-
-  <!-- Bouton retour en haut -->
-  <button id="scrollToTopBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-400 shadow-lg backdrop-blur-sm transition-all duration-300 cursor-pointer" aria-label="Retour en haut">
-    <i class="fa-solid fa-chevron-up"></i>
-  </button>
 </body>
 
 </html>
