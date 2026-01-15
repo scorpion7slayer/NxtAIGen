@@ -59,9 +59,9 @@ NxtGenAI is a multi-provider web platform for conversational AI. It allows users
 
 ### Data Flow - Multi-layer Security Model
 
-```
+```text
 encryption_config → AES-256-CBC global key (generated once)
-   ↓
+    ↓
 api_keys_global → encrypted API keys for all providers (admin)
 api_keys_user → user personal keys (override global)
 provider_settings → additional configs (custom URLs, etc.)
@@ -73,7 +73,7 @@ API keys are NEVER stored in plaintext. All values pass through `encryptValue()`
 
 ### Authentication & Usage Flow
 
-```
+```text
 Guest → PHP session → guest_usage_count counter (limit: GUEST_USAGE_LIMIT = 5, resets after 24h)
 Logged-in user → users.id → api_keys_user (optional personal keys)
 Admin → is_admin = 1 → access to admin/* (provider/model management)
@@ -131,7 +131,7 @@ Each provider has its specific format handled by `api/helpers.php`:
 
 ## Directory Structure
 
-```
+```text
 ├── admin/           # Admin panel (settings, models manager, rate limits)
 ├── api/             # Backend APIs (streaming, models, rate limiting)
 │   ├── github/      # GitHub Copilot OAuth integration
@@ -212,7 +212,7 @@ function escapeHtml(text) {
 'NEWPROVIDER_API_URL' => 'https://api.example.com/v1/chat',
 ```
 
-2. **Add mapping** in `api/streamApi.php` section `$streamConfigs`:
+1. **Add mapping** in `api/streamApi.php` section `$streamConfigs`:
 
 ```php
 'newprovider' => [
@@ -222,9 +222,9 @@ function escapeHtml(text) {
 ]
 ```
 
-3. **Create API file** `api/newproviderApi.php` for model listing (pattern: see `openaiApi.php`)
+1. **Create API file** `api/newproviderApi.php` for model listing (pattern: see `openaiApi.php`)
 
-4. **Add icon** `assets/images/providers/newprovider.svg` and mapping in `assets/js/models.js`:
+2. **Add icon** `assets/images/providers/newprovider.svg` and mapping in `assets/js/models.js`:
 
 ```javascript
 providers: {
@@ -284,17 +284,17 @@ if ($tableCheck->rowCount() === 0) {
 - **Web Speech API**: Available Chrome/Edge/Safari, not Firefox
 - **Vision (images)**: Native support OpenAI GPT-4o, Claude 3, Gemini, Ollama (LLaVA)
 
-# MCP Gemini Design
+## MCP Gemini Design
 
 **Gemini is your frontend developer.** For all UI/design work, use this MCP. Tool descriptions contain all necessary instructions.
 
-## Before writing any UI code, ask yourself:
+## Before writing any UI code, ask yourself
 
 - Is it a NEW visual component (popup, card, section, etc.)? → `snippet_frontend` or `create_frontend`
 - Is it a REDESIGN of an existing element? → `modify_frontend`
 - Is it just text/logic, or a trivial change? → Do it yourself
 
-## Critical rules:
+## Critical rules
 
 1. **If UI already exists and you need to redesign/restyle it** → use `modify_frontend`, NOT snippet_frontend.
 
