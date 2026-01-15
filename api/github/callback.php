@@ -69,7 +69,7 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 $curlError = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 
 // Debug en cas d'erreur cURL
 if ($response === false) {
@@ -117,7 +117,7 @@ curl_setopt_array($ch, [
 
 $userResponse = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 
 if ($httpCode !== 200) {
   header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Erreur lors de la récupération du profil GitHub'));

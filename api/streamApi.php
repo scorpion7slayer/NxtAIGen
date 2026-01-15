@@ -568,7 +568,7 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 
 // Gérer les erreurs cURL (message générique pour la sécurité)
 if ($curlError) {

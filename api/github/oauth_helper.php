@@ -112,7 +112,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() supprimé - deprecated depuis PHP 8.0
 
     if ($httpCode !== 200) {
       error_log("GitHub OAuth refresh failed: HTTP $httpCode - $response");
@@ -165,7 +165,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() supprimé - deprecated depuis PHP 8.0
 
     if ($httpCode === 200) {
       $data = json_decode($response, true);
@@ -189,7 +189,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() supprimé - deprecated depuis PHP 8.0
 
     if ($httpCode === 200) {
       return [

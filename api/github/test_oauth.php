@@ -36,7 +36,7 @@ curl_setopt_array($ch, [
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $error = curl_error($ch);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 echo "Connexion github.com: " . ($httpCode > 0 ? "OK (HTTP $httpCode)" : "ÉCHEC - $error") . "\n\n";
 
 // 4. Tester l'endpoint OAuth
@@ -51,7 +51,7 @@ curl_setopt_array($ch, [
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $error = curl_error($ch);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 echo "Connexion " . $config['GITHUB_TOKEN_URL'] . ": " . ($httpCode > 0 ? "OK (HTTP $httpCode)" : "ÉCHEC - $error") . "\n\n";
 
 // 5. Test avec un faux code (pour vérifier que l'endpoint répond)
@@ -80,7 +80,7 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-curl_close($ch);
+// curl_close() supprimé - deprecated depuis PHP 8.0
 
 echo "HTTP Code: $httpCode\n";
 if ($curlError) {
