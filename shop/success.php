@@ -29,7 +29,7 @@ if (!empty($sessionId) && isset($_SESSION['user_id'])) {
 
   $response = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  curl_close($ch);
+  // curl_close() supprimé - deprecated depuis PHP 8.0
 
   $session = json_decode($response, true);
 

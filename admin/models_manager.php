@@ -119,7 +119,7 @@ function testProviderConnection($provider, $pdo)
   $latency = round((microtime(true) - $startTime) * 1000);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $error = curl_error($ch);
-  curl_close($ch);
+  // curl_close() supprimé - deprecated depuis PHP 8.0
 
   if ($error) {
     return ['success' => false, 'message' => 'Erreur: ' . $error, 'latency' => $latency];
@@ -295,8 +295,12 @@ function fetch_models_all()
 
   $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
   $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-  $basePath = rtrim(dirname($_SERVER['PHP_SELF']) ?: '/', '/');
-  $apiPath = $basePath . '/../api/models.php?provider=all';
+
+  // Construire le chemin de base en remontant du dossier admin
+  $scriptPath = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '';
+  $basePath = dirname(dirname($scriptPath)); // Remonter de /admin à la racine
+  $basePath = ($basePath === '\\' || $basePath === '/') ? '' : $basePath;
+  $apiPath = $basePath . '/api/models.php?provider=all';
   $url = $scheme . '://' . $host . $apiPath;
 
   $ch = curl_init($url);
@@ -317,7 +321,7 @@ function fetch_models_all()
   $response = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $err = curl_error($ch);
-  curl_close($ch);
+  // curl_close() supprimé - deprecated depuis PHP 8.0
 
   if ($response === false || $httpCode !== 200) {
     return [

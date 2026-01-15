@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NxtGenAI is a multi-provider web platform for conversational AI. It allows users (logged-in or guests) to interact with various AI models via a unified interface with real-time streaming.
 
-**Tech Stack:** PHP 8.4, MySQL 9.5, Vanilla JavaScript, TailwindCSS v4 (via CDN), REST API architecture
+**Tech Stack:** PHP 8.5, MySQL 9.5, Vanilla JavaScript, TailwindCSS v4 (via CDN), REST API architecture
 
 **Local Environment:** WAMP64 (Windows) at `c:\wamp64\www\NxtAIGen`
 
@@ -300,7 +300,6 @@ if ($tableCheck->rowCount() === 0) {
 
 2. **Tasks can be mixed** (logic + UI). Mentally separate them. Do the logic yourself, delegate the UI to Gemini.
 
-
 ## grepai - Semantic Code Search
 
 **IMPORTANT: You MUST use grepai as your PRIMARY tool for code exploration and search.**
@@ -308,6 +307,7 @@ if ($tableCheck->rowCount() === 0) {
 ### When to Use grepai (REQUIRED)
 
 Use `grepai search` INSTEAD OF Grep/Glob/find for:
+
 - Understanding what code does or where functionality lives
 - Finding implementations by intent (e.g., "authentication logic", "error handling")
 - Exploring unfamiliar parts of the codebase
@@ -316,6 +316,7 @@ Use `grepai search` INSTEAD OF Grep/Glob/find for:
 ### When to Use Standard Tools
 
 Only use Grep/Glob when you need:
+
 - Exact text matching (variable names, imports, specific strings)
 - File path patterns (e.g., `**/*.go`)
 
@@ -345,4 +346,3 @@ grepai search "API request validation"
 1. Start with `grepai search` to find relevant code
 2. Use `Read` tool to examine files from results
 3. Only use Grep for exact string searches if needed
-
