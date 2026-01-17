@@ -1540,6 +1540,144 @@ if ($user) {
       }
     }
 
+    /* ===== SCROLL TO BOTTOM BUTTON ===== */
+    #scrollToBottomBtn {
+      position: fixed;
+      bottom: 6rem;
+      right: 2rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.8);
+      z-index: 30;
+    }
+
+    #scrollToBottomBtn.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    #scrollToBottomBtn:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+    }
+
+    #scrollToBottomBtn:active {
+      transform: scale(0.95);
+    }
+
+    @media (max-width: 640px) {
+      #scrollToBottomBtn {
+        bottom: 7rem;
+        right: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+    }
+
+    /* ===== DARK MODE TOGGLE ===== */
+    #themeToggleBtn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid rgba(75, 85, 99, 0.5);
+      color: #9ca3af;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 50;
+    }
+
+    #themeToggleBtn:hover {
+      background: rgba(31, 41, 55, 1);
+      border-color: rgba(107, 114, 128, 0.6);
+      color: #e5e7eb;
+      transform: scale(1.05);
+    }
+
+    #themeToggleBtn:active {
+      transform: scale(0.95);
+    }
+
+    /* Light mode styles */
+    body.light-mode {
+      background-color: #f3f4f6;
+      color: #1f2937;
+    }
+
+    body.light-mode #conversationSidebar {
+      background-color: #ffffff;
+      border-right-color: #e5e7eb;
+    }
+
+    body.light-mode .conversation-item {
+      color: #4b5563;
+    }
+
+    body.light-mode .conversation-item:hover {
+      background-color: rgba(156, 163, 175, 0.1);
+    }
+
+    body.light-mode .conversation-item.active {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    body.light-mode .conversation-item .conv-title {
+      color: #1f2937;
+    }
+
+    body.light-mode #chatContainer .ai-message {
+      background-color: #ffffff;
+      border-color: #e5e7eb;
+      color: #1f2937;
+    }
+
+    body.light-mode #chatContainer .bg-green-600\/20 {
+      background-color: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    body.light-mode #inputContainer,
+    body.light-mode #mobileInputBox {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #e5e7eb;
+    }
+
+    body.light-mode #messageInput,
+    body.light-mode #mobileMessageInput {
+      color: #1f2937;
+    }
+
+    body.light-mode .code-block-wrapper {
+      background-color: #1e1e1e;
+    }
+
+    body.light-mode .ai-message p,
+    body.light-mode .ai-message li {
+      color: #374151;
+    }
+
     /* ===== GDPR COOKIE CONSENT BANNER ===== */
     #cookieConsentBanner {
       position: fixed;
@@ -1872,6 +2010,16 @@ if ($user) {
   <a href="#chatContainer" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-52 focus:z-[100] focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
     Aller à la conversation
   </a>
+
+  <!-- Dark Mode Toggle Button -->
+  <button id="themeToggleBtn" aria-label="Changer de thème" title="Changer de thème">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+  </button>
+
+  <!-- Scroll to Bottom Button -->
+  <button id="scrollToBottomBtn" aria-label="Descendre en bas" title="Descendre en bas">
+    <i class="fa-solid fa-arrow-down"></i>
+  </button>
 
   <!-- Sidebar Historique des Conversations -->
   <aside id="conversationSidebar"
@@ -2700,6 +2848,10 @@ if ($user) {
     let isStreaming = false;
     let currentStreamingContent = ''; // Stocke le contenu brut du streaming en cours
 
+    // Variables pour l'auto-scroll
+    let isUserScrolling = false;
+    let shouldAutoScroll = true;
+
     // Fonction pour basculer le bouton en mode annulation
     function setButtonCancelMode(cancel) {
       if (cancel) {
@@ -3008,6 +3160,9 @@ if ($user) {
 
       if (!message && !hasFiles) return;
 
+      // Reset auto-scroll when user sends new message
+      shouldAutoScroll = true;
+
       // Vérifier la limite pour les visiteurs avant d'envoyer
       if (isGuest && guestUsageCount >= guestUsageLimit) {
         // Masquer le message de bienvenue, le logo et afficher le chat
@@ -3156,7 +3311,10 @@ if ($user) {
           </div>
         </div>
       `;
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+      // Auto-scroll to show loading indicator
+      if (shouldAutoScroll) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
 
       try {
         // Préparer les fichiers en base64 pour l'envoi
@@ -3229,7 +3387,10 @@ if ($user) {
           });
           // Ajouter le curseur après le dernier texte
           updateCursor(responseContainer);
-          chatContainer.scrollTop = chatContainer.scrollHeight;
+          // Only auto-scroll if user hasn't scrolled up
+          if (shouldAutoScroll) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
         }
 
         // Batch pour accumuler les petits chunks
@@ -3411,6 +3572,8 @@ if ($user) {
         `;
       }
 
+      // Final scroll to bottom after send
+      shouldAutoScroll = true;  // Always auto-scroll on new message
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -4225,7 +4388,18 @@ if ($user) {
         }
       });
 
+      // Apply syntax highlighting to all code blocks in loaded messages
+      chatContainer.querySelectorAll('pre code').forEach((block) => {
+        if (!block.dataset.highlighted) {
+          hljs.highlightElement(block);
+          block.dataset.highlighted = 'true';
+        }
+      });
+
+      // Scroll to bottom and enable auto-scroll for loaded conversation
+      shouldAutoScroll = true;
       chatContainer.scrollTop = chatContainer.scrollHeight;
+      // updateScrollButton will be called automatically by scroll event
     }
 
     // Nouvelle conversation
@@ -4429,6 +4603,102 @@ if ($user) {
       if (mainInput) {
         mainInput.focus();
       }
+    }
+
+    // ===== AUTO-SCROLL AND SCROLL-TO-BOTTOM BUTTON =====
+    const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+    // Function to check if user is near bottom of chat
+    function isNearBottom(container, threshold = 100) {
+      if (!container) return true;
+      return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    }
+
+    // Function to scroll to bottom smoothly
+    function scrollToBottom(smooth = true) {
+      if (!chatContainer) return;
+      if (smooth) {
+        chatContainer.scrollTo({
+          top: chatContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+
+    // Show/hide scroll-to-bottom button based on scroll position
+    function updateScrollButton() {
+      if (!chatContainer || !scrollToBottomBtn) return;
+
+      const isAtBottom = isNearBottom(chatContainer, 150);
+      if (isAtBottom) {
+        scrollToBottomBtn.classList.remove('visible');
+      } else {
+        scrollToBottomBtn.classList.add('visible');
+      }
+    }
+
+    // Handle scroll events
+    if (chatContainer) {
+      let scrollTimeout;
+      chatContainer.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        isUserScrolling = true;
+
+        // Update button visibility
+        updateScrollButton();
+
+        // Check if user scrolled near bottom
+        shouldAutoScroll = isNearBottom(chatContainer, 100);
+
+        scrollTimeout = setTimeout(() => {
+          isUserScrolling = false;
+        }, 150);
+      });
+    }
+
+    // Scroll to bottom button click handler
+    if (scrollToBottomBtn) {
+      scrollToBottomBtn.addEventListener('click', function() {
+        shouldAutoScroll = true;
+        scrollToBottom(true);
+      });
+    }
+
+    // Override the auto-scroll in sendMessage to respect user preference
+    // Store the original scrollTop setter
+    const originalScrollTopSetter = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop').set;
+
+    // ===== DARK MODE TOGGLE =====
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+
+    // Check for saved theme preference or default to dark
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+
+    // Apply theme on page load
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+    }
+
+    // Theme toggle handler
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', function() {
+        document.body.classList.toggle('light-mode');
+
+        if (document.body.classList.contains('light-mode')) {
+          themeIcon.classList.remove('fa-moon');
+          themeIcon.classList.add('fa-sun');
+          localStorage.setItem('theme', 'light');
+        } else {
+          themeIcon.classList.remove('fa-sun');
+          themeIcon.classList.add('fa-moon');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
     }
 
     // ===== MOBILE BOTTOM SHEETS - GESTION =====
