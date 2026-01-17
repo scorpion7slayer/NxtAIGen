@@ -1604,6 +1604,37 @@ if ($user) {
       background-color: #1e1e1e !important;
     }
 
+    /* ===== RESPONSIVE - DARK MODE & SCROLL BUTTONS ===== */
+
+    /* Mobile (max-width: 640px) */
+    @media (max-width: 640px) {
+      /* Dark mode toggle - décaler vers la gauche pour éviter le bouton profil */
+      #themeToggleBtn {
+        top: 0.75rem;
+        right: 3.5rem; /* Laisse place au bouton profil */
+      }
+
+      /* Scroll to bottom - position adaptée au mobile */
+      #scrollToBottomBtn {
+        bottom: 6.5rem; /* Au-dessus de l'input mobile */
+        right: 1rem;
+        padding: 0.5rem 0.75rem;
+      }
+    }
+
+    /* Tablette (641px - 768px) */
+    @media (min-width: 641px) and (max-width: 768px) {
+      #themeToggleBtn {
+        top: 1rem;
+        right: 1rem;
+      }
+
+      #scrollToBottomBtn {
+        bottom: 6rem;
+        right: 1.5rem;
+      }
+    }
+
     /* ===== GDPR COOKIE CONSENT BANNER ===== */
     #cookieConsentBanner {
       position: fixed;
