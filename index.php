@@ -1540,6 +1540,70 @@ if ($user) {
       }
     }
 
+    /* ===== DARK/LIGHT MODE - CSS CUSTOM (Browser CDN ne supporte pas dark:) ===== */
+    body[data-theme="light"] {
+      background-color: #f9fafb;
+      color: #111827;
+    }
+
+    body[data-theme="light"] #conversationSidebar {
+      background-color: #ffffff !important;
+      border-right-color: #e5e7eb;
+    }
+
+    body[data-theme="light"] .conversation-item {
+      color: #4b5563;
+    }
+
+    body[data-theme="light"] .conversation-item:hover {
+      background-color: rgba(156, 163, 175, 0.1);
+    }
+
+    body[data-theme="light"] .conversation-item.active {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    body[data-theme="light"] .conversation-item .conv-title {
+      color: #1f2937;
+    }
+
+    body[data-theme="light"] .sidebar-title {
+      color: #6b7280;
+    }
+
+    body[data-theme="light"] #chatContainer .ai-message {
+      background-color: #ffffff;
+      border-color: #e5e7eb;
+    }
+
+    body[data-theme="light"] .ai-message p,
+    body[data-theme="light"] .ai-message li,
+    body[data-theme="light"] .ai-message {
+      color: #374151 !important;
+    }
+
+    body[data-theme="light"] #inputContainer,
+    body[data-theme="light"] #mobileInputBox {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #e5e7eb;
+    }
+
+    body[data-theme="light"] #messageInput,
+    body[data-theme="light"] #mobileMessageInput {
+      color: #1f2937;
+    }
+
+    body[data-theme="light"] #messageInput::placeholder,
+    body[data-theme="light"] #mobileMessageInput::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Keep code blocks dark in light mode for better readability */
+    body[data-theme="light"] .code-block-wrapper,
+    body[data-theme="light"] pre code {
+      background-color: #1e1e1e !important;
+    }
+
     /* ===== GDPR COOKIE CONSENT BANNER ===== */
     #cookieConsentBanner {
       position: fixed;
@@ -1863,7 +1927,7 @@ if ($user) {
   </style>
 </head>
 
-<body data-theme="dark" class="dark min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex overflow-hidden">
+<body data-theme="dark" class="min-h-screen text-gray-100 flex overflow-hidden" style="background-color: oklch(21% 0.006 285.885);">
 
   <!-- Skip links pour accessibilité clavier -->
   <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
@@ -1877,7 +1941,7 @@ if ($user) {
   <button id="themeToggleBtn"
     aria-label="Changer de thème"
     title="Changer de thème"
-    class="fixed top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-gray-800/90 dark:bg-gray-800/90 border border-gray-700/50 dark:border-gray-700/50 text-gray-400 dark:text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-200 active:scale-95 transition-all duration-300 backdrop-blur-lg">
+    class="fixed top-4 right-4 z-50 p-2 rounded-lg bg-gray-800/30 border border-gray-700/30 text-gray-400 hover:text-white hover:bg-gray-700/30 transition-all duration-150 backdrop-blur-sm">
     <i class="fa-solid fa-moon" id="themeIcon"></i>
   </button>
 
@@ -1885,15 +1949,17 @@ if ($user) {
   <button id="scrollToBottomBtn"
     aria-label="Descendre en bas"
     title="Descendre en bas"
-    class="fixed bottom-24 right-8 z-30 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/40 hover:from-green-600 hover:to-emerald-700 hover:scale-110 active:scale-95 transition-all duration-300 opacity-0 invisible scale-75 sm:bottom-28 sm:right-8">
-    <i class="fa-solid fa-arrow-down"></i>
+    class="fixed bottom-24 right-4 z-30 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-200 opacity-0 invisible pointer-events-none backdrop-blur-sm shadow-lg"
+    style="display: none;">
+    <i class="fa-solid fa-arrow-down text-sm"></i>
   </button>
 
   <!-- Sidebar Historique des Conversations -->
   <aside id="conversationSidebar"
     aria-label="Historique des conversations"
-    class="conversation-sidebar flex flex-col border-r border-gray-700/30 dark:border-gray-700/30 bg-gray-900 dark:bg-gray-900 h-screen transition-all duration-300 ease-in-out"
-    data-collapsed="false">
+    class="conversation-sidebar flex flex-col border-r border-gray-700/30 h-screen transition-all duration-300 ease-in-out"
+    data-collapsed="false"
+    style="background-color: oklch(21% 0.006 285.885);">
     <!-- Header Sidebar -->
     <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-700/20">
       <h2 id="sidebarTitle" class="sidebar-title text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
@@ -3141,7 +3207,7 @@ if ($user) {
       // Afficher le message utilisateur
       chatContainer.innerHTML += `
         <div class="flex justify-end">
-          <div class="bg-green-600/20 dark:bg-green-600/20 border border-green-500/30 dark:border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+          <div class="bg-green-600/20 border border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
             ${filesHtml}
             ${message ? `<p class="text-gray-200 text-sm">${escapeHtml(message)}</p>` : ''}
           </div>
@@ -3231,7 +3297,7 @@ if ($user) {
         const responseId = 'response-' + Date.now();
         chatContainer.innerHTML += `
           <div class="flex justify-start">
-            <div class="ai-message bg-gray-700/50 dark:bg-gray-700/50 border border-gray-600/50 dark:border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+            <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
               <div id="${responseId}" class="text-gray-200 text-sm streaming-response"></div>
             </div>
           </div>
@@ -4239,7 +4305,7 @@ if ($user) {
         if (msg.role === 'user') {
           chatContainer.innerHTML += `
             <div class="flex justify-end">
-              <div class="bg-green-600/20 dark:bg-green-600/20 border border-green-500/30 dark:border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+              <div class="bg-green-600/20 border border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
                 <p class="text-gray-200 text-sm">${escapeHtml(msg.content)}</p>
               </div>
             </div>
@@ -4247,7 +4313,7 @@ if ($user) {
         } else {
           chatContainer.innerHTML += `
             <div class="flex justify-start">
-              <div class="ai-message bg-gray-700/50 dark:bg-gray-700/50 border border-gray-600/50 dark:border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%] done">
+              <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%] done">
                 ${renderMarkdown(msg.content)}
               </div>
             </div>
@@ -4500,11 +4566,13 @@ if ($user) {
 
       const isAtBottom = isNearBottom(chatContainer, 150);
       if (isAtBottom) {
-        scrollToBottomBtn.classList.add('opacity-0', 'invisible', 'scale-75');
-        scrollToBottomBtn.classList.remove('opacity-100', 'visible', 'scale-100');
+        scrollToBottomBtn.style.display = 'none';
+        scrollToBottomBtn.classList.add('opacity-0', 'invisible');
+        scrollToBottomBtn.classList.remove('opacity-100', 'visible');
       } else {
-        scrollToBottomBtn.classList.remove('opacity-0', 'invisible', 'scale-75');
-        scrollToBottomBtn.classList.add('opacity-100', 'visible', 'scale-100');
+        scrollToBottomBtn.style.display = 'block';
+        scrollToBottomBtn.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+        scrollToBottomBtn.classList.add('opacity-100', 'visible');
       }
     }
 
@@ -4549,7 +4617,6 @@ if ($user) {
     // Apply theme on page load
     if (currentTheme === 'light') {
       document.body.setAttribute('data-theme', 'light');
-      document.body.classList.remove('dark');
       themeIcon.classList.remove('fa-moon');
       themeIcon.classList.add('fa-sun');
     }
@@ -4557,19 +4624,17 @@ if ($user) {
     // Theme toggle handler
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener('click', function() {
-        const isDark = document.body.classList.contains('dark');
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
 
         if (isDark) {
           // Switch to light mode
           document.body.setAttribute('data-theme', 'light');
-          document.body.classList.remove('dark');
           themeIcon.classList.remove('fa-moon');
           themeIcon.classList.add('fa-sun');
           localStorage.setItem('theme', 'light');
         } else {
           // Switch to dark mode
           document.body.setAttribute('data-theme', 'dark');
-          document.body.classList.add('dark');
           themeIcon.classList.remove('fa-sun');
           themeIcon.classList.add('fa-moon');
           localStorage.setItem('theme', 'dark');
