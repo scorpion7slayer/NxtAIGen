@@ -1540,144 +1540,6 @@ if ($user) {
       }
     }
 
-    /* ===== SCROLL TO BOTTOM BUTTON ===== */
-    #scrollToBottomBtn {
-      position: fixed;
-      bottom: 6rem;
-      right: 2rem;
-      width: 3rem;
-      height: 3rem;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.8);
-      z-index: 30;
-    }
-
-    #scrollToBottomBtn.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
-    }
-
-    #scrollToBottomBtn:hover {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      transform: scale(1.1);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
-    }
-
-    #scrollToBottomBtn:active {
-      transform: scale(0.95);
-    }
-
-    @media (max-width: 640px) {
-      #scrollToBottomBtn {
-        bottom: 7rem;
-        right: 1rem;
-        width: 2.5rem;
-        height: 2.5rem;
-      }
-    }
-
-    /* ===== DARK MODE TOGGLE ===== */
-    #themeToggleBtn {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 50%;
-      background: rgba(31, 41, 55, 0.9);
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      color: #9ca3af;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      z-index: 50;
-    }
-
-    #themeToggleBtn:hover {
-      background: rgba(31, 41, 55, 1);
-      border-color: rgba(107, 114, 128, 0.6);
-      color: #e5e7eb;
-      transform: scale(1.05);
-    }
-
-    #themeToggleBtn:active {
-      transform: scale(0.95);
-    }
-
-    /* Light mode styles */
-    body.light-mode {
-      background-color: #f3f4f6;
-      color: #1f2937;
-    }
-
-    body.light-mode #conversationSidebar {
-      background-color: #ffffff;
-      border-right-color: #e5e7eb;
-    }
-
-    body.light-mode .conversation-item {
-      color: #4b5563;
-    }
-
-    body.light-mode .conversation-item:hover {
-      background-color: rgba(156, 163, 175, 0.1);
-    }
-
-    body.light-mode .conversation-item.active {
-      background-color: rgba(16, 185, 129, 0.1);
-    }
-
-    body.light-mode .conversation-item .conv-title {
-      color: #1f2937;
-    }
-
-    body.light-mode #chatContainer .ai-message {
-      background-color: #ffffff;
-      border-color: #e5e7eb;
-      color: #1f2937;
-    }
-
-    body.light-mode #chatContainer .bg-green-600\/20 {
-      background-color: rgba(16, 185, 129, 0.1);
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-
-    body.light-mode #inputContainer,
-    body.light-mode #mobileInputBox {
-      background: rgba(255, 255, 255, 0.9);
-      border-color: #e5e7eb;
-    }
-
-    body.light-mode #messageInput,
-    body.light-mode #mobileMessageInput {
-      color: #1f2937;
-    }
-
-    body.light-mode .code-block-wrapper {
-      background-color: #1e1e1e;
-    }
-
-    body.light-mode .ai-message p,
-    body.light-mode .ai-message li {
-      color: #374151;
-    }
-
     /* ===== GDPR COOKIE CONSENT BANNER ===== */
     #cookieConsentBanner {
       position: fixed;
@@ -2001,7 +1863,7 @@ if ($user) {
   </style>
 </head>
 
-<body class="min-h-screen text-gray-100 flex overflow-hidden">
+<body data-theme="dark" class="dark min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex overflow-hidden">
 
   <!-- Skip links pour accessibilité clavier -->
   <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
@@ -2012,21 +1874,26 @@ if ($user) {
   </a>
 
   <!-- Dark Mode Toggle Button -->
-  <button id="themeToggleBtn" aria-label="Changer de thème" title="Changer de thème">
+  <button id="themeToggleBtn"
+    aria-label="Changer de thème"
+    title="Changer de thème"
+    class="fixed top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-gray-800/90 dark:bg-gray-800/90 border border-gray-700/50 dark:border-gray-700/50 text-gray-400 dark:text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-200 active:scale-95 transition-all duration-300 backdrop-blur-lg">
     <i class="fa-solid fa-moon" id="themeIcon"></i>
   </button>
 
   <!-- Scroll to Bottom Button -->
-  <button id="scrollToBottomBtn" aria-label="Descendre en bas" title="Descendre en bas">
+  <button id="scrollToBottomBtn"
+    aria-label="Descendre en bas"
+    title="Descendre en bas"
+    class="fixed bottom-24 right-8 z-30 w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/40 hover:from-green-600 hover:to-emerald-700 hover:scale-110 active:scale-95 transition-all duration-300 opacity-0 invisible scale-75 sm:bottom-28 sm:right-8">
     <i class="fa-solid fa-arrow-down"></i>
   </button>
 
   <!-- Sidebar Historique des Conversations -->
   <aside id="conversationSidebar"
     aria-label="Historique des conversations"
-    class="conversation-sidebar flex flex-col border-r border-gray-700/30 h-screen transition-all duration-300 ease-in-out"
-    data-collapsed="false"
-    style="background-color: oklch(21% 0.006 285.885);">
+    class="conversation-sidebar flex flex-col border-r border-gray-700/30 dark:border-gray-700/30 bg-gray-900 dark:bg-gray-900 h-screen transition-all duration-300 ease-in-out"
+    data-collapsed="false">
     <!-- Header Sidebar -->
     <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-700/20">
       <h2 id="sidebarTitle" class="sidebar-title text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
@@ -3274,7 +3141,7 @@ if ($user) {
       // Afficher le message utilisateur
       chatContainer.innerHTML += `
         <div class="flex justify-end">
-          <div class="bg-green-600/20 border border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+          <div class="bg-green-600/20 dark:bg-green-600/20 border border-green-500/30 dark:border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
             ${filesHtml}
             ${message ? `<p class="text-gray-200 text-sm">${escapeHtml(message)}</p>` : ''}
           </div>
@@ -3364,7 +3231,7 @@ if ($user) {
         const responseId = 'response-' + Date.now();
         chatContainer.innerHTML += `
           <div class="flex justify-start">
-            <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+            <div class="ai-message bg-gray-700/50 dark:bg-gray-700/50 border border-gray-600/50 dark:border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
               <div id="${responseId}" class="text-gray-200 text-sm streaming-response"></div>
             </div>
           </div>
@@ -4372,7 +4239,7 @@ if ($user) {
         if (msg.role === 'user') {
           chatContainer.innerHTML += `
             <div class="flex justify-end">
-              <div class="bg-green-600/20 border border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+              <div class="bg-green-600/20 dark:bg-green-600/20 border border-green-500/30 dark:border-green-500/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
                 <p class="text-gray-200 text-sm">${escapeHtml(msg.content)}</p>
               </div>
             </div>
@@ -4380,7 +4247,7 @@ if ($user) {
         } else {
           chatContainer.innerHTML += `
             <div class="flex justify-start">
-              <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%] done">
+              <div class="ai-message bg-gray-700/50 dark:bg-gray-700/50 border border-gray-600/50 dark:border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%] done">
                 ${renderMarkdown(msg.content)}
               </div>
             </div>
@@ -4633,9 +4500,11 @@ if ($user) {
 
       const isAtBottom = isNearBottom(chatContainer, 150);
       if (isAtBottom) {
-        scrollToBottomBtn.classList.remove('visible');
+        scrollToBottomBtn.classList.add('opacity-0', 'invisible', 'scale-75');
+        scrollToBottomBtn.classList.remove('opacity-100', 'visible', 'scale-100');
       } else {
-        scrollToBottomBtn.classList.add('visible');
+        scrollToBottomBtn.classList.remove('opacity-0', 'invisible', 'scale-75');
+        scrollToBottomBtn.classList.add('opacity-100', 'visible', 'scale-100');
       }
     }
 
@@ -4679,7 +4548,8 @@ if ($user) {
 
     // Apply theme on page load
     if (currentTheme === 'light') {
-      document.body.classList.add('light-mode');
+      document.body.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark');
       themeIcon.classList.remove('fa-moon');
       themeIcon.classList.add('fa-sun');
     }
@@ -4687,13 +4557,19 @@ if ($user) {
     // Theme toggle handler
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener('click', function() {
-        document.body.classList.toggle('light-mode');
+        const isDark = document.body.classList.contains('dark');
 
-        if (document.body.classList.contains('light-mode')) {
+        if (isDark) {
+          // Switch to light mode
+          document.body.setAttribute('data-theme', 'light');
+          document.body.classList.remove('dark');
           themeIcon.classList.remove('fa-moon');
           themeIcon.classList.add('fa-sun');
           localStorage.setItem('theme', 'light');
         } else {
+          // Switch to dark mode
+          document.body.setAttribute('data-theme', 'dark');
+          document.body.classList.add('dark');
           themeIcon.classList.remove('fa-sun');
           themeIcon.classList.add('fa-moon');
           localStorage.setItem('theme', 'dark');
