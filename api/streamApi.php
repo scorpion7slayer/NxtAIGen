@@ -151,6 +151,12 @@ if (!$isGuest) {
 // Récupérer les données JSON envoyées
 $input = json_decode(file_get_contents('php://input'), true);
 
+// Valider que le JSON est correctement parsé
+if (!is_array($input)) {
+  sendSSE(['error' => 'Format JSON invalide'], 'error');
+  exit();
+}
+
 if (!isset($input['message']) || empty(trim($input['message']))) {
   if (!isset($input['files']) || empty($input['files'])) {
     sendSSE(['error' => 'Message ou fichier requis'], 'error');
