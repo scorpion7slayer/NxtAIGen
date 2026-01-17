@@ -1,3 +1,9 @@
 ## instruction folders
 shop/stripe_secrets.php
 .grepai/
+
+## PHP dependencies and test artifacts
+/vendor/
+composer.lock
+/coverage/
+.phpunit.result.cache

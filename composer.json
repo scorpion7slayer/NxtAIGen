@@ -1,0 +1,21 @@
+{
+    "name": "nxtgenai/nxtgenai",
+    "description": "Multi-provider web platform for conversational AI",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "files": [
+            "api/api_keys_helper.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    }
+}
