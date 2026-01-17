@@ -59,7 +59,7 @@ include 'header.php';
         </div>
 
         <p class="text-center text-sm text-neutral-500 mt-6">
-            Pas de compte ? <a href="register.php" class="text-green-400 hover:text-green-300 transition-colors">Créer un compte</a>
+            Vous n'avez pas encore de compte ? <a href="register.php" class="text-green-400 hover:text-green-300 transition-colors">Inscrivez-vous</a>
         </p>
     </div>
 </main>
