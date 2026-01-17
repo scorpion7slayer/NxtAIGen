@@ -4,6 +4,64 @@
  * Fonctions d'aide pour le traitement des fichiers dans les APIs
  */
 
+// =============================================================================
+// CONSTANTS & SHARED HELPERS
+// =============================================================================
+
+/** Types MIME d'images supportés par les providers AI */
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+/** Types MIME de fichiers texte supportés */
+const SUPPORTED_TEXT_TYPES = ['text/', 'application/json', 'application/xml'];
+
+/**
+ * Vérifie si un fichier est une image supportée
+ * @param string $mimeType Le type MIME du fichier
+ * @return bool
+ */
+function isImageFile(string $mimeType): bool
+{
+  return in_array($mimeType, SUPPORTED_IMAGE_TYPES);
+}
+
+/**
+ * Vérifie si un fichier est un fichier texte supporté
+ * @param string $mimeType Le type MIME du fichier
+ * @return bool
+ */
+function isTextFile(string $mimeType): bool
+{
+  return strpos($mimeType, 'text/') === 0 ||
+    $mimeType === 'application/json' ||
+    $mimeType === 'application/xml';
+}
+
+/**
+ * Extrait les données base64 d'une data URL
+ * @param string $dataUrl La data URL (data:type;base64,...)
+ * @return string Les données base64 brutes
+ */
+function extractBase64Data(string $dataUrl): string
+{
+  return preg_replace('/^data:[^;]+;base64,/', '', $dataUrl);
+}
+
+/**
+ * Formate le contenu d'un fichier texte pour l'affichage
+ * @param string $fileName Le nom du fichier
+ * @param string $base64Data Les données base64 du fichier
+ * @return string Le contenu formaté
+ */
+function formatTextFileContent(string $fileName, string $base64Data): string
+{
+  $fileContent = base64_decode($base64Data);
+  return "Contenu du fichier {$fileName}:\n```\n{$fileContent}\n```";
+}
+
+// =============================================================================
+// PROVIDER-SPECIFIC MESSAGE FORMATTERS
+// =============================================================================
+
 /**
  * Prépare le contenu du message au format OpenAI (utilisé par OpenAI, Mistral, DeepSeek, xAI, etc.)
  * @param string $userMessage Le message texte de l'utilisateur
@@ -21,51 +79,32 @@ function prepareOpenAIMessageContent($userMessage, $files = [])
 
   // Ajouter le texte si présent
   if (!empty($userMessage)) {
-    $messageContent[] = [
-      'type' => 'text',
-      'text' => $userMessage
-    ];
+    $messageContent[] = ['type' => 'text', 'text' => $userMessage];
   }
 
-  // Ajouter les images si présentes
-  $supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
+  // Traiter les fichiers
   foreach ($files as $file) {
-    if (in_array($file['type'], $supportedImageTypes)) {
+    if (isImageFile($file['type'])) {
+      // OpenAI accepte les data URLs directement
       $messageContent[] = [
         'type' => 'image_url',
-        'image_url' => [
-          'url' => $file['data'], // data:image/xxx;base64,... format
-          'detail' => 'auto'
-        ]
+        'image_url' => ['url' => $file['data'], 'detail' => 'auto']
       ];
-    } else {
-      // Pour les fichiers non-image, ajouter le contenu comme texte
-      if (
-        strpos($file['type'], 'text/') === 0 ||
-        $file['type'] === 'application/json' ||
-        $file['type'] === 'application/xml'
-      ) {
-        $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
-        $fileContent = base64_decode($base64Data);
-        $messageContent[] = [
-          'type' => 'text',
-          'text' => "Contenu du fichier {$file['name']}:\n```\n{$fileContent}\n```"
-        ];
-      }
+    } else if (isTextFile($file['type'])) {
+      $base64Data = extractBase64Data($file['data']);
+      $messageContent[] = [
+        'type' => 'text',
+        'text' => formatTextFileContent($file['name'], $base64Data)
+      ];
     }
   }
 
-  // Si aucun contenu, ajouter un message par défaut
-  if (empty($messageContent)) {
-    return $userMessage ?: 'Analyse ce fichier';
-  }
-
-  return $messageContent;
+  return empty($messageContent) ? ($userMessage ?: 'Analyse ce fichier') : $messageContent;
 }
 
 /**
  * Prépare le contenu du message au format Anthropic
+ * Note: Anthropic préfère les images AVANT le texte
  * @param string $userMessage Le message texte de l'utilisateur
  * @param array $files Les fichiers attachés
  * @return array Le contenu formaté pour l'API Anthropic
@@ -73,48 +112,33 @@ function prepareOpenAIMessageContent($userMessage, $files = [])
 function prepareAnthropicMessageContent($userMessage, $files = [])
 {
   $messageContent = [];
-  $supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-  // Ajouter les images d'abord (Anthropic préfère les images avant le texte)
+  // Ajouter les fichiers d'abord (images avant texte pour Anthropic)
   foreach ($files as $file) {
-    if (in_array($file['type'], $supportedImageTypes)) {
-      $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
+    $base64Data = extractBase64Data($file['data']);
+
+    if (isImageFile($file['type'])) {
       $messageContent[] = [
         'type' => 'image',
-        'source' => [
-          'type' => 'base64',
-          'media_type' => $file['type'],
-          'data' => $base64Data
-        ]
+        'source' => ['type' => 'base64', 'media_type' => $file['type'], 'data' => $base64Data]
       ];
-    } else {
-      // Pour les fichiers non-image, ajouter le contenu comme texte
-      if (
-        strpos($file['type'], 'text/') === 0 ||
-        $file['type'] === 'application/json' ||
-        $file['type'] === 'application/xml'
-      ) {
-        $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
-        $fileContent = base64_decode($base64Data);
-        $messageContent[] = [
-          'type' => 'text',
-          'text' => "Contenu du fichier {$file['name']}:\n```\n{$fileContent}\n```"
-        ];
-      }
+    } else if (isTextFile($file['type'])) {
+      $messageContent[] = [
+        'type' => 'text',
+        'text' => formatTextFileContent($file['name'], $base64Data)
+      ];
     }
   }
 
-  // Ajouter le texte à la fin
-  if (!empty($userMessage)) {
-    $messageContent[] = [
-      'type' => 'text',
-      'text' => $userMessage
-    ];
-  } else if (empty($messageContent)) {
-    $messageContent[] = [
-      'type' => 'text',
-      'text' => 'Analyse ce fichier'
-    ];
+  // Ajouter le texte à la fin (ou un message par défaut)
+  $messageContent[] = [
+    'type' => 'text',
+    'text' => !empty($userMessage) ? $userMessage : (empty($messageContent) ? 'Analyse ce fichier' : '')
+  ];
+
+  // Supprimer le dernier élément s'il est vide (cas: fichiers présents mais pas de message)
+  if (end($messageContent)['text'] === '') {
+    array_pop($messageContent);
   }
 
   return $messageContent;
@@ -129,35 +153,19 @@ function prepareAnthropicMessageContent($userMessage, $files = [])
 function prepareGeminiParts($userMessage, $files = [])
 {
   $parts = [];
-  $supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-  // Ajouter les images si présentes
+  // Traiter les fichiers
   foreach ($files as $file) {
-    if (in_array($file['type'], $supportedImageTypes)) {
-      $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
-      $parts[] = [
-        'inlineData' => [
-          'mimeType' => $file['type'],
-          'data' => $base64Data
-        ]
-      ];
-    } else {
-      // Pour les fichiers non-image, ajouter le contenu comme texte
-      if (
-        strpos($file['type'], 'text/') === 0 ||
-        $file['type'] === 'application/json' ||
-        $file['type'] === 'application/xml'
-      ) {
-        $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
-        $fileContent = base64_decode($base64Data);
-        $parts[] = [
-          'text' => "Contenu du fichier {$file['name']}:\n```\n{$fileContent}\n```"
-        ];
-      }
+    $base64Data = extractBase64Data($file['data']);
+
+    if (isImageFile($file['type'])) {
+      $parts[] = ['inlineData' => ['mimeType' => $file['type'], 'data' => $base64Data]];
+    } else if (isTextFile($file['type'])) {
+      $parts[] = ['text' => formatTextFileContent($file['name'], $base64Data)];
     }
   }
 
-  // Ajouter le texte
+  // Ajouter le texte utilisateur ou un message par défaut
   if (!empty($userMessage)) {
     $parts[] = ['text' => $userMessage];
   } else if (empty($parts)) {
@@ -168,7 +176,7 @@ function prepareGeminiParts($userMessage, $files = [])
 }
 
 /**
- * Prépare le contenu du message pour Ollama (images séparées)
+ * Prépare le contenu du message pour Ollama (images séparées du texte)
  * @param string $userMessage Le message texte de l'utilisateur
  * @param array $files Les fichiers attachés
  * @return array ['content' => string, 'images' => array]
@@ -177,31 +185,20 @@ function prepareOllamaMessage($userMessage, $files = [])
 {
   $messageContent = !empty($userMessage) ? $userMessage : 'Analyse cette image';
   $images = [];
-  $supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
   foreach ($files as $file) {
-    if (in_array($file['type'], $supportedImageTypes)) {
+    $base64Data = extractBase64Data($file['data']);
+
+    if (isImageFile($file['type'])) {
       // Ollama attend les images en base64 sans le préfixe data:
-      $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
       $images[] = $base64Data;
-    } else {
-      // Pour les fichiers non-image, ajouter le contenu au message
-      if (
-        strpos($file['type'], 'text/') === 0 ||
-        $file['type'] === 'application/json' ||
-        $file['type'] === 'application/xml'
-      ) {
-        $base64Data = preg_replace('/^data:[^;]+;base64,/', '', $file['data']);
-        $fileContent = base64_decode($base64Data);
-        $messageContent .= "\n\nContenu du fichier {$file['name']}:\n```\n{$fileContent}\n```";
-      }
+    } else if (isTextFile($file['type'])) {
+      // Fichiers texte: ajouter au contenu du message
+      $messageContent .= "\n\n" . formatTextFileContent($file['name'], $base64Data);
     }
   }
 
-  return [
-    'content' => $messageContent,
-    'images' => $images
-  ];
+  return ['content' => $messageContent, 'images' => $images];
 }
 
 /**
