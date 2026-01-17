@@ -64,7 +64,7 @@ include 'header.php';
         </div>
 
         <p class="text-center text-sm text-neutral-500 mt-6">
-            Déjà un compte ? <a href="login.php" class="text-green-400 hover:text-green-300 transition-colors">Se connecter</a>
+            Vous avez déjà un compte ? <a href="login.php" class="text-green-400 hover:text-green-300 transition-colors">Connectez-vous</a>
         </p>
     </div>
 </main>
