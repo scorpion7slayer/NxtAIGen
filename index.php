@@ -1610,15 +1610,15 @@ if ($user) {
     @media (max-width: 640px) {
       /* Dark mode toggle - décaler vers la gauche pour éviter le bouton profil */
       #themeToggleBtn {
-        top: 0.75rem;
-        right: 3.5rem; /* Laisse place au bouton profil */
+        top: 0.75rem !important;
+        right: 3.75rem !important; /* Laisse place au bouton profil (2.5rem + ~1.25rem gap) */
       }
 
       /* Scroll to bottom - position adaptée au mobile */
       #scrollToBottomBtn {
-        bottom: 6.5rem; /* Au-dessus de l'input mobile */
-        right: 1rem;
-        padding: 0.5rem 0.75rem;
+        bottom: 6.5rem !important; /* Au-dessus de l'input mobile */
+        right: 1rem !important;
+        padding: 0.5rem 0.75rem !important;
       }
     }
 
