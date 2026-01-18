@@ -1616,9 +1616,11 @@ if ($user) {
 
       /* Scroll to bottom - position adaptée au mobile */
       #scrollToBottomBtn {
-        bottom: 6.5rem !important; /* Au-dessus de l'input mobile */
+        bottom: 7rem !important; /* Au-dessus de l'input mobile (qui est à bottom: 0 avec z-index: 40) */
         right: 1rem !important;
         padding: 0.5rem 0.75rem !important;
+        z-index: 45 !important; /* Au-dessus de l'input mobile (z-index: 40) */
+        font-size: 0.875rem !important; /* Légèrement plus petit sur mobile */
       }
     }
 
