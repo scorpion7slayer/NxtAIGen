@@ -450,11 +450,8 @@ curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024);      // Chunks plus petits = latence
 $fullResponse = '';
 $hasError = false;
 $errorBuffer = '';
-$tokensInput = 0;
-$tokensOutput = 0;
-$tokensTotal = 0;
 
-curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullResponse, &$hasError, &$errorBuffer, &$tokensInput, &$tokensOutput, &$tokensTotal, $provider) {
+curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullResponse, &$hasError, &$errorBuffer, $provider) {
   // Vérifier le code HTTP
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -485,19 +482,6 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
 
       $decoded = json_decode($jsonData, true);
       if (!$decoded) continue;
-
-      // Capturer les tokens si disponibles (OpenAI, OpenRouter, etc.)
-      if (isset($decoded['usage'])) {
-        if (isset($decoded['usage']['prompt_tokens'])) {
-          $tokensInput = $decoded['usage']['prompt_tokens'];
-        }
-        if (isset($decoded['usage']['completion_tokens'])) {
-          $tokensOutput = $decoded['usage']['completion_tokens'];
-        }
-        if (isset($decoded['usage']['total_tokens'])) {
-          $tokensTotal = $decoded['usage']['total_tokens'];
-        }
-      }
 
       // Vérifier s'il y a une erreur dans la réponse
       if (isset($decoded['error'])) {
@@ -614,22 +598,8 @@ if (!$hasError) {
   if ($isGuest) {
     // Compteur déjà pré-incrémenté avant le streaming, rien à faire ici
   } else {
-    // Calculer tokens utilisés (utiliser les valeurs capturées ou estimation)
-    $tokensUsed = 0;
-    if ($tokensTotal > 0) {
-      $tokensUsed = $tokensTotal;
-    } else if (isset($responseData['usage']['total_tokens'])) {
-      $tokensUsed = $responseData['usage']['total_tokens'];
-    } else {
-      // Estimation: ~1 token = 4 caractères
-      $tokensUsed = intval((strlen($userMessage) + strlen($fullResponse)) / 4);
-      $tokensInput = intval(strlen($userMessage) / 4);
-      $tokensOutput = intval(strlen($fullResponse) / 4);
-      $tokensTotal = $tokensInput + $tokensOutput;
-    }
-
     // Enregistrer l'usage avec le rate limiter déjà instancié
-    $rateLimiter->incrementUsage($userId, 'message', $tokensUsed, [
+    $rateLimiter->incrementUsage($userId, 'message', 1, [
       'provider' => $provider,
       'model' => $model,
       'response_time' => isset($startTime) ? intval((microtime(true) - $startTime) * 1000) : 0,
@@ -641,15 +611,6 @@ if (!$hasError) {
 // Envoyer l'événement de fin si pas déjà fait et pas d'erreur
 if (!$hasError) {
   $doneData = ['done' => true, 'fullResponse' => $fullResponse];
-
-  // Ajouter les infos de tokens
-  if ($tokensTotal > 0 || $tokensInput > 0 || $tokensOutput > 0) {
-    $doneData['tokens'] = [
-      'input' => $tokensInput,
-      'output' => $tokensOutput,
-      'total' => $tokensTotal
-    ];
-  }
 
   // Ajouter les infos d'utilisation
   if ($isGuest) {
