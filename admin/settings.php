@@ -98,63 +98,16 @@ try {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Preconnect CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Font Awesome non-bloquant -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
   <title>Paramètres Admin - NxtGenAI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Light.ttf') format('truetype');
-      font-weight: 300;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Medium.ttf') format('truetype');
-      font-weight: 500;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Bold.ttf') format('truetype');
-      font-weight: 700;
-    }
-
-    * {
-      font-family: 'TikTok Sans', system-ui, sans-serif;
-    }
-
-    /* Light mode background */
-    body {
-      background-color: #f8fafc;
-    }
-
-    /* Dark mode background */
-    .dark body {
-      background-color: oklch(21% 0.006 285.885);
-    }
-
-    ::selection {
-      background: #d1d5db;
-    }
-
-    .dark ::selection {
-      background: #404040;
-    }
-  </style>
+  <link href="../src/output.css" rel="stylesheet">
 </head>
 
 <body class="min-h-screen text-gray-600 dark:text-neutral-400 overflow-x-hidden">
@@ -180,7 +133,7 @@ try {
         <button onclick="toggleNavMenu()" class="p-2.5 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-600 dark:text-neutral-300 transition-colors">
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-[180px] py-1">
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-45 py-1">
           <div class="px-4 py-2 border-b border-gray-100 dark:border-neutral-700">
             <span class="text-sm font-medium text-gray-700 dark:text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
@@ -318,7 +271,7 @@ try {
                           <button onclick="toggleUserActionsMenu(<?php echo $user['id']; ?>)" class="p-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                           </button>
-                          <div id="userActionsMenu-<?php echo $user['id']; ?>" class="hidden absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                          <div id="userActionsMenu-<?php echo $user['id']; ?>" class="hidden absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-40 py-1">
                             <button onclick="closeAllUserMenus(); openConfirmModal('toggle_admin', <?php echo $user['id']; ?>, '<?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?> cet utilisateur ?', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
                               <i class="fa-solid fa-<?php echo $user['is_admin'] ? 'arrow-down' : 'arrow-up'; ?> text-purple-400 w-5 mr-2"></i><?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?>
                             </button>
@@ -346,7 +299,7 @@ try {
   </main>
 
   <!-- Modal de confirmation -->
-  <div id="confirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+  <div id="confirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm items-center justify-center z-50 hidden">
     <div class="bg-white dark:bg-neutral-800/95 border border-gray-200 dark:border-neutral-700/50 rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl">
       <div class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 mb-6">
         <i class="fa-solid fa-exclamation text-amber-500 dark:text-amber-400 text-lg"></i>
@@ -363,7 +316,7 @@ try {
         <button type="button" class="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-neutral-700/50 hover:bg-gray-300 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600/30 rounded-xl text-sm text-gray-700 dark:text-neutral-300 font-medium transition-colors cursor-pointer" onclick="closeConfirmModal()">
           <i class="fa-solid fa-times mr-2"></i>Annuler
         </button>
-        <button type="button" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg cursor-pointer" onclick="submitConfirm()">
+        <button type="button" class="flex-1 px-4 py-2.5 bg-linear-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg cursor-pointer" onclick="submitConfirm()">
           <i class="fa-solid fa-check mr-2"></i>Confirmer
         </button>
       </div>
@@ -371,7 +324,7 @@ try {
   </div>
 
   <!-- Modal de réinitialisation du mot de passe -->
-  <div id="resetModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+  <div id="resetModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm items-center justify-center z-50 hidden">
     <div class="bg-white dark:bg-neutral-800/95 border border-gray-200 dark:border-neutral-700/50 rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl">
       <div class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 mb-6">
         <i class="fa-solid fa-key text-blue-500 dark:text-blue-400 text-lg"></i>
@@ -394,7 +347,7 @@ try {
           <button type="button" class="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-neutral-700/50 hover:bg-gray-300 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600/30 rounded-xl text-sm text-gray-700 dark:text-neutral-300 font-medium transition-colors cursor-pointer" onclick="closeResetModal()">
             <i class="fa-solid fa-times mr-2"></i>Annuler
           </button>
-          <button type="submit" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg cursor-pointer">
+          <button type="submit" class="flex-1 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg cursor-pointer">
             <i class="fa-solid fa-check mr-2"></i>Réinitialiser
           </button>
         </div>
@@ -447,18 +400,22 @@ try {
       // Changer les couleurs en fonction de l'action
       const confirmBtn = document.querySelector('#confirmModal button:last-of-type');
       if (action === 'delete_user') {
-        confirmBtn.className = 'flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg';
+        confirmBtn.className = 'flex-1 px-4 py-2.5 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg';
         confirmBtn.innerHTML = '<i class="fa-solid fa-trash mr-2"></i>Supprimer';
       } else {
-        confirmBtn.className = 'flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg';
+        confirmBtn.className = 'flex-1 px-4 py-2.5 bg-linear-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 rounded-xl text-sm text-white font-medium transition-colors shadow-lg';
         confirmBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>Confirmer';
       }
 
-      document.getElementById('confirmModal').classList.remove('hidden');
+      const confirmModal = document.getElementById('confirmModal');
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('flex');
     }
 
     function closeConfirmModal() {
-      document.getElementById('confirmModal').classList.add('hidden');
+      const confirmModal = document.getElementById('confirmModal');
+      confirmModal.classList.add('hidden');
+      confirmModal.classList.remove('flex');
     }
 
     function submitConfirm() {
@@ -468,14 +425,18 @@ try {
 
     // Modal de réinitialisation du mot de passe
     function openResetModal(userId, username) {
+      const resetModal = document.getElementById('resetModal');
       document.getElementById('resetUserId').value = userId;
       document.getElementById('resetUsername').textContent = username;
       document.getElementById('newPassword').value = '';
-      document.getElementById('resetModal').classList.remove('hidden');
+      resetModal.classList.remove('hidden');
+      resetModal.classList.add('flex');
     }
 
     function closeResetModal() {
-      document.getElementById('resetModal').classList.add('hidden');
+      const resetModal = document.getElementById('resetModal');
+      resetModal.classList.add('hidden');
+      resetModal.classList.remove('flex');
     }
 
     // Fermer les modals en cliquant en dehors

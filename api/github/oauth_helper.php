@@ -16,7 +16,7 @@ class GitHubCopilotOAuth
     $this->pdo = $pdo;
 
     // Charger les credentials OAuth depuis config
-    $oauthConfig = require __DIR__ . '/github/config.php';
+    $oauthConfig = require __DIR__ . '/config.php';
     $this->clientId = $clientId ?? $oauthConfig['GITHUB_CLIENT_ID'] ?? '';
     $this->clientSecret = $clientSecret ?? $oauthConfig['GITHUB_CLIENT_SECRET'] ?? '';
   }

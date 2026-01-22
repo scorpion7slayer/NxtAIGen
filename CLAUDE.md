@@ -4,20 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NxtGenAI is a multi-provider web platform for conversational AI. It allows users (logged-in or guests) to interact with various AI models via a unified interface with real-time streaming.
+NxtAIGen is a multi-provider web platform for conversational AI. It allows users (logged-in or guests) to interact with various AI models via a unified interface with real-time streaming.
 
-**Tech Stack:** PHP 8.5, MySQL 9.5, Vanilla JavaScript, TailwindCSS v4 (via CDN), REST API architecture
+**Tech Stack:** PHP 8.5, MySQL 9.5, Vanilla JavaScript, TailwindCSS v4 (via CLI), REST API architecture
 
 **Local Environment:** WAMP64 (Windows) at `c:\wamp64\www\NxtAIGen`
 
-## Frontend Libraries (CDN)
+## Frontend Libraries
 
-| Library      | Version      | Purpose                                 |
-| ------------ | ------------ | --------------------------------------- |
-| TailwindCSS  | v4 (browser) | Utility-first CSS framework             |
-| Marked.js    | 15.0.4       | Markdown parsing and rendering          |
-| Highlight.js | 11.11.1      | Syntax highlighting (github-dark theme) |
-| Font Awesome | 7.0.1        | Icon library                            |
+**Local (CLI):**
+
+| Library     | Version | Purpose                     |
+| ----------- | ------- | --------------------------- |
+| TailwindCSS | v4.1.18 | Utility-first CSS framework |
+
+**CDN:**
+
+| Library      | Version | Purpose                                 |
+| ------------ | ------- | --------------------------------------- |
+| Marked.js    | 15.0.4  | Markdown parsing and rendering          |
+| Highlight.js | 11.11.1 | Syntax highlighting (github-dark theme) |
+| Font Awesome | 7.0.1   | Icon library                            |
+
+## Tailwind CSS Configuration
+
+**Build command:**
+
+```bash
+npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
+```
+
+**Files:**
+
+- `src/input.css` - Source avec `@theme`, `@layer`, directives personnalisées
+- `src/output.css` - CSS compilé (chargé par index.php)
+- `package.json` - Dépendances `tailwindcss` et `@tailwindcss/cli`
 
 ## Custom Fonts
 

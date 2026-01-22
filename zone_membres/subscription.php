@@ -170,7 +170,7 @@ include 'header.php';
     <div class="space-y-3">
       <?php if ($currentPlan === 'free'): ?>
         <!-- Bouton pour upgrader -->
-        <a href="../shop/abonnement-achat-index-stripe.php" class="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl px-4 py-3 text-sm font-medium transition-all shadow-lg shadow-green-500/25">
+        <a href="../shop/abonnement-achat-index-stripe.php" class="flex items-center justify-center gap-2 w-full bg-linear-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl px-4 py-3 text-sm font-medium transition-all shadow-lg shadow-green-500/25">
           <i class="fa-solid fa-arrow-up"></i>
           <span>Passer à un plan supérieur</span>
         </a>

@@ -67,19 +67,37 @@ if ($user) {
   <?php if (!$isGuest): ?>
     <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>" />
   <?php endif; ?>
+
+  <!-- Preconnect pour les CDN externes (améliore TTFB) -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="src/output.css" as="style">
+
   <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg" />
+  <link href="src/output.css" rel="stylesheet">
+
+  <!-- Font Awesome - chargement non-bloquant -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
     crossorigin="anonymous"
-    referrerpolicy="no-referrer" />
-  <!-- Highlight.js pour la coloration syntaxique -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" />
+    referrerpolicy="no-referrer"
+    media="print"
+    onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  </noscript>
+
+  <!-- Highlight.js - chargement différé -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" media="print" onload="this.media='all'" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-  <!-- Marked.js pour le parsing Markdown -->
+
+  <!-- Marked.js - chargement synchrone (requis avant le script inline) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.4/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
   <!-- Variables globales pour les scripts externes -->
   <script>
     window.isGuest = <?php echo $isGuest ? 'true' : 'false'; ?>;
@@ -87,1886 +105,16 @@ if ($user) {
   </script>
   <script src="assets/js/models.js" defer></script>
   <script src="assets/js/rate_limit_widget.js" defer></script>
-  <title>NxtGenAI</title>
-  <style>
-    /* Fix pour le scroll - empêcher le body de s'étendre */
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('assets/fonts/TikTok_Sans/static/TikTokSans-Medium.ttf') format('truetype');
-      font-weight: 500;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('assets/fonts/TikTok_Sans/static/TikTokSans-Bold.ttf') format('truetype');
-      font-weight: 700;
-    }
-
-    /* Police Noto Color Emoji pour afficher tous les emojis (drapeaux, etc.) */
-    @font-face {
-      font-family: 'Noto Color Emoji';
-      src: url('assets/fonts/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf') format('truetype');
-      font-display: swap;
-    }
-
-    * {
-      font-family: 'TikTok Sans', 'Noto Color Emoji', system-ui, sans-serif;
-    }
-
-    body {
-      background-color: oklch(21% 0.006 285.885);
-    }
-
-    ::selection {
-      background: #404040;
-    }
-
-    /* Styles pour le rendu Markdown */
-    .ai-message h1,
-    .ai-message h2,
-    .ai-message h3 {
-      font-weight: 600;
-      margin-top: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .ai-message h1 {
-      font-size: 1.5rem;
-    }
-
-    .ai-message h2 {
-      font-size: 1.25rem;
-    }
-
-    .ai-message h3 {
-      font-size: 1.1rem;
-    }
-
-    .ai-message p {
-      margin-bottom: 0.75rem;
-    }
-
-    .ai-message ul,
-    .ai-message ol {
-      margin-left: 1.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .ai-message li {
-      margin-bottom: 0.25rem;
-    }
-
-    .ai-message a {
-      color: #60a5fa;
-      text-decoration: underline;
-    }
-
-    .ai-message strong {
-      font-weight: 600;
-    }
-
-    /* Modales personnalisées */
-    .modal-backdrop {
-      backdrop-filter: blur(4px);
-      animation: fadeIn 0.2s ease-out;
-    }
-
-    .modal-content {
-      animation: slideUp 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    /* Input focus ring custom */
-    .modal-input:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px rgb(59 130 246);
-      border-color: rgb(59 130 246);
-    }
-
-    .ai-message em {
-      font-style: italic;
-    }
-
-    /* Curseur de streaming */
-    .streaming-cursor {
-      display: inline-block;
-      width: 0.6em;
-      height: 1.2em;
-      background-color: #10b981;
-      animation: blink 1s step-end infinite;
-      margin-left: 0.15rem;
-      vertical-align: text-bottom;
-      pointer-events: none;
-    }
-
-    .streaming-response.done .streaming-cursor {
-      display: none;
-    }
-
-    @keyframes blink {
-      50% {
-        opacity: 0;
-      }
-    }
-
-    /* Styles pour les blocs de code */
-    .ai-message .code-block-wrapper {
-      position: relative;
-      background-color: #0d1117;
-      border-radius: 0.5rem;
-      margin: 1rem 0;
-      overflow: hidden;
-    }
-
-    .ai-message .code-block-wrapper pre {
-      margin: 0;
-      background: transparent;
-    }
-
-    .ai-message pre {
-      position: relative;
-      background-color: #0d1117;
-      border-radius: 0.5rem;
-      margin: 1rem 0;
-      overflow: hidden;
-    }
-
-    .ai-message pre code {
-      display: block;
-      padding: 1rem;
-      overflow-x: auto;
-      font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 0.875rem;
-      line-height: 1.5;
-    }
-
-    .ai-message code:not(pre code) {
-      background-color: rgba(110, 118, 129, 0.4);
-      padding: 0.2rem 0.4rem;
-      border-radius: 0.25rem;
-      font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 0.875em;
-    }
-
-    /* Header du bloc de code avec langage et bouton copier */
-    .code-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #161b22;
-      padding: 0.5rem 1rem;
-      border-bottom: 1px solid #30363d;
-      font-size: 0.75rem;
-      color: #8b949e;
-    }
-
-    .copy-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      background-color: transparent;
-      color: #8b949e;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .copy-btn:hover {
-      background-color: #30363d;
-      color: #c9d1d9;
-    }
-
-    .copy-btn.copied {
-      color: #3fb950;
-    }
-
-    /* Animation de chargement - 3 points */
-    .typing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .typing-indicator .dot {
-      width: 8px;
-      height: 8px;
-      background-color: #10b981;
-      border-radius: 50%;
-      animation: typing 1.4s infinite ease-in-out both;
-    }
-
-    .typing-indicator .dot:nth-child(1) {
-      animation-delay: 0s;
-    }
-
-    .typing-indicator .dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .typing-indicator .dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes typing {
-
-      0%,
-      80%,
-      100% {
-        transform: scale(0.6);
-        opacity: 0.4;
-      }
-
-      40% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    /* Texte "..." animé */
-    .thinking-text {
-      color: #9ca3af;
-      font-size: 0.875rem;
-      margin-left: 8px;
-    }
-
-    .thinking-text::after {
-      content: '';
-      animation: ellipsis 1.5s infinite;
-    }
-
-    @keyframes ellipsis {
-      0% {
-        content: '';
-      }
-
-      25% {
-        content: '.';
-      }
-
-      50% {
-        content: '..';
-      }
-
-      75% {
-        content: '...';
-      }
-
-      100% {
-        content: '';
-      }
-    }
-
-    /* Scrollbar personnalisée */
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: #4b5563 #1f2937;
-    }
-
-    *::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    *::-webkit-scrollbar-track {
-      background: #1f2937;
-      border-radius: 4px;
-    }
-
-    *::-webkit-scrollbar-thumb {
-      background: #4b5563;
-      border-radius: 4px;
-      transition: background 0.3s ease;
-    }
-
-    *::-webkit-scrollbar-thumb:hover {
-      background: #6b7280;
-    }
-
-    *::-webkit-scrollbar-thumb:active {
-      background: #10b981;
-    }
-
-    /* Scrollbar pour les blocs de code */
-    pre::-webkit-scrollbar-thumb {
-      background: #374151;
-    }
-
-    pre::-webkit-scrollbar-thumb:hover {
-      background: #4b5563;
-    }
-
-    /* ===== SIDEBAR HISTORIQUE ===== */
-    .conversation-sidebar {
-      width: 280px;
-      min-width: 280px;
-      z-index: 40;
-      position: relative;
-    }
-
-    .conversation-sidebar[data-collapsed="true"] {
-      width: 0;
-      min-width: 0;
-      padding: 0;
-      overflow: hidden;
-      border: none;
-    }
-
-    .conversation-sidebar[data-collapsed="true"] .sidebar-header,
-    .conversation-sidebar[data-collapsed="true"] .sidebar-search,
-    .conversation-sidebar[data-collapsed="true"] .sidebar-footer,
-    .conversation-sidebar[data-collapsed="true"] #conversationList {
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* Scrollbar personnalisée sidebar */
-    #conversationList {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-    }
-
-    #conversationList::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #conversationList::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    #conversationList::-webkit-scrollbar-thumb {
-      background-color: rgba(75, 85, 99, 0.5);
-      border-radius: 3px;
-    }
-
-    #conversationList::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(75, 85, 99, 0.8);
-    }
-
-    /* Item conversation */
-    .conversation-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      border-left: 2px solid transparent;
-      position: relative;
-    }
-
-    .conversation-item:hover {
-      background-color: rgba(75, 85, 99, 0.2);
-    }
-
-    .conversation-item.active {
-      background-color: rgba(16, 185, 129, 0.08);
-      border-left-color: #10b981;
-    }
-
-    .conversation-item.active .conv-icon {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-
-    .conversation-item .conv-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 0.5rem;
-      background-color: rgba(75, 85, 99, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      color: #9ca3af;
-      transition: all 0.15s ease;
-    }
-
-    .conversation-item:hover .conv-icon {
-      background-color: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-    }
-
-    .conversation-item .conv-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .conversation-item .conv-title {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #d1d5db;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      transition: color 0.15s ease;
-    }
-
-    .conversation-item:hover .conv-title,
-    .conversation-item.active .conv-title {
-      color: #f3f4f6;
-    }
-
-    .conversation-item .conv-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.25rem;
-    }
-
-    .conversation-item .conv-date {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-
-    .conversation-item .conv-badge {
-      font-size: 0.65rem;
-      padding: 0.125rem 0.375rem;
-      border-radius: 9999px;
-      background-color: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      font-weight: 500;
-    }
-
-    .conversation-item .conv-actions {
-      display: flex;
-      gap: 0.25rem;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.15s ease;
-      position: absolute;
-      right: 0.5rem;
-      background: linear-gradient(to right, transparent, rgba(17, 24, 39, 0.9) 20%);
-      padding-left: 1rem;
-    }
-
-    .conversation-item:hover .conv-actions {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .conversation-item .conv-action-btn {
-      padding: 0.375rem;
-      border-radius: 0.375rem;
-      color: #9ca3af;
-      transition: all 0.15s ease;
-    }
-
-    .conversation-item .conv-action-btn:hover {
-      background-color: rgba(55, 65, 81, 0.8);
-      color: #f3f4f6;
-    }
-
-    .conversation-item .conv-action-btn.delete:hover {
-      background-color: rgba(239, 68, 68, 0.2);
-      color: #f87171;
-    }
-
-    /* Toggle icon animation */
-    .sidebar-toggle-icon {
-      transition: transform 0.3s ease;
-    }
-
-    .conversation-sidebar[data-collapsed="true"]~#openSidebarBtn .sidebar-toggle-icon,
-    [data-collapsed="true"] .sidebar-toggle-icon {
-      transform: rotate(180deg);
-    }
-
-    /* Position par défaut du profil (desktop) - reste en bas à gauche, derrière la sidebar */
-    .profile-desktop-position {
-      left: 0.5rem;
-    }
-
-    /* Mobile responsive */
-    @media (max-width: 768px) {
-      .conversation-sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 40;
-        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
-      }
-
-      .conversation-sidebar[data-collapsed="true"] {
-        transform: translateX(-100%);
-      }
-    }
-
-    /* Confirmation modal */
-    .confirm-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-    }
-
-    .confirm-modal-content {
-      background-color: #1f2937;
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      border-radius: 1rem;
-      padding: 1.5rem;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    /* ===== ANIMATION ZONE DE SAISIE ===== */
-    /* État initial: centré */
-    #mainContent.centered {
-      justify-content: center;
-    }
-
-    /* État actif: chat visible, input en bas */
-    #mainContent.chat-active {
-      justify-content: flex-start;
-      padding-bottom: 0;
-    }
-
-    #mainContent.chat-active #chatContainer {
-      flex: 1;
-      max-height: none;
-      margin-bottom: 1rem;
-      min-height: 0;
-    }
-
-    #mainContent.chat-active #inputWrapper {
-      position: sticky;
-      bottom: 0;
-      background: linear-gradient(to top, oklch(21% 0.006 285.885) 85%, transparent);
-      padding-top: 1rem;
-      padding-bottom: 1rem;
-      margin-top: auto;
-    }
-
-    /* Animation du bouton envoyer */
-    #sendButton:not(:disabled) {
-      background-color: #10b981;
-      color: white;
-      cursor: pointer;
-    }
-
-    #sendButton:not(:disabled):hover {
-      background-color: #059669;
-    }
-
-    /* ===== ACCESSIBILITÉ ===== */
-
-    /* Classe pour éléments visibles uniquement aux screen readers */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border-width: 0;
-    }
-
-    /* Focus visible amélioré pour tous les éléments interactifs */
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible,
-    [tabindex]:focus-visible {
-      outline: 2px solid #10b981;
-      outline-offset: 2px;
-    }
-
-    /* Amélioration contraste des placeholders */
-    ::placeholder {
-      color: #9ca3af;
-      opacity: 1;
-    }
-
-    /* États disabled plus visibles */
-    [disabled],
-    [aria-disabled="true"] {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    /* Respecter les préférences de mouvement réduit */
-    @media (prefers-reduced-motion: reduce) {
-
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-
-      .streaming-cursor {
-        animation: none;
-        opacity: 1;
-      }
-
-      .typing-indicator .dot {
-        animation: none;
-        opacity: 0.8;
-      }
-    }
-
-    /* ===== INPUT FOCUS STYLE - Subtil et élégant ===== */
-    #inputContainer {
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    #inputContainer:has(#messageInput:focus) {
-      border-color: rgba(34, 197, 94, 0.3);
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.1);
-    }
-
-    /* Supprimer l'outline natif du navigateur sur l'input */
-    #messageInput:focus,
-    #mobileMessageInput:focus {
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    /* ===== MOBILE INPUT - VERSION DISTINCTE ===== */
-
-    /* Par défaut: mobile caché, desktop visible */
-    #mobileInputContainer {
-      display: none;
-    }
-
-    #inputWrapper {
-      display: block;
-    }
-
-    /* Mobile: afficher version mobile, cacher desktop */
-    @media (max-width: 640px) {
-
-      /* Cacher la version desktop mais garder le menu modèles accessible */
-      #inputWrapper {
-        visibility: hidden !important;
-        height: 0 !important;
-        overflow: visible !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-
-      /* Le menu modèles reste visible en position fixe */
-      #inputWrapper #modelMenu {
-        visibility: visible !important;
-      }
-
-      #inputWrapper #modelMenu.opacity-100 {
-        position: fixed !important;
-        bottom: 5.5rem !important;
-        left: 1rem !important;
-        right: 1rem !important;
-        top: auto !important;
-        width: auto !important;
-        max-width: none !important;
-        max-height: 50vh !important;
-        z-index: 100 !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        transform: none !important;
-      }
-
-      /* Afficher la version mobile */
-      #mobileInputContainer {
-        display: flex !important;
-        flex-direction: column;
-        width: 100%;
-        padding: 0 1rem;
-      }
-
-      /* Style container mobile - similaire au desktop */
-      #mobileInputBox {
-        background: rgba(31, 41, 55, 0.5);
-        border: 1px solid rgba(75, 85, 99, 0.5);
-        border-radius: 1rem;
-        padding: 1rem;
-        width: 100%;
-      }
-
-      /* Input mobile - style desktop */
-      #mobileMessageInput {
-        width: 100%;
-        background: transparent;
-        border: none;
-        outline: none;
-        color: #d1d5db;
-        font-size: 1rem;
-        /* 16px évite zoom iOS */
-        padding: 0;
-        margin-bottom: 1rem;
-      }
-
-      #mobileMessageInput::placeholder {
-        color: #9ca3af;
-      }
-
-      /* Barre d'actions mobile */
-      #mobileActions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      /* Groupe icônes gauche mobile */
-      #mobileActionsLeft {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      /* Boutons icônes mobile */
-      .mobile-icon-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.5rem;
-        background: transparent;
-        color: #9ca3af;
-        transition: all 0.2s;
-        border: none;
-        cursor: pointer;
-      }
-
-      .mobile-icon-btn:hover,
-      .mobile-icon-btn:focus {
-        background: rgba(75, 85, 99, 0.5);
-        color: #e5e7eb;
-      }
-
-      .mobile-icon-btn svg {
-        width: 1.125rem;
-        height: 1.125rem;
-      }
-
-      /* Bouton envoi mobile */
-      #mobileSendButton {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 0.75rem;
-        background: #374151;
-        color: #9ca3af;
-        border: none;
-        cursor: not-allowed;
-        transition: all 0.3s;
-      }
-
-      #mobileSendButton.active {
-        background: #10b981;
-        color: white;
-        cursor: pointer;
-      }
-
-      #mobileSendButton svg {
-        width: 1.125rem;
-        height: 1.125rem;
-      }
-
-      /* Badge sélecteur modèle mobile - style pill */
-      #mobileModelSelector {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.25rem 0.625rem;
-        border-radius: 9999px;
-        background: rgba(75, 85, 99, 0.5);
-        border: 1px solid rgba(107, 114, 128, 0.3);
-        color: #d1d5db;
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      #mobileModelSelector:hover,
-      #mobileModelSelector:focus {
-        background: rgba(75, 85, 99, 0.8);
-        color: #f3f4f6;
-      }
-
-      #mobileModelSelector img {
-        width: 0.875rem;
-        height: 0.875rem;
-        border-radius: 0.25rem;
-      }
-
-      /* Logo plus grand sur mobile pour l'écran d'accueil */
-      #logoContainer {
-        margin-bottom: 1.5rem;
-      }
-
-      #siteLogo {
-        height: 4rem;
-      }
-
-      /* Message accueil - style Perplexity */
-      #welcomeMessage {
-        font-size: 1.125rem;
-        font-weight: 500;
-        padding: 0 1rem;
-        margin-bottom: 1.5rem;
-        color: #e5e7eb;
-      }
-
-      /* Bouton historique sur mobile - visible en haut à gauche */
-      #openSidebarBtn {
-        display: flex !important;
-        position: fixed !important;
-        top: 0.75rem !important;
-        left: 0.75rem !important;
-        padding: 0.5rem !important;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50% !important;
-        background: rgba(31, 41, 55, 0.9) !important;
-        -webkit-backdrop-filter: blur(8px);
-        backdrop-filter: blur(8px);
-      }
-
-      /* Cacher le bouton historique quand sidebar ouverte sur mobile */
-      #openSidebarBtn.hidden {
-        display: none !important;
-      }
-
-      /* Repositionner les boutons connexion en haut à droite sur mobile */
-      #profileContainer {
-        position: fixed !important;
-        bottom: auto !important;
-        top: 0.75rem !important;
-        left: auto !important;
-        right: 0.75rem !important;
-        width: auto !important;
-      }
-
-      /* Surcharger la classe desktop */
-      #profileContainer.profile-desktop-position {
-        left: auto !important;
-      }
-
-      #profileContainer .flex.items-center.gap-2 {
-        flex-direction: row;
-        gap: 0.5rem !important;
-      }
-
-      /* Boutons auth en rond sur mobile */
-      #profileContainer a.rounded-full {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-      }
-
-      #profileContainer a.rounded-full span {
-        display: none !important;
-      }
-
-      #profileContainer a.rounded-full i {
-        margin: 0 !important;
-      }
-
-      /* Profile button (connecté) - dimensions gérées globalement */
-      /* Cacher l'indicateur chevron sur mobile */
-      #profileButton #profileIcon {
-        display: none !important;
-      }
-
-      /* Menu profil sur mobile - s'afficher en dessous */
-      #profileMenu {
-        bottom: auto !important;
-        top: 100% !important;
-        left: auto !important;
-        right: 0 !important;
-        margin-top: 0.5rem !important;
-        margin-bottom: 0 !important;
-      }
-
-      /* Main content - centré verticalement */
-      #mainContent {
-        overflow-x: hidden;
-        padding: 1rem 0.5rem !important;
-        justify-content: flex-start;
-        padding-top: 15vh !important;
-      }
-
-      /* Quand conversation active - repositionner */
-      #mainContent.chat-active {
-        padding-top: 1rem !important;
-        justify-content: flex-start;
-      }
-
-      #mainContent.chat-active #logoContainer {
-        display: none;
-      }
-
-      #mainContent.chat-active #welcomeMessage {
-        display: none;
-      }
-
-      #mainContent.chat-active #mobileInputContainer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgb(17, 24, 39) 85%, transparent);
-        padding: 1rem;
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
-        z-index: 40;
-      }
-
-      /* Chat container mobile */
-      #mainContent.chat-active #chatContainer {
-        padding-bottom: 6rem;
-      }
-
-      /* Prévisualisation fichiers mobile */
-      #mobileFilePreview {
-        margin-bottom: 0.75rem;
-      }
-
-      #mobileFilePreview:empty {
-        display: none;
-      }
-
-      /* Profile container mobile - position gérée via right (défini plus haut) */
-
-      /* Menu modèles - repositionné pour mobile */
-      #modelMenu {
-        position: fixed !important;
-        bottom: 5rem !important;
-        left: 1rem !important;
-        right: 1rem !important;
-        top: auto !important;
-        width: auto !important;
-        max-width: none !important;
-        max-height: 50vh !important;
-        transform: none !important;
-        z-index: 100 !important;
-      }
-
-      #modelMenu.opacity-100 {
-        transform: none !important;
-      }
-    }
-
-    /* ===== TRÈS PETITS ÉCRANS (< 380px) ===== */
-    @media (max-width: 380px) {
-      #mobileInputBox {
-        padding: 0.75rem;
-        border-radius: 1.25rem;
-      }
-
-      #mobileMessageInput {
-        font-size: 0.9375rem;
-      }
-
-      #mobileModelSelector span {
-        max-width: 60px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      #siteLogo {
-        height: 3.5rem;
-      }
-
-      #welcomeMessage {
-        font-size: 1rem;
-      }
-    }
-
-    /* ===== DESKTOP - garder styles existants optimisés ===== */
-    @media (min-width: 641px) {
-
-      /* Desktop garde tout comme avant */
-      #inputContainer {
-        padding: 1rem;
-      }
-    }
-
-    /* ===== MOBILE BOTTOM SHEET - MENU MODÈLES ===== */
-    .mobile-bottom-sheet {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-    }
-
-    .mobile-bottom-sheet.active {
-      pointer-events: auto;
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .mobile-bottom-sheet-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    .mobile-bottom-sheet-content {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-height: 85vh;
-      background: #1f2937;
-      border-radius: 1.5rem 1.5rem 0 0;
-      transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      padding-bottom: env(safe-area-inset-bottom, 0);
-    }
-
-    .mobile-bottom-sheet.active .mobile-bottom-sheet-content {
-      transform: translateY(0);
-    }
-
-    /* Handle du bottom sheet */
-    .mobile-sheet-handle {
-      width: 36px;
-      height: 4px;
-      background: rgba(156, 163, 175, 0.4);
-      border-radius: 9999px;
-      margin: 0.75rem auto;
-      flex-shrink: 0;
-    }
-
-    /* Header du bottom sheet modèles */
-    .mobile-sheet-header {
-      padding: 0 1rem 0.75rem;
-      border-bottom: 1px solid rgba(75, 85, 99, 0.3);
-      flex-shrink: 0;
-    }
-
-    .mobile-sheet-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #f3f4f6;
-      margin-bottom: 0.75rem;
-    }
-
-    /* Recherche dans le bottom sheet */
-    .mobile-sheet-search {
-      position: relative;
-    }
-
-    .mobile-sheet-search input {
-      width: 100%;
-      padding: 0.75rem 1rem 0.75rem 2.75rem;
-      background: rgba(55, 65, 81, 0.5);
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      border-radius: 0.75rem;
-      color: #e5e7eb;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .mobile-sheet-search input:focus {
-      border-color: rgba(16, 185, 129, 0.5);
-      background: rgba(55, 65, 81, 0.8);
-    }
-
-    .mobile-sheet-search input::placeholder {
-      color: #9ca3af;
-    }
-
-    .mobile-sheet-search i {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-      pointer-events: none;
-    }
-
-    /* Liste des modèles mobile */
-    .mobile-sheet-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0.5rem;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Section provider dans la liste mobile */
-    .mobile-provider-section {
-      margin-bottom: 0.5rem;
-    }
-
-    .mobile-provider-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      color: #9ca3af;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .mobile-provider-header img {
-      width: 1rem;
-      height: 1rem;
-      border-radius: 0.25rem;
-    }
-
-    /* Item modèle mobile - touch-friendly */
-    .mobile-model-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      cursor: pointer;
-      transition: background 0.15s ease;
-      min-height: 56px;
-      /* Touch target minimum */
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .mobile-model-item:hover,
-    .mobile-model-item:active {
-      background: rgba(55, 65, 81, 0.5);
-    }
-
-    .mobile-model-item.selected {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .mobile-model-item img {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 0.5rem;
-      flex-shrink: 0;
-    }
-
-    .mobile-model-item .model-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .mobile-model-item .model-name {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: #e5e7eb;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .mobile-model-item .model-provider {
-      font-size: 0.75rem;
-      color: #9ca3af;
-      margin-top: 0.125rem;
-    }
-
-    .mobile-model-item .model-check {
-      color: #10b981;
-      font-size: 1.125rem;
-      flex-shrink: 0;
-    }
-
-    /* ===== MOBILE BOTTOM SHEET - MENU PROFIL ===== */
-    .mobile-profile-sheet .mobile-bottom-sheet-content {
-      max-height: auto;
-      padding: 0 0 env(safe-area-inset-bottom, 1rem);
-    }
-
-    .mobile-profile-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(75, 85, 99, 0.3);
-    }
-
-    .mobile-profile-avatar {
-      width: 3.5rem;
-      height: 3.5rem;
-      border-radius: 9999px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.25rem;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .mobile-profile-info h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #f3f4f6;
-    }
-
-    .mobile-profile-info p {
-      font-size: 0.875rem;
-      color: #9ca3af;
-      margin-top: 0.125rem;
-    }
-
-    /* Items du menu profil mobile */
-    .mobile-profile-menu {
-      padding: 0.5rem;
-    }
-
-    .mobile-profile-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
-      border-radius: 0.75rem;
-      color: #d1d5db;
-      font-size: 0.9375rem;
-      cursor: pointer;
-      transition: background 0.15s ease;
-      min-height: 56px;
-      -webkit-tap-highlight-color: transparent;
-      text-decoration: none;
-    }
-
-    .mobile-profile-item:hover,
-    .mobile-profile-item:active {
-      background: rgba(55, 65, 81, 0.5);
-    }
-
-    .mobile-profile-item i {
-      width: 1.5rem;
-      text-align: center;
-      font-size: 1.125rem;
-      color: #9ca3af;
-    }
-
-    .mobile-profile-item.danger {
-      color: #f87171;
-    }
-
-    .mobile-profile-item.danger i {
-      color: #f87171;
-    }
-
-    .mobile-profile-divider {
-      height: 1px;
-      background: rgba(75, 85, 99, 0.3);
-      margin: 0.5rem 0.75rem;
-    }
-
-    /* ===== MOBILE AUTH BUTTONS SHEET ===== */
-    .mobile-auth-sheet .mobile-bottom-sheet-content {
-      padding: 1rem 1rem calc(env(safe-area-inset-bottom, 1rem) + 0.5rem);
-    }
-
-    .mobile-auth-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .mobile-auth-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      min-height: 56px;
-      text-decoration: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .mobile-auth-btn.primary {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-
-    .mobile-auth-btn.primary:hover,
-    .mobile-auth-btn.primary:active {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    }
-
-    .mobile-auth-btn.secondary {
-      background: rgba(55, 65, 81, 0.5);
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      color: #e5e7eb;
-    }
-
-    .mobile-auth-btn.secondary:hover,
-    .mobile-auth-btn.secondary:active {
-      background: rgba(55, 65, 81, 0.8);
-    }
-
-    /* ===== OVERRIDE MOBILE/TABLETTE - Cacher menus desktop ===== */
-    @media (max-width: 800px) {
-
-      /* Cacher le menu modèles desktop sur mobile/tablette */
-      #modelMenu {
-        display: none !important;
-      }
-
-      /* Cacher le menu profil desktop sur mobile/tablette */
-      #profileMenu {
-        display: none !important;
-      }
-
-      /* Boutons auth mobile */
-      #profileContainer>.flex.items-center.gap-2>a {
-        display: none !important;
-      }
-
-      /* Afficher le bouton compact auth mobile */
-      #mobileAuthTrigger {
-        display: flex !important;
-      }
-    }
-
-    /* Cacher le trigger auth sur desktop */
-    @media (min-width: 801px) {
-
-      #mobileAuthTrigger,
-      #mobileModelSheet,
-      #mobileProfileSheet,
-      #mobileAuthSheet {
-        display: none !important;
-      }
-    }
-
-    /* ===== TABLETTE (641px - 1024px) ===== */
-    @media (min-width: 641px) and (max-width: 1024px) {
-
-      /* Sidebar plus étroite sur tablette */
-      .conversation-sidebar {
-        width: 240px;
-        min-width: 240px;
-      }
-
-      /* Ajuster la position du profil */
-      .profile-desktop-position {
-        left: calc(240px + 0.5rem);
-      }
-
-      /* Zone de saisie adaptée */
-      #inputWrapper {
-        max-width: 90%;
-      }
-
-      /* Chat container plus large */
-      #chatContainer {
-        max-width: 90%;
-      }
-    }
-
-    /* ===== BOUTON PROFIL - TOUJOURS ROND (toutes tailles) ===== */
-    #profileButton {
-      width: 3rem;
-      height: 3rem;
-      min-width: 3rem;
-      min-height: 3rem;
-      border-radius: 9999px !important;
-      padding: 0 !important;
-    }
-
-    /* Sur mobile, légèrement plus petit */
-    @media (max-width: 640px) {
-      #profileButton {
-        width: 2.5rem;
-        height: 2.5rem;
-        min-width: 2.5rem;
-        min-height: 2.5rem;
-      }
-    }
-
-    /* ===== DARK/LIGHT MODE - CSS CUSTOM (Browser CDN ne supporte pas dark:) ===== */
-    body[data-theme="light"] {
-      background-color: #f9fafb;
-      color: #111827;
-    }
-
-    body[data-theme="light"] #conversationSidebar {
-      background-color: #ffffff !important;
-      border-right-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] .conversation-item {
-      color: #4b5563;
-    }
-
-    body[data-theme="light"] .conversation-item:hover {
-      background-color: rgba(156, 163, 175, 0.1);
-    }
-
-    body[data-theme="light"] .conversation-item.active {
-      background-color: rgba(16, 185, 129, 0.1);
-    }
-
-    body[data-theme="light"] .conversation-item .conv-title {
-      color: #1f2937;
-    }
-
-    body[data-theme="light"] .sidebar-title {
-      color: #6b7280;
-    }
-
-    body[data-theme="light"] #chatContainer .ai-message {
-      background-color: #ffffff;
-      border-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] .ai-message p,
-    body[data-theme="light"] .ai-message li,
-    body[data-theme="light"] .ai-message {
-      color: #374151 !important;
-    }
-
-    body[data-theme="light"] #inputContainer,
-    body[data-theme="light"] #mobileInputBox {
-      background: rgba(255, 255, 255, 0.9);
-      border-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] #messageInput,
-    body[data-theme="light"] #mobileMessageInput {
-      color: #1f2937;
-    }
-
-    body[data-theme="light"] #messageInput::placeholder,
-    body[data-theme="light"] #mobileMessageInput::placeholder {
-      color: #9ca3af;
-    }
-
-    /* Keep code blocks dark in light mode for better readability */
-    body[data-theme="light"] .code-block-wrapper,
-    body[data-theme="light"] pre code {
-      background-color: #1e1e1e !important;
-    }
-
-    /* ===== RESPONSIVE - DARK MODE & SCROLL BUTTONS ===== */
-
-    /* Mobile (max-width: 640px) */
-    @media (max-width: 640px) {
-      /* Dark mode toggle - décaler vers la gauche pour éviter le bouton profil */
-      #themeToggleBtn {
-        top: 0.75rem !important;
-        right: 3.75rem !important; /* Laisse place au bouton profil (2.5rem + ~1.25rem gap) */
-      }
-
-      /* Scroll to bottom - position adaptée au mobile */
-      #scrollToBottomBtn {
-        bottom: 7rem !important; /* Au-dessus de l'input mobile (qui est à bottom: 0 avec z-index: 40) */
-        right: 1rem !important;
-        padding: 0.5rem 0.75rem !important;
-        z-index: 45 !important; /* Au-dessus de l'input mobile (z-index: 40) */
-        font-size: 0.875rem !important; /* Légèrement plus petit sur mobile */
-      }
-    }
-
-    /* Tablette (641px - 768px) */
-    @media (min-width: 641px) and (max-width: 768px) {
-      #themeToggleBtn {
-        top: 1rem;
-        right: 1rem;
-      }
-
-      #scrollToBottomBtn {
-        bottom: 6rem;
-        right: 1.5rem;
-      }
-    }
-
-    /* ===== GDPR COOKIE CONSENT BANNER ===== */
-    #cookieConsentBanner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      background: linear-gradient(to top, rgba(33, 33, 33, 0.98), rgba(33, 33, 33, 0.95));
-      border-top: 1px solid rgba(66, 66, 66, 0.8);
-      padding: 1.25rem 1.5rem;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      transform: translateY(100%);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
-    }
-
-    #cookieConsentBanner.visible {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    #cookieConsentBanner.hiding {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-
-    .cookie-banner-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .cookie-banner-text {
-      flex: 1;
-      min-width: 280px;
-    }
-
-    .cookie-banner-text h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #f3f4f6;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .cookie-banner-text h3 i {
-      color: #10b981;
-    }
-
-    .cookie-banner-text p {
-      font-size: 0.875rem;
-      color: #9ca3af;
-      line-height: 1.5;
-      margin: 0;
-    }
-
-    .cookie-banner-text a {
-      color: #10b981;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-
-    .cookie-banner-text a:hover {
-      color: #34d399;
-    }
-
-    .cookie-banner-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .cookie-btn {
-      padding: 0.625rem 1.25rem;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-      white-space: nowrap;
-    }
-
-    .cookie-btn-accept {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-
-    .cookie-btn-accept:hover {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    .cookie-btn-reject {
-      background: rgba(75, 85, 99, 0.5);
-      color: #d1d5db;
-    }
-
-    .cookie-btn-reject:hover {
-      background: rgba(75, 85, 99, 0.8);
-    }
-
-    .cookie-btn-settings {
-      background: transparent;
-      color: #9ca3af;
-      border: 1px solid rgba(75, 85, 99, 0.5);
-    }
-
-    .cookie-btn-settings:hover {
-      background: rgba(75, 85, 99, 0.3);
-      color: #e5e7eb;
-      border-color: rgba(107, 114, 128, 0.6);
-    }
-
-    /* Modal paramètres cookies */
-    #cookieSettingsModal {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-
-    #cookieSettingsModal.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .cookie-settings-content {
-      background: #1f2937;
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      border-radius: 1rem;
-      max-width: 500px;
-      width: 90%;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      transform: scale(0.95) translateY(10px);
-      transition: transform 0.3s ease;
-    }
-
-    #cookieSettingsModal.visible .cookie-settings-content {
-      transform: scale(1) translateY(0);
-    }
-
-    .cookie-settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid rgba(75, 85, 99, 0.3);
-    }
-
-    .cookie-settings-header h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #f3f4f6;
-      margin: 0;
-    }
-
-    .cookie-settings-close {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 0.5rem;
-      background: transparent;
-      border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .cookie-settings-close:hover {
-      background: rgba(75, 85, 99, 0.5);
-      color: #f3f4f6;
-    }
-
-    .cookie-settings-body {
-      padding: 1.5rem;
-    }
-
-    .cookie-category {
-      padding: 1rem;
-      background: rgba(55, 65, 81, 0.3);
-      border-radius: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .cookie-category:last-child {
-      margin-bottom: 0;
-    }
-
-    .cookie-category-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .cookie-category-title {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .cookie-category-desc {
-      font-size: 0.8125rem;
-      color: #9ca3af;
-      line-height: 1.4;
-      margin: 0;
-    }
-
-    /* Toggle switch */
-    .cookie-toggle {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .cookie-toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .cookie-toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background: rgba(75, 85, 99, 0.5);
-      border-radius: 9999px;
-      transition: all 0.3s ease;
-    }
-
-    .cookie-toggle-slider::before {
-      content: '';
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      left: 3px;
-      bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s ease;
-    }
-
-    .cookie-toggle input:checked+.cookie-toggle-slider {
-      background: #10b981;
-    }
-
-    .cookie-toggle input:checked+.cookie-toggle-slider::before {
-      transform: translateX(20px);
-    }
-
-    .cookie-toggle input:disabled+.cookie-toggle-slider {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .cookie-toggle input:disabled+.cookie-toggle-slider::before {
-      background: #d1d5db;
-    }
-
-    .cookie-settings-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      padding: 1rem 1.5rem;
-      border-top: 1px solid rgba(75, 85, 99, 0.3);
-    }
-
-    /* Mobile responsive cookie banner */
-    @media (max-width: 640px) {
-      #cookieConsentBanner {
-        padding: 1rem;
-      }
-
-      .cookie-banner-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-      }
-
-      .cookie-banner-text {
-        min-width: 100%;
-      }
-
-      .cookie-banner-text h3 {
-        justify-content: center;
-      }
-
-      .cookie-banner-actions {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .cookie-btn {
-        flex: 1;
-        min-width: 80px;
-      }
-    }
-  </style>
+  <title>NxtAIGen</title>
 </head>
 
-<body data-theme="dark" class="min-h-screen text-gray-100 flex overflow-hidden" style="background-color: oklch(21% 0.006 285.885);">
+<body data-theme="dark" class="min-h-screen text-gray-100 flex overflow-hidden bg-bg-dark">
 
   <!-- Skip links pour accessibilité clavier -->
-  <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
+  <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
     Aller à la zone de saisie
   </a>
-  <a href="#chatContainer" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-52 focus:z-[100] focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
+  <a href="#chatContainer" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-52 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
     Aller à la conversation
   </a>
 
@@ -1982,17 +130,15 @@ if ($user) {
   <button id="scrollToBottomBtn"
     aria-label="Descendre en bas"
     title="Descendre en bas"
-    class="fixed bottom-24 right-4 z-30 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-200 opacity-0 invisible pointer-events-none backdrop-blur-sm shadow-lg"
-    style="display: none;">
+    class="fixed bottom-24 right-4 z-30 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-200 opacity-0 invisible pointer-events-none backdrop-blur-sm shadow-lg hidden">
     <i class="fa-solid fa-arrow-down text-sm"></i>
   </button>
 
   <!-- Sidebar Historique des Conversations -->
   <aside id="conversationSidebar"
     aria-label="Historique des conversations"
-    class="conversation-sidebar flex flex-col border-r border-gray-700/30 h-screen transition-all duration-300 ease-in-out"
-    data-collapsed="false"
-    style="background-color: oklch(21% 0.006 285.885);">
+    class="conversation-sidebar flex flex-col border-r border-gray-700/30 h-screen transition-all duration-300 ease-in-out bg-bg-dark"
+    data-collapsed="false">
     <!-- Header Sidebar -->
     <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-700/20">
       <h2 id="sidebarTitle" class="sidebar-title text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
@@ -2061,11 +207,11 @@ if ($user) {
   <!-- Overlay mobile -->
   <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm opacity-0 invisible transition-all duration-300 md:hidden" data-visible="false"></div>
 
-  <!-- ===== MOBILE BOTTOM SHEET - MENU MODÈLES ===== -->
-  <div id="mobileModelSheet" class="mobile-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileModelSheetTitle">
-    <div class="mobile-bottom-sheet-backdrop" onclick="closeMobileModelSheet()"></div>
-    <div class="mobile-bottom-sheet-content">
-      <div class="mobile-sheet-handle" role="presentation"></div>
+  <!-- ===== MOBILE BOTTOM SHEET - MENU MODÃˆLES ===== -->
+  <div id="mobileModelSheet" class="mobile-bottom-sheet fixed inset-0 z-50 pointer-events-none opacity-0 invisible transition-opacity duration-200 md:hidden" role="dialog" aria-modal="true" aria-labelledby="mobileModelSheetTitle">
+    <div class="mobile-bottom-sheet-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobileModelSheet()"></div>
+    <div class="mobile-bottom-sheet-content absolute bottom-0 left-0 right-0 max-h-[85vh] bg-neutral-800 rounded-t-3xl transform translate-y-full transition-transform duration-300 flex flex-col overflow-hidden">
+      <div class="mobile-sheet-handle bg-gray-400/30 rounded-full w-9 h-1.5 mx-auto my-3" role="presentation"></div>
       <div class="mobile-sheet-header">
         <h2 id="mobileModelSheetTitle" class="mobile-sheet-title">Sélectionner un modèle</h2>
         <div class="mobile-sheet-search">
@@ -2089,9 +235,9 @@ if ($user) {
 
   <!-- ===== MOBILE BOTTOM SHEET - MENU PROFIL (connecté) ===== -->
   <?php if ($user): ?>
-    <div id="mobileProfileSheet" class="mobile-bottom-sheet mobile-profile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileProfileSheetTitle">
-      <div class="mobile-bottom-sheet-backdrop" onclick="closeMobileProfileSheet()"></div>
-      <div class="mobile-bottom-sheet-content">
+    <div id="mobileProfileSheet" class="mobile-bottom-sheet mobile-profile-sheet fixed inset-0 z-50 pointer-events-none opacity-0 invisible transition-opacity duration-200 md:hidden" role="dialog" aria-modal="true" aria-labelledby="mobileProfileSheetTitle">
+      <div class="mobile-bottom-sheet-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobileProfileSheet()"></div>
+      <div class="mobile-bottom-sheet-content absolute bottom-0 left-0 right-0 max-h-[85vh] bg-neutral-800 rounded-t-3xl transform translate-y-full transition-transform duration-300 flex flex-col overflow-hidden">
         <div class="mobile-sheet-handle" role="presentation"></div>
         <div class="mobile-profile-header">
           <div class="mobile-profile-avatar">
@@ -2131,9 +277,9 @@ if ($user) {
     </div>
   <?php else: ?>
     <!-- ===== MOBILE BOTTOM SHEET - AUTH (non connecté) ===== -->
-    <div id="mobileAuthSheet" class="mobile-bottom-sheet mobile-auth-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileAuthSheetTitle">
-      <div class="mobile-bottom-sheet-backdrop" onclick="closeMobileAuthSheet()"></div>
-      <div class="mobile-bottom-sheet-content">
+    <div id="mobileAuthSheet" class="mobile-bottom-sheet mobile-auth-sheet fixed inset-0 z-50 pointer-events-none opacity-0 invisible transition-opacity duration-200 md:hidden" role="dialog" aria-modal="true" aria-labelledby="mobileAuthSheetTitle">
+      <div class="mobile-bottom-sheet-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobileAuthSheet()"></div>
+      <div class="mobile-bottom-sheet-content absolute bottom-0 left-0 right-0 max-h-[85vh] bg-neutral-800 rounded-t-3xl transform translate-y-full transition-transform duration-300 flex flex-col overflow-hidden">
         <div class="mobile-sheet-handle" role="presentation"></div>
         <h2 id="mobileAuthSheetTitle" class="sr-only">Connexion ou inscription</h2>
         <div class="mobile-auth-buttons">
@@ -2151,7 +297,7 @@ if ($user) {
   <?php endif; ?>
 
   <!-- Bouton pour ouvrir la sidebar (visible quand collapsed) -->
-  <button id="openSidebarBtn" class="fixed left-4 top-4 z-50 p-3 rounded-xl border border-gray-700/30 text-gray-400 hover:text-green-400 hover:bg-gray-700/30 hover:border-green-500/30 transition-all duration-200 cursor-pointer shadow-xl backdrop-blur-sm hidden" style="background-color: oklch(21% 0.006 285.885);" title="Ouvrir l'historique">
+  <button id="openSidebarBtn" class="fixed left-4 top-4 z-50 p-3 rounded-xl border border-gray-700/30 text-gray-400 hover:text-green-400 hover:bg-gray-700/30 hover:border-green-500/30 transition-all duration-200 cursor-pointer shadow-xl backdrop-blur-sm hidden bg-bg-dark" title="Ouvrir l'historique">
     <i class="fa-solid fa-clock-rotate-left"></i>
   </button>
 
@@ -2186,7 +332,7 @@ if ($user) {
           </span>
           <?php if ($remaining === 0): ?>
             <p class="mt-2 text-xs text-gray-500">
-              <span id="resetTimer" data-reset-time="<?php echo $timeRemaining; ?>"></span> • <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+              <span id="resetTimer" data-reset-time="<?php echo $timeRemaining; ?>"></span> â€¢ <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
             </p>
           <?php else: ?>
             <p class="mt-2 text-xs text-gray-500">
@@ -2201,7 +347,7 @@ if ($user) {
       <div id="inputContainer"
         class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50">
         <!-- Zone de prévisualisation des fichiers -->
-        <div id="filePreviewContainer" class="hidden mb-3 flex flex-wrap gap-2">
+        <div id="filePreviewContainer" class="hidden mb-3 gap-2">
         </div>
         <label for="messageInput" class="sr-only">Votre message à l'assistant IA</label>
         <input
@@ -2327,7 +473,7 @@ if ($user) {
     </div>
 
     <!-- ===== ZONE DE SAISIE MOBILE ===== -->
-    <div id="mobileInputContainer" aria-label="Zone de saisie mobile">
+    <div id="mobileInputContainer" class="hidden" aria-label="Zone de saisie mobile">
       <!-- Container principal mobile -->
       <div id="mobileInputBox">
         <!-- Prévisualisation fichiers mobile -->
@@ -2348,7 +494,7 @@ if ($user) {
           <div id="mobileActionsLeft">
             <!-- Sélecteur modèle mobile -->
             <button id="mobileModelSelector" aria-label="Sélectionner un modèle" aria-haspopup="true">
-              <img id="mobileModelIcon" src="assets/images/providers/openai.svg" alt="">
+              <img id="mobileModelIcon" src="assets/images/providers/openai.svg" alt="" aria-hidden="true">
               <span id="mobileModelName">GPT-4o Mini</span>
               <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" />
@@ -2441,7 +587,7 @@ if ($user) {
           aria-label="Menu profil"
           aria-haspopup="true"
           aria-expanded="false"
-          class="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+          class="relative flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900">
           <span class="text-white font-semibold text-lg"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span>
           <span
             id="profileIcon"
@@ -2477,7 +623,7 @@ if ($user) {
   </main>
 
   <script>
-    // État utilisateur (isGuest et guestUsageLimit déjà définis dans le head)
+    // Ã‰tat utilisateur (isGuest et guestUsageLimit déjà définis dans le head)
     let guestUsageCount = <?php echo $guestUsageCount; ?>;
 
     // Timer de réinitialisation pour les visiteurs
@@ -2552,7 +698,7 @@ if ($user) {
       }
     }
 
-    // État du modèle sélectionné (global pour models.js)
+    // Ã‰tat du modèle sélectionné (global pour models.js)
     let selectedModel = {
       provider: 'openai',
       model: 'gpt-4o-mini',
@@ -2864,7 +1010,7 @@ if ($user) {
           if (!resetTimer && timerParagraph) {
             // Calculer le temps restant (approximatif)
             const timeRemaining = 86400; // Par défaut 24h, sera mis à jour par le serveur
-            timerParagraph.innerHTML = '<span id="resetTimer" data-reset-time="' + timeRemaining + '"></span> • <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité';
+            timerParagraph.innerHTML = '<span id="resetTimer" data-reset-time="' + timeRemaining + '"></span> â€¢ <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité';
 
             // Réinitialiser le timer
             const newResetTimer = document.getElementById('resetTimer');
@@ -2903,7 +1049,7 @@ if ($user) {
         <div class="flex justify-start">
           <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl rounded-bl-md px-4 py-4 max-w-[85%]">
             <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-gift text-amber-400"></i>
               </div>
               <div>
@@ -2928,7 +1074,7 @@ if ($user) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ==== MODALES PERSONNALISÉES ====
+    // ==== MODALES PERSONNALISÃ‰ES ====
     // Modal Confirm personnalisée
     function showConfirmModal(message) {
       return new Promise((resolve) => {
@@ -2938,7 +1084,7 @@ if ($user) {
             <div class="modal-content bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-700/50 max-w-md w-full">
               <div class="p-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0">
+                  <div class="shrink-0">
                     <div class="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
                       <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl"></i>
                     </div>
@@ -3372,10 +1518,10 @@ if ($user) {
                     window.updateRateLimits(data.rate_limits);
                   }
 
-                  // === SAUVEGARDER LA RÉPONSE IA ===
+                  // === SAUVEGARDER LA RÃ‰PONSE IA ===
                   <?php if (!$isGuest): ?>
                     if (currentConversationId && fullResponse && !responseSaved) {
-                      responseSaved = true; // Éviter la double sauvegarde
+                      responseSaved = true; // Ã‰viter la double sauvegarde
                       // Sauvegarder la réponse IA
                       fetch('api/conversations.php', {
                         method: 'POST',
@@ -3448,7 +1594,7 @@ if ($user) {
       }
 
       // Final scroll to bottom after send
-      shouldAutoScroll = true;  // Always auto-scroll on new message
+      shouldAutoScroll = true; // Always auto-scroll on new message
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -3906,7 +2052,7 @@ if ($user) {
       const cursor = document.createElement('span');
       cursor.className = 'streaming-cursor';
 
-      // Trouver le dernier nœud texte non vide
+      // Trouver le dernier nÅ“ud texte non vide
       function getLastTextNode(el) {
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
         let last = null;
@@ -4005,7 +2151,7 @@ if ($user) {
     const noConversationsPlaceholder = document.getElementById('noConversationsPlaceholder');
     const profileContainer = document.getElementById('profileContainer');
 
-    // État de la sidebar
+    // Ã‰tat de la sidebar
     let currentConversationId = null;
     let conversations = [];
     let conversationMessages = []; // Messages de la conversation actuelle en mémoire
@@ -4116,7 +2262,7 @@ if ($user) {
         }
 
         const convEl = document.createElement('div');
-        convEl.className = `conversation-item${conv.id == currentConversationId ? ' active' : ''}`;
+        convEl.className = `conversation-item flex items-center gap-3 p-3 rounded-lg relative transition-all duration-150 group cursor-pointer ${conv.id == currentConversationId ? 'bg-green-800/10 border-l-2 border-green-500' : 'hover:bg-gray-700/20'}`;
         convEl.dataset.id = conv.id;
 
         const date = new Date(conv.updated_at);
@@ -4124,22 +2270,22 @@ if ($user) {
         const msgCount = conv.message_count || 0;
 
         convEl.innerHTML = `
-          <div class="conv-icon">
+          <div class="w-8 h-8 rounded-md bg-gray-800/50 flex items-center justify-center text-xs text-gray-300 shrink-0">
             <i class="fa-regular fa-message text-sm"></i>
           </div>
-          <div class="conv-content">
-            <div class="conv-title">${escapeHtml(conv.title || 'Nouvelle conversation')}</div>
-            <div class="conv-meta">
-              <span class="conv-date">${dateStr}</span>
-              ${msgCount > 0 ? `<span class="conv-badge">${msgCount}</span>` : ''}
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-200 truncate">${escapeHtml(conv.title || 'Nouvelle conversation')}</div>
+            <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
+              <span class="text-xs">${dateStr}</span>
+              ${msgCount > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-neutral-800/40 text-green-400">${msgCount}</span>` : ''}
             </div>
           </div>
-          <div class="conv-actions">
-            <button class="conv-action-btn" title="Renommer" onclick="event.stopPropagation(); renameConversation(${conv.id})">
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <button class="px-2 py-1 rounded-md text-neutral-300 hover:text-white hover:bg-gray-700/50" title="Renommer" onclick="event.stopPropagation(); renameConversation(${conv.id})">
               <i class="fa-solid fa-pen text-xs"></i>
             </button>
-            <button class="conv-action-btn delete" title="Supprimer" onclick="event.stopPropagation(); deleteConversation(${conv.id})">
-              <i class="fa-solid fa-trash text-xs"></i>
+            <button class="px-2 py-1 rounded-md text-neutral-300 hover:text-white hover:bg-gray-700/50" title="Supprimer" onclick="event.stopPropagation(); deleteConversation(${conv.id})">
+              <i class="fa-solid fa-trash text-xs text-red-400"></i>
             </button>
           </div>
         `;
@@ -4157,7 +2303,7 @@ if ($user) {
       const hours = Math.floor(diff / 3600000);
       const days = Math.floor(diff / 86400000);
 
-      if (minutes < 1) return "À l'instant";
+      if (minutes < 1) return "Ã€ l'instant";
       if (minutes < 60) return `Il y a ${minutes} min`;
       if (hours < 24) return `Il y a ${hours}h`;
       if (days < 7) return `Il y a ${days}j`;
@@ -4550,7 +2696,7 @@ if ($user) {
 
     // ===== MOBILE BOTTOM SHEETS - GESTION =====
 
-    // État des bottom sheets
+    // Ã‰tat des bottom sheets
     let mobileModelSheetOpen = false;
     let mobileProfileSheetOpen = false;
     let mobileAuthSheetOpen = false;
@@ -4558,7 +2704,7 @@ if ($user) {
     // Cache des modèles pour le bottom sheet mobile
     let mobileModelsCache = null;
 
-    // ===== BOTTOM SHEET MODÈLES =====
+    // ===== BOTTOM SHEET MODÃˆLES =====
     function openMobileModelSheet() {
       const sheet = document.getElementById('mobileModelSheet');
       if (!sheet) return;
@@ -4682,7 +2828,7 @@ if ($user) {
                    role="option"
                    aria-selected="${isSelected}"
                    onclick="selectMobileModel(this)">
-                <img src="${providerIcon}" alt="">
+                <img src="${providerIcon}" alt="${providerName}" aria-hidden="true">
                 <div class="model-info">
                   <div class="model-name">${escapeHtml(model.display)}</div>
                   <div class="model-provider">${escapeHtml(model.model)}</div>
@@ -4796,7 +2942,7 @@ if ($user) {
       document.body.style.overflow = '';
     }
 
-    // ===== GESTION DES ÉVÉNEMENTS MOBILE =====
+    // ===== GESTION DES Ã‰VÃ‰NEMENTS MOBILE =====
 
     // Modifier le comportement du sélecteur modèle mobile
     if (mobileModelSelector) {
@@ -5099,13 +3245,13 @@ if ($user) {
           </p>
         </div>
         <div class="cookie-banner-actions">
-          <button type="button" id="cookieRejectAll" class="cookie-btn cookie-btn-reject">
+          <button type="button" id="cookieRejectAll" class="px-3 py-2 rounded-lg text-neutral-300 bg-neutral-700/30 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
             Refuser
           </button>
-          <button type="button" id="cookieOpenSettings" class="cookie-btn cookie-btn-settings">
+          <button type="button" id="cookieOpenSettings" class="px-3 py-2 rounded-lg text-neutral-300 border border-neutral-700/30 hover:bg-neutral-700/30 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
             <i class="fa-solid fa-sliders"></i> Paramètres
           </button>
-          <button type="button" id="cookieAcceptAll" class="cookie-btn cookie-btn-accept">
+          <button type="button" id="cookieAcceptAll" class="px-3 py-2 rounded-lg text-white bg-linear-to-tr from-green-500 to-green-600 hover:from-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
             <i class="fa-solid fa-check"></i> Accepter tout
           </button>
         </div>
@@ -5126,9 +3272,11 @@ if ($user) {
           <div class="cookie-category">
             <div class="cookie-category-header">
               <span class="cookie-category-title">Cookies essentiels</span>
-              <label class="cookie-toggle">
-                <input type="checkbox" checked disabled>
-                <span class="cookie-toggle-slider"></span>
+              <label class="inline-flex items-center cursor-default">
+                <input type="checkbox" checked disabled class="sr-only peer">
+                <div class="w-11 h-6 rounded-full bg-neutral-700/30 peer-disabled:opacity-60 relative">
+                  <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></span>
+                </div>
               </label>
             </div>
             <p class="cookie-category-desc">
@@ -5140,9 +3288,11 @@ if ($user) {
           <div class="cookie-category">
             <div class="cookie-category-header">
               <span class="cookie-category-title">Cookies analytiques</span>
-              <label class="cookie-toggle">
-                <input type="checkbox" id="cookieAnalytics">
-                <span class="cookie-toggle-slider"></span>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cookieAnalytics" class="sr-only peer">
+                <div class="w-11 h-6 rounded-full bg-neutral-700/30 peer-checked:bg-green-500 relative">
+                  <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                </div>
               </label>
             </div>
             <p class="cookie-category-desc">
@@ -5154,9 +3304,11 @@ if ($user) {
           <div class="cookie-category">
             <div class="cookie-category-header">
               <span class="cookie-category-title">Cookies marketing</span>
-              <label class="cookie-toggle">
-                <input type="checkbox" id="cookieMarketing">
-                <span class="cookie-toggle-slider"></span>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="cookieMarketing" class="sr-only peer">
+                <div class="w-11 h-6 rounded-full bg-neutral-700/30 peer-checked:bg-green-500 relative">
+                  <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                </div>
               </label>
             </div>
             <p class="cookie-category-desc">

@@ -210,83 +210,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Preconnect CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://js.stripe.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <!-- Font Awesome non-bloquant -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
   <title>Abonnements - NxtGenAI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Medium.ttf') format('truetype');
-      font-weight: 500;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Bold.ttf') format('truetype');
-      font-weight: 700;
-    }
-
-    * {
-      font-family: 'TikTok Sans', system-ui, sans-serif;
-    }
-
-    body {
-      background-color: oklch(21% 0.006 285.885);
-    }
-
-    ::selection {
-      background: #404040;
-    }
-
-    .plan-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .plan-card:hover {
-      transform: translateY(-8px);
-    }
-
-    .popular-badge {
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.7;
-      }
-    }
-
-    .gradient-border {
-      position: relative;
-      background: linear-gradient(135deg, #22c55e, #10b981, #059669);
-      padding: 2px;
-      border-radius: 1.5rem;
-    }
-
-    .gradient-border>div {
-      background: oklch(21% 0.006 285.885);
-      border-radius: calc(1.5rem - 2px);
-    }
-  </style>
+  <link href="../src/output.css" rel="stylesheet">
 </head>
 
 <body class="min-h-screen text-neutral-400">
@@ -335,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
       <!-- Grille des plans -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <!-- Plan Free -->
-        <div class="plan-card bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-5 lg:p-6 flex flex-col">
+        <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-5 lg:p-6 flex flex-col transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
           <div class="mb-4">
             <div class="w-12 h-12 rounded-xl bg-gray-500/10 flex items-center justify-center mb-4">
               <i class="fa-solid fa-user text-xl text-gray-400"></i>
@@ -349,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
             <span class="text-neutral-500">/mois</span>
           </div>
 
-          <ul class="space-y-3 mb-6 flex-grow">
+          <ul class="space-y-3 mb-6 grow">
             <?php foreach ($freePlan['features'] as $feature): ?>
               <li class="flex items-start gap-2 text-sm">
                 <i class="fa-solid fa-check text-gray-500 mt-0.5"></i>
@@ -371,10 +305,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
 
         <!-- Plans payants -->
         <?php foreach ($stripePlans as $key => $plan): ?>
-          <div class="<?php echo $plan['popular'] ? 'gradient-border' : ''; ?>">
-            <div class="plan-card bg-neutral-800/50 border <?php echo $plan['popular'] ? 'border-transparent' : 'border-neutral-700/50'; ?> rounded-2xl p-5 lg:p-6 flex flex-col h-full relative">
+          <div class="<?php echo $plan['popular'] ? 'rounded-2xl p-0.5 bg-linear-to-tr from-green-500 via-green-400 to-green-700' : ''; ?>">
+            <div class="bg-neutral-800/50 border <?php echo $plan['popular'] ? 'border-transparent' : 'border-neutral-700/50'; ?> rounded-2xl p-5 lg:p-6 flex flex-col h-full relative transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
               <?php if ($plan['popular']): ?>
-                <div class="popular-badge absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full animate-pulse">
                   Populaire
                 </div>
               <?php endif; ?>
@@ -406,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
                 <span class="text-neutral-500">/<?php echo $plan['interval']; ?></span>
               </div>
 
-              <ul class="space-y-3 mb-6 flex-grow">
+              <ul class="space-y-3 mb-6 grow">
                 <?php foreach ($plan['features'] as $feature): ?>
                   <li class="flex items-start gap-2 text-sm">
                     <i class="fa-solid fa-check text-<?php echo $plan['color']; ?>-400 mt-0.5"></i>
@@ -424,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
                   S'inscrire
                 </a>
               <?php else: ?>
-                <button onclick="subscribe('<?php echo $key; ?>')" class="subscribe-btn w-full py-3 px-4 bg-<?php echo $plan['color']; ?>-500 hover:bg-<?php echo $plan['color']; ?>-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <button onclick="subscribe('<?php echo $key; ?>')" class="subscribe-btn w-full py-3 px-4 bg-<?php echo $plan['color']; ?>-500 hover:bg-<?php echo $plan['color']; ?>-600 text-white rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-<?php echo $plan['color']; ?>-500 focus:ring-offset-2 flex items-center justify-center gap-2">
                   <span>Choisir ce plan</span>
                   <i class="fa-solid fa-arrow-right"></i>
                 </button>

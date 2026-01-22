@@ -120,9 +120,16 @@ $stats = $pdo->query("
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Preconnect CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="../src/output.css" as="style">
+  <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
   <title>Gestion Rate Limiting - Admin NxtGenAI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+  <link href="../src/output.css" rel="stylesheet">
+  <!-- Font Awesome non-bloquant -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" media="print" onload="this.media='all'" />
 </head>
 
 <body class="bg-neutral-900 text-gray-200 overflow-x-hidden">
@@ -151,7 +158,7 @@ $stats = $pdo->query("
         <button onclick="toggleNavMenu()" class="p-2.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-40 py-1">
           <a href="settings.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
             <i class="fa-solid fa-shield-halved text-blue-400 w-5 mr-2"></i>Admin
           </a>
@@ -310,7 +317,7 @@ $stats = $pdo->query("
                     <button onclick="toggleActionsMenu(<?= $user['id'] ?>)" class="p-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
                       <i class="fa-solid fa-ellipsis-vertical"></i>
                     </button>
-                    <div id="actionsMenu-<?= $user['id'] ?>" class="hidden absolute right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                    <div id="actionsMenu-<?= $user['id'] ?>" class="hidden absolute right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-40 py-1">
                       <button onclick="openPlanModal(<?= $user['id'] ?>, '<?= $user['username'] ?>', '<?= $user['user_plan'] ?>'); closeAllMenus();" class="w-full px-4 py-2.5 text-left text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors flex items-center gap-2">
                         <i class="fa-solid fa-pen text-blue-400 w-4"></i>Modifier
                       </button>
@@ -336,8 +343,8 @@ $stats = $pdo->query("
   </div>
 
   <!-- Modal Changement de plan -->
-  <div id="planModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-6 max-w-md w-full mx-4">
+  <div id="planModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50">
+    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-800 border border-neutral-700 rounded-lg p-6 max-w-md w-full mx-4">
       <h3 class="text-xl font-bold mb-4" id="planModalTitle">Changer le plan utilisateur</h3>
       <form method="POST">
         <input type="hidden" name="action" value="update_plan">
@@ -390,8 +397,8 @@ $stats = $pdo->query("
   </div>
 
   <!-- Modal Limites personnalisées -->
-  <div id="customModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-neutral-800 border border-neutral-700 rounded-lg p-6 max-w-md w-full mx-4">
+  <div id="customModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50">
+    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-800 border border-neutral-700 rounded-lg p-6 max-w-md w-full mx-4">
       <h3 class="text-xl font-bold mb-4" id="customModalTitle">Limites personnalisées</h3>
       <form method="POST">
         <input type="hidden" name="action" value="custom_limits">
@@ -431,7 +438,9 @@ $stats = $pdo->query("
 
   <script>
     function openPlanModal(userId, username, currentPlan) {
-      document.getElementById('planModal').classList.remove('hidden');
+      const modal = document.getElementById('planModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
       document.getElementById('planModalTitle').textContent = `Changer le plan de ${username}`;
       document.getElementById('planUserId').value = userId;
 
@@ -444,11 +453,15 @@ $stats = $pdo->query("
     }
 
     function closePlanModal() {
-      document.getElementById('planModal').classList.add('hidden');
+      const modal = document.getElementById('planModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
 
     function openCustomModal(userId, username, hourly, daily, monthly) {
-      document.getElementById('customModal').classList.remove('hidden');
+      const modal = document.getElementById('customModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
       document.getElementById('customModalTitle').textContent = `Limites personnalisées - ${username}`;
       document.getElementById('customUserId').value = userId;
       document.getElementById('customHourly').value = hourly;
@@ -457,7 +470,9 @@ $stats = $pdo->query("
     }
 
     function closeCustomModal() {
-      document.getElementById('customModal').classList.add('hidden');
+      const modal = document.getElementById('customModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
 
     // Fermer les modals en cliquant à l'extérieur

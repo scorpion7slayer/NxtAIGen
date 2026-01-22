@@ -409,184 +409,16 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Preconnect CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <title>Gestion des Modèles - NxtGenAI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Light.ttf') format('truetype');
-      font-weight: 300;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Medium.ttf') format('truetype');
-      font-weight: 500;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Bold.ttf') format('truetype');
-      font-weight: 700;
-    }
-
-    * {
-      font-family: 'TikTok Sans', system-ui, sans-serif;
-    }
-
-    body {
-      background-color: oklch(21% 0.006 285.885);
-    }
-
-    ::selection {
-      background: #404040;
-    }
-
-    /* Toggle Switch */
-    .toggle-switch {
-      position: relative;
-      width: 44px;
-      height: 24px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background-color: #404040;
-      transition: 0.3s;
-      border-radius: 24px;
-    }
-
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: #9ca3af;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
-
-    input:checked+.toggle-slider {
-      background-color: #22c55e;
-    }
-
-    input:checked+.toggle-slider:before {
-      transform: translateX(20px);
-      background-color: white;
-    }
-
-    /* Mini toggle for compact view */
-    .toggle-switch-sm {
-      width: 36px;
-      height: 20px;
-    }
-
-    .toggle-switch-sm .toggle-slider:before {
-      height: 14px;
-      width: 14px;
-    }
-
-    input:checked+.toggle-slider:before {
-      transform: translateX(20px);
-    }
-
-    .toggle-switch-sm input:checked+.toggle-slider:before {
-      transform: translateX(16px);
-    }
-
-    /* Collapse animation */
-    .collapse-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
-      opacity: 0;
-    }
-
-    .collapse-content.expanded {
-      max-height: 2000px;
-      opacity: 1;
-    }
-
-    /* Pulse animation for testing */
-    @keyframes pulse-dot {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.5;
-      }
-    }
-
-    .animate-pulse-dot {
-      animation: pulse-dot 1s infinite;
-    }
-
-    /* Stat card hover */
-    .stat-card {
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Stat number animation */
-    .stat-card p[id^="stat"] {
-      transition: transform 0.15s ease-out, color 0.15s ease-out;
-    }
-
-    /* Modal backdrop */
-    .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #404040;
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #525252;
-    }
-  </style>
+  <!-- Font Awesome non-bloquant -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
+  <title>Gestion des Modèles - NxtAIGen</title>
+  <link href="../src/output.css" rel="stylesheet">
 </head>
 
 <body class="min-h-screen text-neutral-400 overflow-x-hidden">
@@ -616,7 +448,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         <button onclick="toggleNavMenu()" class="p-2.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-[180px] py-1">
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-45 py-1">
           <div class="px-4 py-2 border-b border-neutral-700">
             <span class="text-sm font-medium text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
@@ -643,7 +475,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
   <main class="max-w-5xl mx-auto px-4 pt-20 pb-10">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+      <div class="rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
             <i class="fa-solid fa-server text-blue-400"></i>
@@ -654,7 +486,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           </div>
         </div>
       </div>
-      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+      <div class="rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
             <i class="fa-solid fa-check-circle text-green-400"></i>
@@ -665,7 +497,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           </div>
         </div>
       </div>
-      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+      <div class="rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
             <i class="fa-solid fa-robot text-purple-400"></i>
@@ -676,7 +508,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           </div>
         </div>
       </div>
-      <div class="stat-card rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4">
+      <div class="rounded-xl border border-neutral-700/50 bg-neutral-900/50 p-4 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
             <i class="fa-solid fa-bolt text-amber-400"></i>
@@ -806,10 +638,12 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                   <button onclick="testApi('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-500 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Tester la connexion">
                     <i class="fa-solid fa-plug" id="testIcon_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"></i>
                   </button>
-                  <!-- Toggle Provider -->
-                  <label class="toggle-switch" title="Activer/Désactiver ce provider">
-                    <input type="checkbox" id="providerToggle_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $isProviderEnabled ? 'checked' : ''; ?> onchange="toggleProvider('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
-                    <span class="toggle-slider"></span>
+                  <!-- Toggle Provider (Tailwind peer) -->
+                  <label class="inline-flex items-center cursor-pointer" title="Activer/Désactiver ce provider">
+                    <input type="checkbox" id="providerToggle_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $isProviderEnabled ? 'checked' : ''; ?> onchange="toggleProvider('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-neutral-700 rounded-full peer-checked:bg-green-500 transition-colors relative">
+                      <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -835,9 +669,11 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                       <div class="model-item flex items-center justify-between p-3 rounded-lg bg-neutral-800/40 hover:bg-neutral-800/60 transition-colors group" data-model-name="<?php echo htmlspecialchars(strtolower($modelName . ' ' . $modelId), ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                           <!-- Toggle Model -->
-                          <label class="toggle-switch toggle-switch-sm shrink-0" title="Activer/Désactiver ce modèle">
-                            <input type="checkbox" <?php echo $isModelEnabled ? 'checked' : ''; ?> onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" />
-                            <span class="toggle-slider"></span>
+                          <label class="inline-flex items-center cursor-pointer shrink-0" title="Activer/Désactiver ce modèle">
+                            <input type="checkbox" <?php echo $isModelEnabled ? 'checked' : ''; ?> onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
+                            <div class="w-9 h-5 bg-neutral-700 rounded-full peer-checked:bg-green-500 transition-colors relative">
+                              <span class="absolute left-1 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
+                            </div>
                           </label>
                           <div class="min-w-0">
                             <div class="text-sm text-neutral-200 font-medium truncate model-name"><?php echo htmlspecialchars($modelName, ENT_QUOTES, 'UTF-8'); ?></div>

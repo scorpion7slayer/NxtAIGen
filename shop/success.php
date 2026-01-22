@@ -83,56 +83,16 @@ if (!empty($sessionId) && isset($_SESSION['user_id'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Preconnect CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <!-- Preload CSS critique -->
+  <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous">
+  <!-- Font Awesome non-bloquant -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" media="print" onload="this.media='all'">
   <title><?php echo $success ? 'Paiement réussi' : 'Erreur'; ?> - NxtGenAI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-    }
-
-    @font-face {
-      font-family: 'TikTok Sans';
-      src: url('../assets/fonts/TikTok_Sans/static/TikTokSans-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-    }
-
-    * {
-      font-family: 'TikTok Sans', system-ui, sans-serif;
-    }
-
-    body {
-      background-color: oklch(21% 0.006 285.885);
-    }
-
-    .success-animation {
-      animation: successPop 0.5s ease-out;
-    }
-
-    @keyframes successPop {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-
-      50% {
-        transform: scale(1.2);
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .confetti {
-      position: fixed;
-      pointer-events: none;
-    }
-  </style>
+  <link href="../src/output.css" rel="stylesheet">
 </head>
 
 <body class="min-h-screen text-neutral-400 flex items-center justify-center px-4">
@@ -196,14 +156,6 @@ if (!empty($sessionId) && isset($_SESSION['user_id'])) {
         }
         createConfetti();
       </script>
-      <style>
-        @keyframes fall {
-          to {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-          }
-        }
-      </style>
     <?php else: ?>
       <div class="mb-6">
         <div class="w-24 h-24 mx-auto rounded-full bg-red-500/20 flex items-center justify-center">
