@@ -2323,59 +2323,6 @@ if ($user) {
             </button>
           </div>
         </div>
-
-        <!-- Zone d'affichage des tokens -->
-        <div id="tokensDisplay" class="hidden mt-3 pt-3 border-t border-gray-700/50">
-          <div class="flex items-center justify-between text-xs text-gray-400">
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1.5">
-                <i class="fa-solid fa-microchip text-gray-500"></i>
-                <span class="font-medium">Tokens:</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div id="tokensInputBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                  <span id="tokensInputValue">0</span>
-                </div>
-                <div id="tokensOutputBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">
-                  <span id="tokensOutputValue">0</span>
-                </div>
-                <div id="tokensTotalBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400">
-                  <span id="tokensTotalValue">0</span>
-                </div>
-                <!-- Point d'interrogation avec tooltip -->
-                <button id="tokensHelpBtn" class="ml-1 w-5 h-5 flex items-center justify-center rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-gray-300 transition-colors relative" title="Aide tokens">
-                  <i class="fa-solid fa-question text-xs"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- Popover explicatif -->
-          <div id="tokensTooltip" class="hidden absolute z-50 mt-2 p-3 bg-gray-800 border border-gray-700 rounded-lg shadow-xl text-xs text-gray-300 max-w-xs">
-            <div class="space-y-2">
-              <div class="flex items-start gap-2">
-                <div class="w-3 h-3 mt-0.5 rounded bg-blue-500/20 border border-blue-500/40 flex-shrink-0"></div>
-                <div>
-                  <span class="font-medium text-blue-400">Entrée</span> : Tokens de votre message
-                </div>
-              </div>
-              <div class="flex items-start gap-2">
-                <div class="w-3 h-3 mt-0.5 rounded bg-green-500/20 border border-green-500/40 flex-shrink-0"></div>
-                <div>
-                  <span class="font-medium text-green-400">Sortie</span> : Tokens de la réponse IA
-                </div>
-              </div>
-              <div class="flex items-start gap-2">
-                <div class="w-3 h-3 mt-0.5 rounded bg-purple-500/20 border border-purple-500/40 flex-shrink-0"></div>
-                <div>
-                  <span class="font-medium text-purple-400">Total</span> : Somme des tokens utilisés
-                </div>
-              </div>
-              <div class="pt-2 mt-2 border-t border-gray-700/50 text-gray-400">
-                Les tokens représentent la quantité de texte traité par l'IA. ~1 token ≈ 4 caractères.
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -2614,9 +2561,6 @@ if ($user) {
 
     const messageInput = document.getElementById("messageInput");
     const sendButton = document.getElementById("sendButton");
-    const tokensDisplay = document.getElementById('tokensDisplay');
-    const tokensHelpBtn = document.getElementById('tokensHelpBtn');
-    const tokensTooltip = document.getElementById('tokensTooltip');
 
     // ===== MOBILE INPUT SYNCHRONIZATION =====
     const mobileMessageInput = document.getElementById("mobileMessageInput");
@@ -2755,22 +2699,6 @@ if ($user) {
       syncModelDisplay();
     });
     // ===== FIN MOBILE SYNC =====
-
-    // Gestion du tooltip des tokens
-    let tooltipVisible = false;
-    tokensHelpBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      tooltipVisible = !tooltipVisible;
-      tokensTooltip.classList.toggle('hidden', !tooltipVisible);
-    });
-
-    // Fermer le tooltip en cliquant ailleurs
-    document.addEventListener('click', (e) => {
-      if (tooltipVisible && !tokensTooltip.contains(e.target) && e.target !== tokensHelpBtn) {
-        tooltipVisible = false;
-        tokensTooltip.classList.add('hidden');
-      }
-    });
 
     // Sélecteur de modèle
     const modelSelectorBtn = document.getElementById('modelSelectorBtn');
@@ -3442,25 +3370,6 @@ if ($user) {
                   // Mettre à jour les limites de rate limiting pour les utilisateurs connectés
                   if (!isGuest && data.rate_limits && typeof window.updateRateLimits === 'function') {
                     window.updateRateLimits(data.rate_limits);
-                  }
-
-                  // Afficher les informations de tokens dans la zone sous la saisie
-                  if (data.tokens && (data.tokens.total > 0 || data.tokens.input > 0)) {
-                    const tokensDisplay = document.getElementById('tokensDisplay');
-                    document.getElementById('tokensInputValue').textContent = data.tokens.input.toLocaleString();
-                    document.getElementById('tokensOutputValue').textContent = data.tokens.output.toLocaleString();
-                    document.getElementById('tokensTotalValue').textContent = data.tokens.total.toLocaleString();
-                    tokensDisplay.classList.remove('hidden');
-
-                    // Sauvegarder les tokens pour la conversation actuelle
-                    if (currentConversationId) {
-                      const convIndex = conversations.findIndex(c => c.id == currentConversationId);
-                      if (convIndex !== -1) {
-                        conversations[convIndex].last_tokens = data.tokens;
-                        // Mettre à jour le rendu de la sidebar pour afficher les tokens
-                        renderConversationList(conversationSearch?.value || '');
-                      }
-                    }
                   }
 
                   // === SAUVEGARDER LA RÉPONSE IA ===
@@ -4202,25 +4111,6 @@ if ($user) {
           if (existingEl) {
             existingEl.querySelector('.conv-title').textContent = conv.title || 'Nouvelle conversation';
             existingEl.classList.toggle('active', conv.id == currentConversationId);
-
-            // Mettre à jour les tokens si présents
-            const hasTokens = conv.last_tokens && (conv.last_tokens.total > 0);
-            const existingTokensBadge = existingEl.querySelector('.conv-badge[title="Tokens utilisés"]');
-            if (hasTokens && !existingTokensBadge) {
-              // Ajouter le badge tokens
-              const metaDiv = existingEl.querySelector('.conv-meta');
-              if (metaDiv) {
-                const tokenBadge = document.createElement('span');
-                tokenBadge.className = 'conv-badge';
-                tokenBadge.style.cssText = 'background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2); color: rgb(192, 132, 252);';
-                tokenBadge.title = 'Tokens utilisés';
-                tokenBadge.innerHTML = `<i class="fa-solid fa-microchip text-[10px]"></i> ${conv.last_tokens.total.toLocaleString()}`;
-                metaDiv.appendChild(tokenBadge);
-              }
-            } else if (hasTokens && existingTokensBadge) {
-              // Mettre à jour le badge existant
-              existingTokensBadge.innerHTML = `<i class="fa-solid fa-microchip text-[10px]"></i> ${conv.last_tokens.total.toLocaleString()}`;
-            }
           }
           return;
         }
@@ -4232,7 +4122,6 @@ if ($user) {
         const date = new Date(conv.updated_at);
         const dateStr = formatRelativeDate(date);
         const msgCount = conv.message_count || 0;
-        const hasTokens = conv.last_tokens && (conv.last_tokens.total > 0);
 
         convEl.innerHTML = `
           <div class="conv-icon">
@@ -4243,7 +4132,6 @@ if ($user) {
             <div class="conv-meta">
               <span class="conv-date">${dateStr}</span>
               ${msgCount > 0 ? `<span class="conv-badge">${msgCount}</span>` : ''}
-              ${hasTokens ? `<span class="conv-badge" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2); color: rgb(192, 132, 252);" title="Tokens utilisés"><i class="fa-solid fa-microchip text-[10px]"></i> ${conv.last_tokens.total.toLocaleString()}</span>` : ''}
             </div>
           </div>
           <div class="conv-actions">
@@ -4284,18 +4172,6 @@ if ($user) {
       if (currentConversationId === id) return;
 
       currentConversationId = id;
-
-      // Masquer l'affichage des tokens de la conversation précédente
-      tokensDisplay.classList.add('hidden');
-
-      // Réafficher les tokens si la conversation en a
-      const conv = conversations.find(c => c.id == id);
-      if (conv && conv.last_tokens && conv.last_tokens.total > 0) {
-        document.getElementById('tokensInputValue').textContent = conv.last_tokens.input?.toLocaleString() || '0';
-        document.getElementById('tokensOutputValue').textContent = conv.last_tokens.output?.toLocaleString() || '0';
-        document.getElementById('tokensTotalValue').textContent = conv.last_tokens.total.toLocaleString();
-        tokensDisplay.classList.remove('hidden');
-      }
 
       // Mettre à jour la classe active
       conversationList.querySelectorAll('.conversation-item').forEach(el => {
@@ -4378,9 +4254,6 @@ if ($user) {
       document.getElementById('chatContainer').innerHTML = '';
       document.getElementById('welcomeMessage').classList.remove('hidden');
       document.getElementById('logoContainer').classList.remove('hidden');
-
-      // Masquer l'affichage des tokens
-      tokensDisplay.classList.add('hidden');
 
       // Désélectionner dans la sidebar
       conversationList.querySelectorAll('.conversation-item').forEach(el => {
