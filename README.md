@@ -5,40 +5,40 @@
 <h1 align="center">NxtAIGen</h1>
 
 <p align="center">
-  <strong>Multi-provider conversational AI platform</strong><br>
-  One interface. 12 AI providers. Real-time streaming.
+  <strong>Plateforme d'IA conversationnelle multi-fournisseurs</strong><br>
+  Une interface. 12 fournisseurs d'IA. Streaming en temps reel.
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> &middot;
-  <a href="#providers">Providers</a> &middot;
-  <a href="#quick-start">Quick Start</a> &middot;
-  <a href="#license">License</a>
+  <a href="#fonctionnalites">Fonctionnalites</a> &middot;
+  <a href="#fournisseurs">Fournisseurs</a> &middot;
+  <a href="#demarrage-rapide">Demarrage rapide</a> &middot;
+  <a href="#licence">Licence</a>
 </p>
 
 ---
 
-## Features
+## Fonctionnalites
 
-- **12 AI providers** &mdash; OpenAI, Anthropic, Gemini, DeepSeek, Mistral, xAI, Perplexity, OpenRouter, Hugging Face, Moonshot, GitHub Copilot, Ollama
-- **Real-time streaming** &mdash; Server-Sent Events, token by token
-- **Multi-format input** &mdash; Text, images, PDF, DOCX (up to 10 MB)
-- **Guest access** &mdash; Try without an account (5 messages / 24h)
-- **Subscription plans** &mdash; Free, Basic, Premium, Ultra via Stripe
-- **Encrypted API keys** &mdash; AES-256-CBC, never stored in plaintext
-- **Admin panel** &mdash; Manage providers, models, keys and rate limits
+- **12 fournisseurs d'IA** &mdash; OpenAI, Anthropic, Gemini, DeepSeek, Mistral, xAI, Perplexity, OpenRouter, Hugging Face, Moonshot, GitHub Copilot, Ollama
+- **Streaming en temps reel** &mdash; Server-Sent Events, token par token
+- **Entree multi-format** &mdash; Texte, images, PDF, DOCX (jusqu'a 10 Mo)
+- **Acces invite** &mdash; Essayez sans compte (5 messages / 24h)
+- **Abonnements** &mdash; Gratuit, Basic, Premium, Ultra via Stripe
+- **Cles API chiffrees** &mdash; AES-256-CBC, jamais stockees en clair
+- **Panneau d'administration** &mdash; Gestion des fournisseurs, modeles, cles et limites
 
-## Tech Stack
+## Stack technique
 
-| Layer    | Technology                               |
+| Couche   | Technologie                              |
 | -------- | ---------------------------------------- |
 | Backend  | PHP 8.5, MySQL 9.5                       |
 | Frontend | Vanilla JS, TailwindCSS v4, Marked.js    |
-| Icons    | Font Awesome 7.0.1, Highlight.js 11.11.1 |
+| Icones   | Font Awesome 7.0.1, Highlight.js 11.11.1 |
 
-## Providers
+## Fournisseurs
 
-| Provider        | Format             |
+| Fournisseur     | Format             |
 | --------------- | ------------------ |
 | OpenAI          | OpenAI             |
 | Anthropic       | Custom             |
@@ -53,38 +53,38 @@
 | GitHub Copilot  | OpenAI + OAuth     |
 | Ollama          | Custom             |
 
-## Quick Start
+## Demarrage rapide
 
 ```bash
-# Clone
+# Cloner le depot
 git clone https://github.com/scorpion7slayer/NxtAIGen.git
 cd NxtAIGen
 
-# Install dependencies
+# Installer les dependances
 npm install
 
-# Import database
+# Importer la base de donnees
 mysql -u root -p < database/nxtgenai.schema.sql
 
-# Configure API keys
+# Configurer les cles API
 cp api/config.php.example api/config.php
-# Edit api/config.php with your provider keys
+# Editez api/config.php avec vos cles de fournisseurs
 
-# Build CSS (dev)
+# Compiler le CSS (dev)
 npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
 ```
 
-Then create an admin user with `is_admin = 1` in the database and manage everything from `/admin/settings.php`.
+Creez ensuite un utilisateur admin avec `is_admin = 1` dans la base de donnees, puis gerez tout depuis `/admin/settings.php`.
 
-## Plans
+## Abonnements
 
-| Plan    | Hourly | Daily     | Monthly   | Price   |
-| ------- | ------ | --------- | --------- | ------- |
-| Free    | 10     | 30        | 150       | $0      |
-| Basic   | 20     | 50        | 1,000     | $5/mo   |
-| Premium | 50     | 200       | 5,000     | $15/mo  |
-| Ultra   | 100    | Unlimited | Unlimited | $29/mo  |
+| Plan    | Par heure | Par jour  | Par mois  | Prix    |
+| ------- | --------- | --------- | --------- | ------- |
+| Gratuit | 10        | 30        | 150       | 0$      |
+| Basic   | 20        | 50        | 1 000     | 5$/mois |
+| Premium | 50        | 200       | 5 000     | 15$/mois|
+| Ultra   | 100       | Illimite  | Illimite  | 29$/mois|
 
-## License
+## Licence
 
-This project is licensed under the [MIT License](LICENSE).
+Ce projet est sous licence [MIT](LICENSE).
