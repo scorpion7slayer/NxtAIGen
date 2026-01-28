@@ -1,9 +1,463 @@
 <!doctype html>
-<html lang="fr">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>NxtAIGen</title>
-    </head>
-    <body></body>
+<html lang="fr" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NxtAIGen — Plateforme IA Multi-Fournisseurs</title>
+    <meta name="description" content="Une interface, 12 fournisseurs d'IA, streaming en temps reel. Discutez avec OpenAI, Claude, Gemini, DeepSeek et bien plus." />
+    <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="src/output.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes glow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-delay { animation: float 6s ease-in-out 2s infinite; }
+        .animate-glow { animation: glow 3s ease-in-out infinite; }
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .pricing-popular {
+            border: 2px solid #10b981;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+        .hero-grid {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 antialiased">
+
+    <!-- Barre de navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-gray-950/80 backdrop-blur-xl">
+        <div class="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3">
+                <img src="assets/images/logo.svg" alt="NxtAIGen" class="h-8 w-8" />
+                <span class="text-xl font-bold tracking-tight">NxtAIGen</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+                <a href="#fonctionnalites" class="hover:text-white transition-colors">Fonctionnalites</a>
+                <a href="#fournisseurs" class="hover:text-white transition-colors">Fournisseurs</a>
+                <a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="zone_membres/login.php" class="hidden sm:inline-flex text-sm text-gray-400 hover:text-white transition-colors px-4 py-2">
+                    Se connecter
+                </a>
+                <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-5 py-2.5 transition-colors">
+                    Lancer l'appli
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden hero-grid">
+        <!-- Effets de fond -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-glow"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-glow" style="animation-delay: 1.5s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/8 rounded-full blur-3xl animate-glow" style="animation-delay: 3s;"></div>
+
+        <div class="relative z-10 mx-auto max-w-5xl px-6 text-center pt-24">
+            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-400 mb-8">
+                <span class="relative flex h-2 w-2">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                </span>
+                12 fournisseurs d'IA connectes
+            </div>
+
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6">
+                Une seule interface pour<br/>
+                <span class="gradient-text">tous vos modeles d'IA</span>
+            </h1>
+
+            <p class="mx-auto max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed mb-10">
+                Discutez avec OpenAI, Claude, Gemini, DeepSeek et 8 autres fournisseurs via une plateforme unifiee avec streaming en temps reel.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all hover:shadow-lg hover:shadow-emerald-500/25">
+                    Commencer gratuitement
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="#fonctionnalites" class="inline-flex items-center gap-2 rounded-full border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium px-8 py-4 text-lg transition-all">
+                    En savoir plus
+                    <i class="fa-solid fa-chevron-down text-sm"></i>
+                </a>
+            </div>
+
+            <!-- Icones des fournisseurs flottantes -->
+            <div class="relative mt-20 mb-10">
+                <div class="flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+                    <img src="assets/images/providers/openai.svg" alt="OpenAI" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" />
+                    <img src="assets/images/providers/anthropic.svg" alt="Anthropic" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" />
+                    <img src="assets/images/providers/gemini.svg" alt="Gemini" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" style="animation-delay: 0.5s;" />
+                    <img src="assets/images/providers/deepseek.svg" alt="DeepSeek" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" style="animation-delay: 0.8s;" />
+                    <img src="assets/images/providers/mistral.svg" alt="Mistral" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" style="animation-delay: 1s;" />
+                    <img src="assets/images/providers/xai.svg" alt="xAI" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" style="animation-delay: 1.3s;" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fonctionnalites -->
+    <section id="fonctionnalites" class="relative py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tout ce dont vous avez besoin</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Une plateforme puissante et unifiee pour interagir avec les meilleurs modeles d'IA disponibles.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Fonctionnalite 1 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 mb-4">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Streaming en temps reel</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Recevez les reponses token par token via Server-Sent Events. Aucune attente.</p>
+                </div>
+
+                <!-- Fonctionnalite 2 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 mb-4">
+                        <i class="fa-solid fa-layer-group text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">12 fournisseurs</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Basculez entre OpenAI, Claude, Gemini, DeepSeek, Mistral et plus en un clic.</p>
+                </div>
+
+                <!-- Fonctionnalite 3 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 mb-4">
+                        <i class="fa-solid fa-file-lines text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Entree multi-format</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Envoyez des images, PDF et fichiers DOCX. Les modeles vision analysent vos images directement.</p>
+                </div>
+
+                <!-- Fonctionnalite 4 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 mb-4">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Chiffrement AES-256</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Toutes les cles API chiffrees en AES-256-CBC. Jamais stockees en clair.</p>
+                </div>
+
+                <!-- Fonctionnalite 5 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 mb-4">
+                        <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Historique des conversations</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Toutes vos conversations sont sauvegardees et recherchables. Reprenez la ou vous en etiez.</p>
+                </div>
+
+                <!-- Fonctionnalite 6 -->
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 mb-4">
+                        <i class="fa-solid fa-user-shield text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Acces invite</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Testez la plateforme sans creer de compte. 5 messages gratuits toutes les 24 heures.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fournisseurs -->
+    <section id="fournisseurs" class="relative py-24 sm:py-32 border-t border-white/5">
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tous les grands fournisseurs</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Accedez aux meilleurs modeles d'IA via une couche API unifiee.</p>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/openai.svg" alt="OpenAI" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">OpenAI</p>
+                        <p class="text-gray-500 text-xs">GPT-4o, o1, o3</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/anthropic.svg" alt="Anthropic" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Anthropic</p>
+                        <p class="text-gray-500 text-xs">Claude 4, Opus</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/gemini.svg" alt="Google" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Google Gemini</p>
+                        <p class="text-gray-500 text-xs">Gemini 2.5 Pro</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/deepseek.svg" alt="DeepSeek" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">DeepSeek</p>
+                        <p class="text-gray-500 text-xs">V3, R1</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/mistral.svg" alt="Mistral" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Mistral</p>
+                        <p class="text-gray-500 text-xs">Large, Medium</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/xai.svg" alt="xAI" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">xAI</p>
+                        <p class="text-gray-500 text-xs">Grok</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/perplexity.svg" alt="Perplexity" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Perplexity</p>
+                        <p class="text-gray-500 text-xs">Sonar</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/openrouter.svg" alt="OpenRouter" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">OpenRouter</p>
+                        <p class="text-gray-500 text-xs">Multi-modele</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/huggingface.svg" alt="Hugging Face" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Hugging Face</p>
+                        <p class="text-gray-500 text-xs">Modeles ouverts</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/moonshot.svg" alt="Moonshot" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Moonshot</p>
+                        <p class="text-gray-500 text-xs">Kimi</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/githubcopilot.svg" alt="GitHub Copilot" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">GitHub Copilot</p>
+                        <p class="text-gray-500 text-xs">OAuth</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
+                    <img src="assets/images/providers/ollama.svg" alt="Ollama" class="w-10 h-10 rounded-lg" />
+                    <div>
+                        <p class="font-semibold text-sm">Ollama</p>
+                        <p class="text-gray-500 text-xs">Modeles locaux</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tarifs -->
+    <section id="tarifs" class="relative py-24 sm:py-32 border-t border-white/5">
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tarifs simples</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Commencez gratuitement, evoluez selon vos besoins.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <!-- Gratuit -->
+                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
+                    <h3 class="text-lg font-semibold mb-1">Gratuit</h3>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span class="text-4xl font-bold">0$</span>
+                        <span class="text-gray-500 text-sm">/mois</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            10 requetes / heure
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            30 requetes / jour
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            150 requetes / mois
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Tous les fournisseurs
+                        </li>
+                    </ul>
+                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
+                        Commencer
+                    </a>
+                </div>
+
+                <!-- Basic -->
+                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
+                    <h3 class="text-lg font-semibold mb-1">Basic</h3>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span class="text-4xl font-bold">5$</span>
+                        <span class="text-gray-500 text-sm">/mois</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            20 requetes / heure
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            50 requetes / jour
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            1 000 requetes / mois
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Historique des conversations
+                        </li>
+                    </ul>
+                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
+                        S'abonner
+                    </a>
+                </div>
+
+                <!-- Premium (Populaire) -->
+                <div class="rounded-2xl p-6 flex flex-col card-hover pricing-popular relative bg-gray-900/50">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <span class="inline-flex items-center rounded-full bg-emerald-500 text-white text-xs font-semibold px-3 py-1">Populaire</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-1">Premium</h3>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span class="text-4xl font-bold">15$</span>
+                        <span class="text-gray-500 text-sm">/mois</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            50 requetes / heure
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            200 requetes / jour
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            5 000 requetes / mois
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Support prioritaire
+                        </li>
+                    </ul>
+                    <a href="zone_membres/register.php" class="block text-center rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium py-3 transition-all">
+                        S'abonner
+                    </a>
+                </div>
+
+                <!-- Ultra -->
+                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
+                    <h3 class="text-lg font-semibold mb-1">Ultra</h3>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span class="text-4xl font-bold">29$</span>
+                        <span class="text-gray-500 text-sm">/mois</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            100 requetes / heure
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Illimite par jour
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Illimite par mois
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                            Cles API personnelles
+                        </li>
+                    </ul>
+                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
+                        S'abonner
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="relative py-24 sm:py-32 border-t border-white/5">
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"></div>
+        </div>
+        <div class="relative mx-auto max-w-3xl px-6 text-center">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4">Pret a commencer ?</h2>
+            <p class="text-gray-400 text-lg mb-8">Essayez NxtAIGen gratuitement. Aucune carte bancaire requise.</p>
+            <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all hover:shadow-lg hover:shadow-emerald-500/25">
+                Lancer l'application
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Pied de page -->
+    <footer class="border-t border-white/5 py-12">
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-3">
+                    <img src="assets/images/logo.svg" alt="NxtAIGen" class="h-6 w-6 opacity-60" />
+                    <span class="text-sm text-gray-500">&copy; 2025 NxtAIGen. Tous droits reserves.</span>
+                </div>
+                <div class="flex items-center gap-6 text-sm text-gray-500">
+                    <a href="#fonctionnalites" class="hover:text-gray-300 transition-colors">Fonctionnalites</a>
+                    <a href="#fournisseurs" class="hover:text-gray-300 transition-colors">Fournisseurs</a>
+                    <a href="#tarifs" class="hover:text-gray-300 transition-colors">Tarifs</a>
+                    <a href="https://github.com/scorpion7slayer/NxtAIGen" target="_blank" rel="noopener" class="hover:text-gray-300 transition-colors">
+                        <i class="fa-brands fa-github text-base"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
 </html>
