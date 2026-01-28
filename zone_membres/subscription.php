@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once 'db.php';
 require_once '../api/rate_limiter.php';
+require_once '../shop/stripe_config.php';
 
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
@@ -38,7 +39,7 @@ $messageType = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   if ($_POST['action'] === 'cancel' && !empty($stripeSubId)) {
     // Annuler l'abonnement Stripe
-    $stripeSecretKey = 'REDACTED_STRIPE_SECRET_KEY';
+    $stripeSecretKey = STRIPE_SECRET_KEY;
 
     $ch = curl_init();
     curl_setopt_array($ch, [

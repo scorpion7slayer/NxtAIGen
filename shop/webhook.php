@@ -11,9 +11,8 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// Configuration
-define('STRIPE_SECRET_KEY', 'REDACTED_STRIPE_SECRET_KEY');
-define('STRIPE_WEBHOOK_SECRET', 'REDACTED_STRIPE_WEBHOOK_SECRET');
+// Configuration Stripe (cles dans stripe_config.php, hors du repo)
+require_once __DIR__ . '/stripe_config.php';
 // Log des webhooks (optionnel, pour debug)
 function logWebhook($message, $data = [])
 {

@@ -13,7 +13,7 @@ require_once __DIR__ . '/stripe_config.php';
 $stripePlans = [
   'basic' => [
     'name' => 'Basic',
-    'price_id' => 'REDACTED_STRIPE_PRICE_BASIC',
+    'price_id' => STRIPE_PRICE_BASIC,
     'price' => 5.00,
     'currency' => 'EUR',
     'interval' => 'mois',
@@ -30,7 +30,7 @@ $stripePlans = [
   ],
   'premium' => [
     'name' => 'Premium',
-    'price_id' => 'REDACTED_STRIPE_PRICE_PREMIUM',
+    'price_id' => STRIPE_PRICE_PREMIUM,
     'price' => 15.00,
     'currency' => 'EUR',
     'interval' => 'mois',
@@ -48,7 +48,7 @@ $stripePlans = [
   ],
   'ultra' => [
     'name' => 'Ultra',
-    'price_id' => 'REDACTED_STRIPE_PRICE_ULTRA',
+    'price_id' => STRIPE_PRICE_ULTRA,
     'price' => 29.00,
     'currency' => 'EUR',
     'interval' => 'mois',
