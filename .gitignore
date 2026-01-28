@@ -1,8 +1,45 @@
-## instruction folders
-shop/stripe_secrets.php
-.grepai/
+# ============================================
+# NxtGenAI - .gitignore
+# ============================================
 
-## tailwind files
+# === FICHIERS DE CONFIGURATION SENSIBLES ===
+# (contiennent des cles API, mots de passe, secrets)
+api/config.php
+api/github/config.php
+zone_membres/db.php
+shop/stripe_config.php
+shop/stripe_secrets.php
+
+# === BASE DE DONNEES ===
+# Le dump complet contient des donnees utilisateur et des cles chiffrees
+# Utiliser database/nxtgenai.schema.sql pour le schema propre
+database/nxtgenai.sql
+
+# === FICHIERS DE LOGS ===
+shop/webhook_logs.txt
+*.log
+logs/
+
+# === FICHIERS DE TEST/DEBUG ===
+api/github/test_oauth.php
+
+# === ENVIRONNEMENT ===
+.env
+.env.*
+!.env.example
+
+# === TAILWIND / NODE ===
+node_modules/
 package-lock.json
 package.json
-node_modules/
+
+# === OUTILS DE DEVELOPPEMENT ===
+.grepai/
+.claude/settings.local.json
+
+# === SYSTEME ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

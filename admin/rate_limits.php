@@ -130,6 +130,23 @@ $stats = $pdo->query("
   <link href="../src/output.css" rel="stylesheet">
   <!-- Font Awesome non-bloquant -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" media="print" onload="this.media='all'" />
+  <!-- Theme initialization (inline to prevent FOUC) -->
+  <script>
+    (function() {
+      function getCookie(name) {
+        const nameEQ = name + '=';
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i].trim();
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
+        }
+        return null;
+      }
+      document.documentElement.classList.add('dark');
+      document.documentElement.lang = 'fr';
+    })();
+  </script>
+  
 </head>
 
 <body class="bg-neutral-900 text-gray-200 overflow-x-hidden">
@@ -142,14 +159,14 @@ $stats = $pdo->query("
         <span class="md:hidden">Rate Limits</span>
       </h1>
       <!-- Navigation Desktop -->
-      <div class="hidden md:flex gap-2">
-        <a href="settings.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+      <div class="hidden md:flex gap-2 items-center">
+        <a href="settings.php" class="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white hover:text-blue-400 transition-colors flex items-center">
           <i class="fa-solid fa-shield-halved mr-1.5 text-blue-400"></i>Admin
         </a>
-        <a href="models_manager.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+        <a href="models_manager.php" class="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white hover:text-purple-400 transition-colors flex items-center">
           <i class="fa-solid fa-robot mr-1.5 text-purple-400"></i>Modèles
         </a>
-        <a href="../index.php" class="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-sm text-neutral-300 hover:text-white transition-colors flex items-center">
+        <a href="../index.php" class="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white hover:text-green-400 transition-colors flex items-center">
           <i class="fa-solid fa-home mr-1.5 text-green-400"></i>Accueil
         </a>
       </div>

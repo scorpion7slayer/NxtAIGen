@@ -252,9 +252,24 @@ const ModelManager = {
             <div class="flex items-center justify-between px-3 py-2">
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Modèles disponibles</p>
                 <button id="refreshModelsBtn" class="text-gray-500 hover:text-gray-300 transition-colors" title="Rafraîchir">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+                    <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                </button>
+            </div>
+            <div class="relative px-3 pb-2">
+                <i class="fa-solid fa-magnifying-glass absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+                <input
+                    type="text"
+                    id="desktopModelSearch"
+                    placeholder="Rechercher..."
+                    autocomplete="off"
+                    class="w-full pl-8 pr-8 py-1.5 bg-gray-700/50 border border-gray-700/50 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 outline-none transition-colors"
+                />
+                <button
+                    id="desktopModelSearchClear"
+                    type="button"
+                    class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors hidden"
+                    title="Effacer">
+                    <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             </div>
             <div class="border-b border-gray-700/50 mb-2"></div>
@@ -342,6 +357,80 @@ const ModelManager = {
                 localStorage.removeItem(this.localStorageKey); // Vider le cache localStorage
                 await this.refreshModelMenu();
             });
+
+        // Recherche desktop
+        const searchInput = document.getElementById("desktopModelSearch");
+        const clearBtn = document.getElementById("desktopModelSearchClear");
+
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                const value = e.target.value;
+                this.filterDesktopModels(value);
+                // Afficher/masquer le bouton clear
+                if (clearBtn) {
+                    clearBtn.classList.toggle("hidden", !value);
+                }
+            });
+            // Empêcher la fermeture du menu lors du clic sur la recherche
+            searchInput.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Bouton clear de la recherche
+        if (clearBtn) {
+            clearBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (searchInput) {
+                    searchInput.value = "";
+                    searchInput.focus();
+                }
+                clearBtn.classList.add("hidden");
+                this.filterDesktopModels("");
+            });
+        }
+    },
+
+    /**
+     * Filtre les modèles desktop selon la recherche
+     */
+    filterDesktopModels(query) {
+        const q = query.toLowerCase().trim();
+        const sections = document.querySelectorAll("#modelMenu .provider-section");
+
+        sections.forEach((section) => {
+            const providerName = section.dataset.provider.toLowerCase();
+            const providerInfo = this.providers[section.dataset.provider];
+            const displayName = providerInfo?.name?.toLowerCase() || "";
+            const models = section.querySelectorAll(".model-option");
+            let visibleCount = 0;
+
+            if (!q) {
+                // Pas de filtre, tout afficher
+                section.style.display = "";
+                models.forEach((m) => (m.style.display = ""));
+                return;
+            }
+
+            // Vérifier si le nom du provider correspond
+            const providerMatches = providerName.includes(q) || displayName.includes(q);
+
+            models.forEach((model) => {
+                const modelId = model.dataset.model?.toLowerCase() || "";
+                const modelDisplay = model.dataset.display?.toLowerCase() || "";
+                const modelMatches = modelId.includes(q) || modelDisplay.includes(q);
+
+                if (providerMatches || modelMatches) {
+                    model.style.display = "";
+                    visibleCount++;
+                } else {
+                    model.style.display = "none";
+                }
+            });
+
+            // Cacher la section si aucun modèle visible
+            section.style.display = visibleCount === 0 ? "none" : "";
+        });
     },
 
     /**

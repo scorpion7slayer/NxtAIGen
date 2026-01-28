@@ -105,43 +105,42 @@ if ($user) {
   </script>
   <script src="assets/js/models.js" defer></script>
   <script src="assets/js/rate_limit_widget.js" defer></script>
+  <!-- Theme initialization (inline to prevent FOUC) -->
+  <script>
+    document.documentElement.classList.add('dark');
+    document.documentElement.lang = 'fr';
+  </script>
   <title>NxtAIGen</title>
 </head>
 
-<body data-theme="dark" class="min-h-screen text-gray-100 flex overflow-hidden bg-bg-dark">
+<body class="min-h-screen flex overflow-hidden bg-bg-dark text-neutral-100">
 
   <!-- Skip links pour accessibilité clavier -->
-  <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
+  <a href="#messageInput" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg" data-i18n="a11y.skip_to_input">
     Aller à la zone de saisie
   </a>
-  <a href="#chatContainer" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-52 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg">
+  <a href="#chatContainer" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-52 focus:z-100 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-lg focus:outline-none focus:shadow-lg" data-i18n="a11y.skip_to_chat">
     Aller à la conversation
   </a>
 
-  <!-- Dark Mode Toggle Button -->
-  <button id="themeToggleBtn"
-    aria-label="Changer de thème"
-    title="Changer de thème"
-    class="fixed top-4 right-4 z-50 p-2 rounded-lg bg-gray-800/30 border border-gray-700/30 text-gray-400 hover:text-white hover:bg-gray-700/30 transition-all duration-150 backdrop-blur-sm">
-    <i class="fa-solid fa-moon" id="themeIcon"></i>
-  </button>
+  <!-- Suppression des boutons de thème et de langue -->
 
   <!-- Scroll to Bottom Button -->
   <button id="scrollToBottomBtn"
     aria-label="Descendre en bas"
     title="Descendre en bas"
-    class="fixed bottom-24 right-4 z-30 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-200 opacity-0 invisible pointer-events-none backdrop-blur-sm shadow-lg hidden">
+    class="fixed bottom-24 right-4 z-30 px-3 py-2 rounded-lg bg-bg-dark border border-neutral-700 text-neutral-400 transition-all duration-200 opacity-0 invisible pointer-events-none backdrop-blur-sm shadow-none hidden">
     <i class="fa-solid fa-arrow-down text-sm"></i>
   </button>
 
   <!-- Sidebar Historique des Conversations -->
   <aside id="conversationSidebar"
     aria-label="Historique des conversations"
-    class="conversation-sidebar flex flex-col border-r border-gray-700/30 h-screen transition-all duration-300 ease-in-out bg-bg-dark"
+    class="conversation-sidebar flex flex-col border-r border-neutral-700 h-screen transition-all duration-300 ease-in-out bg-bg-dark"
     data-collapsed="false">
     <!-- Header Sidebar -->
-    <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-gray-700/20">
-      <h2 id="sidebarTitle" class="sidebar-title text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+    <div class="sidebar-header flex items-center justify-between px-4 py-3 border-b border-neutral-700/20">
+      <h2 id="sidebarTitle" class="sidebar-title text-sm font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
         <i class="fa-solid fa-clock-rotate-left text-green-500" aria-hidden="true"></i>
         <span class="sidebar-title-text">Historique</span>
       </h2>
@@ -149,7 +148,8 @@ if ($user) {
         <!-- Bouton Nouvelle Conversation -->
         <button id="newConversationBtn"
           aria-label="Créer une nouvelle conversation"
-          class="p-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-gray-700/30 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
+          data-i18n-title="sidebar.new_conversation"
+          class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-200 dark:hover:bg-gray-700/30 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
           <i class="fa-solid fa-plus" aria-hidden="true"></i>
         </button>
         <!-- Bouton Collapse -->
@@ -157,23 +157,27 @@ if ($user) {
           aria-label="Réduire la barre latérale"
           aria-expanded="true"
           aria-controls="conversationSidebar"
-          class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/30 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
+          data-i18n-title="sidebar.collapse"
+          class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700/30 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
           <i class="fa-solid fa-angles-left sidebar-toggle-icon" aria-hidden="true"></i>
         </button>
       </div>
     </div>
 
     <!-- Barre de recherche -->
-    <div class="sidebar-search p-3 border-b border-gray-700/20" role="search">
+    <div class="sidebar-search p-3 border-b border-neutral-700/20" role="search">
       <div class="relative group">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm group-focus-within:text-green-500 transition-colors" aria-hidden="true"></i>
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm group-focus-within:text-green-500 transition-colors pointer-events-none" aria-hidden="true"></i>
         <label for="conversationSearch" class="sr-only">Rechercher dans les conversations</label>
-        <input type="search"
+        <input type="text"
           id="conversationSearch"
           placeholder="Rechercher..."
           aria-label="Rechercher dans l'historique des conversations"
           autocomplete="off"
-          class="w-full bg-gray-800/30 border border-gray-700/30 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-300 placeholder:text-gray-400 placeholder:italic outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 focus:bg-gray-800/50 transition-all duration-200">
+          class="w-full bg-bg-dark border border-neutral-700 rounded-lg pl-9 pr-8 py-2 text-sm text-neutral-300 placeholder:text-neutral-500 placeholder:italic outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 focus:bg-bg-dark transition-all duration-200">
+        <button type="button" id="conversationSearchClear" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors hidden" aria-label="Effacer la recherche">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
     </div>
 
@@ -182,24 +186,24 @@ if ($user) {
       aria-label="Liste des conversations"
       class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
       <!-- Placeholder quand pas de conversations -->
-      <div id="noConversationsPlaceholder" class="flex flex-col items-center justify-center py-12 text-gray-400">
-        <div class="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
+      <div id="noConversationsPlaceholder" class="flex flex-col items-center justify-center py-12 text-neutral-400">
+        <div class="w-16 h-16 rounded-full bg-neutral-700/50 flex items-center justify-center mb-4">
           <i class="fa-regular fa-comments text-2xl opacity-60" aria-hidden="true"></i>
         </div>
-        <p class="text-sm font-medium text-gray-400">Aucune conversation</p>
-        <p class="text-xs mt-1 text-gray-400">Commencez à discuter !</p>
+        <p class="text-sm font-medium text-neutral-400">Aucune conversation</p>
+        <p class="text-xs mt-1 text-neutral-500">Commencez à discuter pour créer un historique</p>
       </div>
     </nav>
 
     <!-- Footer Sidebar -->
-    <div class="sidebar-footer p-3 border-t border-gray-700/20 space-y-2">
+    <div class="sidebar-footer p-3 border-t border-neutral-700/20 space-y-2">
       <button id="newConversationBtnFooter" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition-colors duration-150 cursor-pointer">
         <i class="fa-solid fa-plus"></i>
         <span>Nouvelle conversation</span>
       </button>
-      <button id="exportConversationsBtn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-800/30 border border-gray-700/30 text-gray-400 hover:text-white hover:bg-gray-700/30 transition-all duration-150 text-sm cursor-pointer" title="Exporter les conversations">
+      <button id="exportConversationsBtn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-neutral-700/30 border border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-600/50 transition-all duration-150 text-sm cursor-pointer" title="Exporter les conversations">
         <i class="fa-solid fa-file-export"></i>
-        <span class="sidebar-btn-text">Exporter tout</span>
+        <span class="sidebar-btn-text">Exporter l'historique</span>
       </button>
     </div>
   </aside>
@@ -214,9 +218,12 @@ if ($user) {
       <div class="mobile-sheet-handle bg-gray-400/30 rounded-full w-9 h-1.5 mx-auto my-3" role="presentation"></div>
       <div class="mobile-sheet-header">
         <h2 id="mobileModelSheetTitle" class="mobile-sheet-title">Sélectionner un modèle</h2>
-        <div class="mobile-sheet-search">
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="search" id="mobileModelSearch" placeholder="Rechercher un modèle..." autocomplete="off" aria-label="Rechercher un modèle">
+        <div class="mobile-sheet-search relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-base text-neutral-400 pointer-events-none" aria-hidden="true"></i>
+          <input type="text" id="mobileModelSearch" placeholder="Rechercher un modèle..." autocomplete="off" aria-label="Rechercher un modèle">
+          <button type="button" id="mobileModelSearchClear" class="mobile-search-clear hidden" aria-label="Effacer la recherche">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
       </div>
       <div id="mobileModelList" class="mobile-sheet-list" role="listbox" aria-labelledby="mobileModelSheetTitle">
@@ -227,7 +234,7 @@ if ($user) {
             <span class="dot"></span>
             <span class="dot"></span>
           </div>
-          <span class="ml-3 text-gray-400 text-sm">Chargement des modèles...</span>
+          <span class="ml-3 text-neutral-400 text-sm">Chargement des modèles...</span>
         </div>
       </div>
     </div>
@@ -264,13 +271,13 @@ if ($user) {
           <?php if ($isAdmin): ?>
             <a href="admin/settings.php" class="mobile-profile-item">
               <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
-              <span>Admin</span>
+              <span data-i18n="nav.admin">Admin</span>
             </a>
           <?php endif; ?>
           <div class="mobile-profile-divider"></div>
           <a href="zone_membres/logout.php" class="mobile-profile-item danger">
             <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-            <span>Déconnexion</span>
+            <span data-i18n="nav.logout">Déconnexion</span>
           </a>
         </nav>
       </div>
@@ -285,11 +292,11 @@ if ($user) {
         <div class="mobile-auth-buttons">
           <a href="zone_membres/register.php" class="mobile-auth-btn primary">
             <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-            <span>Créer un compte gratuit</span>
+            <span data-i18n="nav.register">Créer un compte gratuit</span>
           </a>
           <a href="zone_membres/login.php" class="mobile-auth-btn secondary">
             <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
-            <span>Se connecter</span>
+            <span data-i18n="nav.login">Se connecter</span>
           </a>
         </div>
       </div>
@@ -319,7 +326,7 @@ if ($user) {
 
     <!-- Message d'accueil -->
     <div id="welcomeMessage" class="justify-center mb-6 text-center max-w-2xl text-gray-400/90 transition-all duration-500 ease-out">
-      Posez-moi une question pour commencer.
+      <span>Pensez à poser une question pour commencer.</span>
       <?php if ($isGuest): ?>
         <?php
         $remaining = GUEST_USAGE_LIMIT - $guestUsageCount;
@@ -345,7 +352,7 @@ if ($user) {
     <div id="inputWrapper" class="w-full max-w-2xl transition-all duration-500 ease-out">
       <!-- Zone de saisie -->
       <div id="inputContainer"
-        class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50">
+        class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50 shadow-none">
         <!-- Zone de prévisualisation des fichiers -->
         <div id="filePreviewContainer" class="hidden mb-3 gap-2">
         </div>
@@ -353,11 +360,11 @@ if ($user) {
         <input
           type="text"
           id="messageInput"
-          placeholder="Posez une question. Tapez @ pour mentions et / pour raccourcis."
+          placeholder="Posez une question..."
           aria-label="Votre message à l'assistant IA"
           aria-describedby="inputHelpText"
           autocomplete="off"
-          class="w-full bg-transparent text-gray-300 placeholder:text-gray-400 outline-none text-base mb-4" />
+          class="w-full bg-transparent text-gray-300 placeholder:text-gray-500 outline-none text-base mb-4" />
         <span id="inputHelpText" class="sr-only">Appuyez sur Entrée pour envoyer, ou utilisez le bouton d'envoi</span>
 
         <!-- Barre d'outils -->
@@ -366,7 +373,7 @@ if ($user) {
           <div class="flex items-center gap-2">
             <!-- Bouton ampoule -->
             <button
-              class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer">
+              class="p-2 rounded-lg text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer">
               <i class="fa-solid fa-lightbulb"></i>
             </button>
             <?php if ($isGuest): ?>
@@ -408,8 +415,6 @@ if ($user) {
               <!-- Menu déroulant des modèles -->
               <div
                 id="modelMenu"
-                role="listbox"
-                aria-labelledby="modelSelectorBtn"
                 class="absolute bottom-full left-0 w-72 bg-gray-800 rounded-xl border border-gray-700/50 shadow-xl overflow-hidden opacity-0 invisible translate-y-2 transition-all duration-200 ease-out z-50 mb-2">
                 <div class="p-2 max-h-96 overflow-y-auto">
                   <p class="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
@@ -437,7 +442,7 @@ if ($user) {
               id="attachButton"
               aria-label="Joindre un fichier"
               aria-describedby="fileTypesAllowed"
-              class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
+              class="p-2 rounded-lg text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
               <i class="fa-solid fa-paperclip"></i>
             </button>
             <span id="fileTypesAllowed" class="sr-only">Formats acceptés: images, PDF, Word, texte, CSV, JSON, XML, Markdown. Taille max: 10 MB</span>
@@ -454,7 +459,7 @@ if ($user) {
               id="micButton"
               aria-label="Dicter un message (reconnaissance vocale)"
               aria-pressed="false"
-              class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
+              class="p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
               <i class="fa-solid fa-microphone-lines"></i>
             </button>
 
@@ -463,6 +468,7 @@ if ($user) {
               id="sendButton"
               disabled
               aria-label="Envoyer le message"
+              data-i18n-title="chat.send"
               aria-disabled="true"
               class="p-2 rounded-lg bg-gray-700 text-gray-400 transition-all duration-300 ease-in-out cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500">
               <i class="fa-solid fa-paper-plane"></i>
@@ -866,6 +872,12 @@ if ($user) {
         modelMenu.classList.remove('opacity-100', 'visible', 'translate-y-0');
         modelMenu.classList.add('opacity-0', 'invisible', 'translate-y-2');
         modelChevron.classList.remove('rotate-180');
+        // Réinitialiser la recherche
+        const searchInput = document.getElementById('desktopModelSearch');
+        if (searchInput) {
+          searchInput.value = '';
+          window.modelManager?.filterDesktopModels('');
+        }
       }
     });
 
@@ -876,6 +888,12 @@ if ($user) {
         modelMenu.classList.remove('opacity-100', 'visible', 'translate-y-0');
         modelMenu.classList.add('opacity-0', 'invisible', 'translate-y-2');
         modelChevron.classList.remove('rotate-180');
+        // Réinitialiser la recherche
+        const searchInput = document.getElementById('desktopModelSearch');
+        if (searchInput) {
+          searchInput.value = '';
+          window.modelManager?.filterDesktopModels('');
+        }
       }
     });
 
@@ -1057,11 +1075,11 @@ if ($user) {
                 <p class="text-gray-300 text-sm mb-3">Vous avez utilisé vos ${guestUsageLimit} essais gratuits.</p>
                 <p class="text-gray-400 text-sm mb-3">${timeInfo}, ou créez un compte gratuit pour un accès illimité !</p>
                 <div class="flex gap-2">
-                  <a href="zone_membres/register.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition-colors">
+                  <a href="zone_membres/register.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium transition-colors">
                     <i class="fa-solid fa-user-plus"></i>
                     S'inscrire gratuitement
                   </a>
-                  <a href="zone_membres/login.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm transition-colors">
+                  <a href="zone_membres/login.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 text-gray-300 text-sm transition-colors">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     Se connecter
                   </a>
@@ -1096,10 +1114,10 @@ if ($user) {
                 </div>
               </div>
               <div class="flex gap-3 px-6 pb-6">
-                <button data-action="cancel" class="flex-1 px-4 py-2.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium transition-colors">
+                <button data-action="cancel" class="flex-1 px-4 py-2.5 rounded-lg bg-gray-700 text-gray-300 font-medium transition-colors">
                   Annuler
                 </button>
-                <button data-action="confirm" class="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors">
+                <button data-action="confirm" class="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 text-white font-medium transition-colors">
                   OK
                 </button>
               </div>
@@ -1145,10 +1163,10 @@ if ($user) {
                 />
               </div>
               <div class="flex gap-3 px-6 pb-6">
-                <button data-action="cancel" class="flex-1 px-4 py-2.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium transition-colors">
+                <button data-action="cancel" class="flex-1 px-4 py-2.5 rounded-lg bg-gray-700 text-gray-300 font-medium transition-colors">
                   Annuler
                 </button>
-                <button data-action="confirm" class="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors">
+                <button data-action="confirm" class="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 text-white font-medium transition-colors">
                   OK
                 </button>
               </div>
@@ -1883,25 +1901,27 @@ if ($user) {
     }
 
     // Drag & Drop sur la zone de saisie
-    const inputContainer = document.querySelector('.bg-gray-800\\/50.rounded-2xl');
+    const inputContainerEl = document.getElementById('inputContainer');
 
-    inputContainer.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      this.classList.add('border-green-500', 'bg-green-500/10');
-    });
+    if (inputContainerEl) {
+      inputContainerEl.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-green-500', 'bg-green-500/10');
+      });
 
-    inputContainer.addEventListener('dragleave', function(e) {
-      e.preventDefault();
-      this.classList.remove('border-green-500', 'bg-green-500/10');
-    });
+      inputContainerEl.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-green-500', 'bg-green-500/10');
+      });
 
-    inputContainer.addEventListener('drop', function(e) {
-      e.preventDefault();
-      this.classList.remove('border-green-500', 'bg-green-500/10');
+      inputContainerEl.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-green-500', 'bg-green-500/10');
 
-      const files = Array.from(e.dataTransfer.files);
-      files.forEach(file => addFilePreview(file));
-    });
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => addFilePreview(file));
+      });
+    }
 
     // Speech-to-Text avec Web Speech API
     const micButton = document.getElementById('micButton');
@@ -2274,7 +2294,7 @@ if ($user) {
             <i class="fa-regular fa-message text-sm"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-200 truncate">${escapeHtml(conv.title || 'Nouvelle conversation')}</div>
+            <div class="conv-title text-sm font-medium text-gray-200 truncate">${escapeHtml(conv.title || 'Nouvelle conversation')}</div>
             <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
               <span class="text-xs">${dateStr}</span>
               ${msgCount > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-neutral-800/40 text-green-400">${msgCount}</span>` : ''}
@@ -2509,9 +2529,27 @@ if ($user) {
     }
 
     // Recherche
+    const conversationSearchClear = document.getElementById('conversationSearchClear');
+
     conversationSearch.addEventListener('input', (e) => {
-      renderConversationList(e.target.value);
+      const value = e.target.value;
+      renderConversationList(value);
+      // Afficher/masquer le bouton clear
+      if (conversationSearchClear) {
+        conversationSearchClear.classList.toggle('hidden', !value);
+      }
     });
+
+    // Bouton clear de la recherche conversations
+    if (conversationSearchClear) {
+      conversationSearchClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        conversationSearch.value = '';
+        conversationSearch.focus();
+        conversationSearchClear.classList.add('hidden');
+        renderConversationList('');
+      });
+    }
 
     // Export des conversations
     exportConversationsBtn.addEventListener('click', async () => {
@@ -2659,40 +2697,9 @@ if ($user) {
     // Store the original scrollTop setter
     const originalScrollTopSetter = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop').set;
 
-    // ===== DARK MODE TOGGLE =====
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeIcon');
-
-    // Check for saved theme preference or default to dark
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-
-    // Apply theme on page load
-    if (currentTheme === 'light') {
-      document.body.setAttribute('data-theme', 'light');
-      themeIcon.classList.remove('fa-moon');
-      themeIcon.classList.add('fa-sun');
-    }
-
-    // Theme toggle handler
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener('click', function() {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
-
-        if (isDark) {
-          // Switch to light mode
-          document.body.setAttribute('data-theme', 'light');
-          themeIcon.classList.remove('fa-moon');
-          themeIcon.classList.add('fa-sun');
-          localStorage.setItem('theme', 'light');
-        } else {
-          // Switch to dark mode
-          document.body.setAttribute('data-theme', 'dark');
-          themeIcon.classList.remove('fa-sun');
-          themeIcon.classList.add('fa-moon');
-          localStorage.setItem('theme', 'dark');
-        }
-      });
-    }
+    // ===== DARK MODE & LANGUAGE TOGGLE =====
+    // Theme and language toggle are handled by assets/js/theme-lang.js
+    // Event listeners are bound via .theme-toggle-btn and .lang-toggle-btn classes
 
     // ===== MOBILE BOTTOM SHEETS - GESTION =====
 
@@ -2710,7 +2717,17 @@ if ($user) {
       if (!sheet) return;
 
       mobileModelSheetOpen = true;
-      sheet.classList.add('active');
+      // Retirer les classes Tailwind conflictuelles et ajouter active
+      sheet.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+      sheet.classList.add('active', 'opacity-100', 'visible', 'pointer-events-auto');
+
+      // Animer le contenu vers le haut
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-full');
+        content.classList.add('translate-y-0');
+      }
+
       document.body.style.overflow = 'hidden';
 
       // Charger les modèles si pas encore fait
@@ -2730,7 +2747,17 @@ if ($user) {
       if (!sheet) return;
 
       mobileModelSheetOpen = false;
-      sheet.classList.remove('active');
+
+      // Animer le contenu vers le bas
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-0');
+        content.classList.add('translate-y-full');
+      }
+
+      // Remettre les classes Tailwind et retirer active
+      sheet.classList.remove('active', 'opacity-100', 'visible', 'pointer-events-auto');
+      sheet.classList.add('opacity-0', 'invisible', 'pointer-events-none');
       document.body.style.overflow = '';
 
       // Vider la recherche
@@ -2898,9 +2925,29 @@ if ($user) {
 
     // Recherche dans le bottom sheet modèles
     const mobileModelSearch = document.getElementById('mobileModelSearch');
+    const mobileModelSearchClear = document.getElementById('mobileModelSearchClear');
+
     if (mobileModelSearch) {
       mobileModelSearch.addEventListener('input', (e) => {
-        filterMobileModels(e.target.value);
+        const value = e.target.value;
+        filterMobileModels(value);
+        // Afficher/masquer le bouton clear
+        if (mobileModelSearchClear) {
+          mobileModelSearchClear.classList.toggle('hidden', !value);
+        }
+      });
+    }
+
+    // Bouton clear de la recherche mobile
+    if (mobileModelSearchClear) {
+      mobileModelSearchClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (mobileModelSearch) {
+          mobileModelSearch.value = '';
+          mobileModelSearch.focus();
+        }
+        mobileModelSearchClear.classList.add('hidden');
+        filterMobileModels('');
       });
     }
 
@@ -2910,7 +2957,15 @@ if ($user) {
       if (!sheet) return;
 
       mobileProfileSheetOpen = true;
-      sheet.classList.add('active');
+      sheet.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+      sheet.classList.add('active', 'opacity-100', 'visible', 'pointer-events-auto');
+
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-full');
+        content.classList.add('translate-y-0');
+      }
+
       document.body.style.overflow = 'hidden';
     }
 
@@ -2919,7 +2974,15 @@ if ($user) {
       if (!sheet) return;
 
       mobileProfileSheetOpen = false;
-      sheet.classList.remove('active');
+
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-0');
+        content.classList.add('translate-y-full');
+      }
+
+      sheet.classList.remove('active', 'opacity-100', 'visible', 'pointer-events-auto');
+      sheet.classList.add('opacity-0', 'invisible', 'pointer-events-none');
       document.body.style.overflow = '';
     }
 
@@ -2929,7 +2992,15 @@ if ($user) {
       if (!sheet) return;
 
       mobileAuthSheetOpen = true;
-      sheet.classList.add('active');
+      sheet.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+      sheet.classList.add('active', 'opacity-100', 'visible', 'pointer-events-auto');
+
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-full');
+        content.classList.add('translate-y-0');
+      }
+
       document.body.style.overflow = 'hidden';
     }
 
@@ -2938,7 +3009,15 @@ if ($user) {
       if (!sheet) return;
 
       mobileAuthSheetOpen = false;
-      sheet.classList.remove('active');
+
+      const content = sheet.querySelector('.mobile-bottom-sheet-content');
+      if (content) {
+        content.classList.remove('translate-y-0');
+        content.classList.add('translate-y-full');
+      }
+
+      sheet.classList.remove('active', 'opacity-100', 'visible', 'pointer-events-auto');
+      sheet.classList.add('opacity-0', 'invisible', 'pointer-events-none');
       document.body.style.overflow = '';
     }
 

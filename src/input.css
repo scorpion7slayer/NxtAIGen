@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ===== DARK MODE CONFIG (classe strategy) ===== */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ===== THEME PERSONNALISÉ ===== */
 @theme {
     /* Couleurs personnalisées */
@@ -158,19 +161,39 @@
 
 /* ===== BASE STYLES ===== */
 @layer base {
-    html,
-    body {
+    html {
         height: 100%;
-        overflow: hidden;
+    }
+
+    body {
+        min-height: 100%;
+        /* overflow: hidden est géré par classe .overflow-hidden sur les pages qui le nécessitent (chat) */
     }
 
     * {
         font-family: var(--font-sans);
     }
 
-    body {
-        background-color: var(--color-bg-dark);
+    /* ===== TRANSITIONS GLOBALES POUR CHANGEMENT DE THÈME ===== */
+    html,
+    body,
+    header,
+    nav,
+    main,
+    footer,
+    section,
+    aside,
+    div,
+    button,
+    a,
+    input,
+    textarea,
+    select {
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
     }
+
+    /* Light mode: utilise les classes Tailwind sur le body */
+    /* Dark mode: appliqué via les classes dark: */
 
     ::selection {
         background: #d1d5db;
@@ -185,10 +208,10 @@
         opacity: 1;
     }
 
-    /* Scrollbar personnalisée */
+    /* Scrollbar personnalisée - Light mode */
     * {
         scrollbar-width: thin;
-        scrollbar-color: #4b5563 #1f2937;
+        scrollbar-color: #d1d5db #f3f4f6;
     }
 
     *::-webkit-scrollbar {
@@ -197,29 +220,46 @@
     }
 
     *::-webkit-scrollbar-track {
-        background: #1f2937;
+        background: #f3f4f6;
         border-radius: 4px;
     }
 
     *::-webkit-scrollbar-thumb {
-        background: #4b5563;
+        background: #d1d5db;
         border-radius: 4px;
         transition: background 0.3s ease;
     }
 
     *::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
+        background: #9ca3af;
     }
 
     *::-webkit-scrollbar-thumb:active {
         background: #10b981;
     }
 
-    pre::-webkit-scrollbar-thumb {
+    /* Scrollbar personnalisée - Dark mode */
+    .dark * {
+        scrollbar-color: #4b5563 #1f2937;
+    }
+
+    .dark *::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+
+    .dark *::-webkit-scrollbar-thumb {
+        background: #4b5563;
+    }
+
+    .dark *::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
+
+    .dark pre::-webkit-scrollbar-thumb {
         background: #374151;
     }
 
-    pre::-webkit-scrollbar-thumb:hover {
+    .dark pre::-webkit-scrollbar-thumb:hover {
         background: #4b5563;
     }
 
@@ -386,10 +426,13 @@
         @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4;
         backdrop-filter: blur(4px);
         animation: fadeIn 0.2s ease-out;
+        will-change: opacity;
     }
     .modal-content {
-        @apply bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-700/50 max-w-md w-full;
+        @apply bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 max-w-md w-full;
         animation: slideUp 0.3s ease-out;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     }
     .modal-input:focus {
         outline: none;
@@ -414,6 +457,8 @@
         margin-left: 0.15rem;
         vertical-align: text-bottom;
         pointer-events: none;
+        will-change: opacity;
+        backface-visibility: hidden;
     }
 
     .streaming-response.done .streaming-cursor {
@@ -433,6 +478,9 @@
         background-color: #10b981;
         border-radius: 50%;
         animation: typing 1.4s infinite ease-in-out both;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
+        transform: translateZ(0);
     }
 
     .typing-indicator .dot:nth-child(1) {
@@ -497,6 +545,8 @@
 
     .sidebar-toggle-icon {
         transition: transform 0.3s ease;
+        will-change: transform;
+        backface-visibility: hidden;
     }
 
     .conversation-sidebar[data-collapsed="true"]
@@ -532,12 +582,20 @@
         bottom: 0;
         background: linear-gradient(
             to top,
-            var(--color-bg-dark) 85%,
+            rgb(249 250 251) 85%,
             transparent
         );
         padding-top: 1rem;
         padding-bottom: 1rem;
         margin-top: auto;
+    }
+
+    .dark #mainContent.chat-active #inputWrapper {
+        background: linear-gradient(
+            to top,
+            var(--color-bg-dark) 85%,
+            transparent
+        );
     }
 
     /* === SEND BUTTON === */
@@ -583,6 +641,7 @@
     /* Mobile bottom sheets migrated to Tailwind utilities (see markup) */
     .mobile-bottom-sheet {
         @apply fixed inset-0 z-50 pointer-events-none opacity-0 invisible transition-opacity duration-200 md:hidden;
+        will-change: opacity;
     }
     .mobile-bottom-sheet.active {
         @apply pointer-events-auto opacity-100 visible;
@@ -592,9 +651,11 @@
     }
     .mobile-bottom-sheet-content {
         @apply absolute bottom-0 left-0 right-0 max-h-[85vh] bg-neutral-800 rounded-t-3xl transform translate-y-full transition-transform duration-300 flex flex-col overflow-hidden p-0;
+        will-change: transform;
+        backface-visibility: hidden;
     }
     .mobile-bottom-sheet.active .mobile-bottom-sheet-content {
-        transform: translateY(0);
+        @apply translate-y-0;
     }
     .mobile-sheet-handle {
         @apply w-9 h-1.5 bg-gray-400/30 rounded-full mx-auto my-3 shrink-0;
@@ -615,13 +676,25 @@
         color: #9ca3af;
     }
 
-    .mobile-sheet-search i {
+    .mobile-sheet-search > i:first-child {
+        /* Désormais géré par Tailwind dans le HTML pour la taille/couleur/position */
+        pointer-events: none;
+    }
+
+    .mobile-search-clear {
         position: absolute;
-        left: 1rem;
+        right: 0.75rem;
         top: 50%;
         transform: translateY(-50%);
         color: #9ca3af;
-        pointer-events: none;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: color 0.15s ease;
+        cursor: pointer;
+    }
+
+    .mobile-search-clear:hover {
+        color: #e5e7eb;
     }
 
     .mobile-sheet-list {
@@ -873,6 +946,8 @@
         transition:
             transform 0.4s var(--ease-sheet),
             opacity 0.3s ease;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     }
 
     #cookieConsentBanner.visible {
@@ -948,6 +1023,7 @@
         transition:
             opacity 0.3s ease,
             visibility 0.3s ease;
+        will-change: opacity;
     }
 
     #cookieSettingsModal.visible {
@@ -956,16 +1032,24 @@
     }
 
     .cookie-settings-content {
-        background: #1f2937;
-        border: 1px solid rgba(75, 85, 99, 0.5);
+        background: white;
+        border: 1px solid rgba(209, 213, 219, 0.8);
         border-radius: 1rem;
         max-width: 500px;
         width: 90%;
         max-height: 85vh;
         overflow-y: auto;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         transform: scale(0.95) translateY(10px);
         transition: transform 0.3s ease;
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+
+    .dark .cookie-settings-content {
+        background: #1f2937;
+        border: 1px solid rgba(75, 85, 99, 0.5);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
     #cookieSettingsModal.visible .cookie-settings-content {
@@ -1060,6 +1144,8 @@
     /* === SUCCESS ANIMATION === */
     .success-animation {
         animation: successPop 0.5s ease-out;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     }
 
     .confetti {
@@ -1078,6 +1164,7 @@
             max-height 0.3s ease-out,
             opacity 0.2s ease-out;
         opacity: 0;
+        will-change: max-height, opacity;
     }
 
     .collapse-content.expanded {
@@ -1090,67 +1177,8 @@
         animation: pulse-dot 1s infinite;
     }
 
-    /* === DARK/LIGHT MODE === */
-    body[data-theme="light"] {
-        background-color: #f9fafb;
-        color: #111827;
-    }
-
-    body[data-theme="light"] #conversationSidebar {
-        background-color: #ffffff !important;
-        border-right-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] .conversation-item {
-        color: #4b5563;
-    }
-
-    body[data-theme="light"] .conversation-item:hover {
-        background-color: rgba(156, 163, 175, 0.1);
-    }
-
-    body[data-theme="light"] .conversation-item.active {
-        background-color: rgba(16, 185, 129, 0.1);
-    }
-
-    body[data-theme="light"] .conversation-item .conv-title {
-        color: #1f2937;
-    }
-    body[data-theme="light"] .sidebar-title {
-        color: #6b7280;
-    }
-
-    body[data-theme="light"] #chatContainer .ai-message {
-        background-color: #ffffff;
-        border-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] .ai-message p,
-    body[data-theme="light"] .ai-message li,
-    body[data-theme="light"] .ai-message {
-        color: #374151 !important;
-    }
-
-    body[data-theme="light"] #inputContainer,
-    body[data-theme="light"] #mobileInputBox {
-        background: rgba(255, 255, 255, 0.9);
-        border-color: #e5e7eb;
-    }
-
-    body[data-theme="light"] #messageInput,
-    body[data-theme="light"] #mobileMessageInput {
-        color: #1f2937;
-    }
-
-    body[data-theme="light"] #messageInput::placeholder,
-    body[data-theme="light"] #mobileMessageInput::placeholder {
-        color: #9ca3af;
-    }
-
-    body[data-theme="light"] .code-block-wrapper,
-    body[data-theme="light"] pre code {
-        background-color: #1e1e1e !important;
-    }
+    /* === DARK/LIGHT MODE - Utilise la stratégie classe Tailwind (.dark) === */
+    /* Les styles sont gérés via les classes dark: dans le HTML */
 }
 
 /* ===== UTILITIES ===== */
@@ -1422,10 +1450,14 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgb(17, 24, 39) 85%, transparent);
+        background: linear-gradient(to top, rgb(249 250 251) 85%, transparent);
         padding: 1rem;
         padding-bottom: max(1rem, env(safe-area-inset-bottom));
         z-index: 40;
+    }
+
+    .dark #mainContent.chat-active #mobileInputContainer {
+        background: linear-gradient(to top, rgb(17, 24, 39) 85%, transparent);
     }
 
     #mainContent.chat-active #chatContainer {

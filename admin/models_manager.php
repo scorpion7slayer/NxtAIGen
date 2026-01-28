@@ -417,29 +417,31 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
   <!-- Font Awesome non-bloquant -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
-  <title>Gestion des Modèles - NxtAIGen</title>
+  <title>Gestion des Modeles - NxtAIGen</title>
   <link href="../src/output.css" rel="stylesheet">
+  <script>
+    document.documentElement.classList.add('dark');
+    document.documentElement.lang = 'fr';
+  </script>
 </head>
 
-<body class="min-h-screen text-neutral-400 overflow-x-hidden">
+<body class="min-h-screen bg-neutral-900 text-neutral-200 overflow-x-hidden">
   <!-- Header -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-[oklch(21%_0.006_285.885)]/90 backdrop-blur-md border-b border-neutral-700/50">
+  <header class="fixed top-0 left-0 right-0 z-50 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-700/50">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-neutral-200 hover:text-white transition-colors">
+      <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-white hover:text-blue-400 transition-colors">
         <img src="../assets/images/logo.svg" alt="NxtGenAI" class="w-7 h-7" />
         <span class="hidden sm:inline">NxtGenAI</span>
       </a>
-      <!-- Navigation Desktop -->
       <nav class="hidden md:flex items-center gap-4">
-        <a href="settings.php" class="text-sm text-neutral-400 hover:text-blue-400 transition-colors">
+        <a href="settings.php" class="text-sm text-white hover:text-blue-400 transition-colors">
           <i class="fa-solid fa-shield-halved mr-1.5"></i>Admin
         </a>
-        <a href="rate_limits.php" class="text-sm text-neutral-400 hover:text-amber-400 transition-colors">
+        <a href="rate_limits.php" class="text-sm text-white hover:text-amber-400 transition-colors">
           <i class="fa-solid fa-gauge-high mr-1.5"></i>Rate Limits
         </a>
-        <div class="w-px h-4 bg-neutral-700"></div>
-        <span class="text-sm text-neutral-400"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
-        <a href="../zone_membres/logout.php" class="text-sm text-neutral-500 hover:text-red-400 transition-colors">
+        <span class="text-sm text-white"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
+        <a href="../zone_membres/logout.php" class="text-sm text-neutral-400 hover:text-red-400 transition-colors">
           <i class="fa-solid fa-sign-out-alt"></i>
         </a>
       </nav>
@@ -450,15 +452,15 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         </button>
         <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-45 py-1">
           <div class="px-4 py-2 border-b border-neutral-700">
-            <span class="text-sm font-medium text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="text-sm font-medium text-white"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
-          <a href="settings.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+          <a href="settings.php" class="block px-4 py-3 text-sm text-white hover:bg-neutral-700 hover:text-blue-400 transition-colors">
             <i class="fa-solid fa-shield-halved text-blue-400 w-5 mr-2"></i>Admin
           </a>
-          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-white hover:bg-neutral-700 hover:text-amber-400 transition-colors">
             <i class="fa-solid fa-gauge-high text-amber-400 w-5 mr-2"></i>Rate Limits
           </a>
-          <a href="../index.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors">
+          <a href="../index.php" class="block px-4 py-3 text-sm text-white hover:bg-neutral-700 hover:text-green-400 transition-colors">
             <i class="fa-solid fa-home text-green-400 w-5 mr-2"></i>Accueil
           </a>
           <div class="border-t border-neutral-700 mt-1 pt-1">
@@ -522,11 +524,27 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-1 mb-6 border-b border-neutral-700/50">
-      <button id="tabModels" onclick="switchTab('models')" class="px-4 py-3 text-sm font-medium text-green-400 border-b-2 border-green-400 transition-colors">
+    <div class="flex gap-1 mb-6 border-b border-neutral-700/50" role="tablist" aria-label="Gestion">
+      <button
+        id="tabModels"
+        onclick="switchTab('models')"
+        class="px-4 py-3 text-sm font-medium text-green-400 border-b-2 border-green-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panelModels"
+        tabindex="0"
+      >
         <i class="fa-solid fa-robot mr-2"></i>Modèles IA
       </button>
-      <button id="tabApi" onclick="switchTab('api')" class="px-4 py-3 text-sm font-medium text-neutral-400 hover:text-neutral-200 border-b-2 border-transparent transition-colors">
+      <button
+        id="tabApi"
+        onclick="switchTab('api')"
+        class="px-4 py-3 text-sm font-medium text-neutral-400 hover:text-neutral-200 border-b-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panelApi"
+        tabindex="0"
+      >
         <i class="fa-solid fa-key mr-2"></i>Clés API
       </button>
     </div>
@@ -581,7 +599,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             </div>
           </div>
           <!-- Refresh (visible uniquement sur desktop, en mobile c'est dans le bulk menu) -->
-          <button onclick="refreshModels()" class="hidden md:flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors">
+          <button onclick="refreshModels()" class="hidden md:flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors">
             <i class="fa-solid fa-refresh" id="refreshIcon"></i>
             <span>Actualiser</span>
           </button>
@@ -615,10 +633,23 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           ?>
             <section class="provider-section rounded-xl border border-neutral-700/50 bg-neutral-900/50 overflow-hidden" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" data-models="<?php echo $modelCount; ?>" data-status="<?php echo $isProviderEnabled ? '1' : '0'; ?>">
               <!-- Provider Header -->
-              <div class="flex items-center justify-between px-4 py-3 bg-neutral-800/30 border-b border-neutral-700/30 cursor-pointer hover:bg-neutral-800/50 transition-colors" onclick="toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')">
+              <div
+                class="flex items-center justify-between px-4 py-3 bg-neutral-800/30 border-b border-neutral-700/30 cursor-pointer hover:bg-neutral-800/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                onclick="toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')"
+                tabindex="0"
+                role="button"
+                aria-expanded="true"
+                aria-controls="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
+                onkeydown="if(event.key==='Enter'||event.key===' '){toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>'); event.preventDefault();}"
+              >
                 <div class="flex items-center gap-3">
-                  <button class="collapse-btn text-neutral-500 hover:text-neutral-300 transition-colors" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
-                    <i class="fa-solid fa-chevron-down transition-transform"></i>
+                  <button
+                    class="collapse-btn text-neutral-500 hover:text-neutral-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
+                    tabindex="-1"
+                    aria-label="Ouvrir/Replier <?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
+                  >
+                    <i class="fa-solid fa-chevron-down transition-transform duration-300 ease-in-out"></i>
                   </button>
                   <img src="../assets/images/providers/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" class="w-6 h-6" onerror="this.src='../assets/images/logo.svg'" />
                   <div>
@@ -649,7 +680,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
               </div>
 
               <!-- Models List (Collapsible) -->
-              <div class="collapse-content expanded p-4" id="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
+              <div class="collapse-content expanded p-4 transition-all duration-300 ease-in-out" id="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php if (isset($block['error'])): ?>
                   <div class="flex items-center gap-2 text-sm text-amber-300/80">
                     <i class="fa-solid fa-info-circle"></i>
@@ -1013,7 +1044,8 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         el.classList.add('expanded');
       });
       document.querySelectorAll('.collapse-btn i').forEach(icon => {
-        icon.style.transform = 'rotate(0deg)';
+        icon.classList.remove('-rotate-90');
+        icon.classList.add('rotate-0');
       });
     }
 
@@ -1024,7 +1056,8 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         el.classList.remove('expanded');
       });
       document.querySelectorAll('.collapse-btn i').forEach(icon => {
-        icon.style.transform = 'rotate(-90deg)';
+        icon.classList.remove('rotate-0');
+        icon.classList.add('-rotate-90');
       });
     }
 
@@ -1032,13 +1065,18 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     function toggleProviderCollapse(provider) {
       const content = document.getElementById('models_' + provider);
       const btn = document.querySelector(`.collapse-btn[data-provider="${provider}"] i`);
-
-      if (content.classList.contains('expanded')) {
+      const header = document.querySelector(`.provider-section[data-provider="${provider}"] > div[role="button"]`);
+      const expanded = content.classList.contains('expanded');
+      if (expanded) {
         content.classList.remove('expanded');
-        btn.style.transform = 'rotate(-90deg)';
+        btn.classList.remove('rotate-0');
+        btn.classList.add('-rotate-90');
+        if(header) header.setAttribute('aria-expanded', 'false');
       } else {
         content.classList.add('expanded');
-        btn.style.transform = 'rotate(0deg)';
+        btn.classList.remove('-rotate-90');
+        btn.classList.add('rotate-0');
+        if(header) header.setAttribute('aria-expanded', 'true');
       }
     }
 

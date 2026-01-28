@@ -45,7 +45,7 @@ include 'header.php';
             <?php if ($isAdmin): ?>
                 <span class="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-xl text-xs text-purple-400">
                     <i class="fa-solid fa-crown"></i>
-                    <span>Administrateur</span>
+                    <span data-i18n="dashboard.administrator">Administrateur</span>
                 </span>
             <?php endif; ?>
         </div>
@@ -55,7 +55,7 @@ include 'header.php';
                 <div class="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
                     <i class="fa-solid fa-comments text-green-400"></i>
                 </div>
-                <span>Aller au chatbot</span>
+                <span data-i18n="dashboard.go_chatbot">Aller au chatbot</span>
                 <i class="fa-solid fa-chevron-right ml-auto text-gray-400 dark:text-neutral-600"></i>
             </a>
 
@@ -64,7 +64,7 @@ include 'header.php';
                     <div class="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center">
                         <i class="fa-solid fa-user-shield text-purple-400"></i>
                     </div>
-                    <span>Paramètres administrateur</span>
+                    <span data-i18n="dashboard.admin_settings">Paramètres administrateur</span>
                     <i class="fa-solid fa-chevron-right ml-auto text-purple-400 dark:text-purple-600"></i>
                 </a>
             <?php endif; ?>
@@ -73,7 +73,7 @@ include 'header.php';
                 <div class="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
                     <i class="fa-solid fa-credit-card text-green-400"></i>
                 </div>
-                <span>Mon abonnement</span>
+                <span data-i18n="dashboard.my_subscription">Mon abonnement</span>
                 <i class="fa-solid fa-chevron-right ml-auto text-gray-400 dark:text-neutral-600"></i>
             </a>
 
@@ -81,7 +81,7 @@ include 'header.php';
                 <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
                     <i class="fa-solid fa-user-gear text-amber-400"></i>
                 </div>
-                <span>Mes paramètres</span>
+                <span data-i18n="dashboard.my_settings">Mes paramètres</span>
                 <i class="fa-solid fa-chevron-right ml-auto text-gray-400 dark:text-neutral-600"></i>
             </a>
 
@@ -89,7 +89,7 @@ include 'header.php';
                 <div class="w-9 h-9 rounded-lg bg-gray-200 dark:bg-neutral-700/50 flex items-center justify-center">
                     <i class="fa-solid fa-sign-out-alt text-gray-500 dark:text-neutral-500"></i>
                 </div>
-                <span>Se déconnecter</span>
+                <span data-i18n="dashboard.logout">Se déconnecter</span>
                 <i class="fa-solid fa-chevron-right ml-auto text-gray-400 dark:text-neutral-600"></i>
             </a>
         </div>
@@ -97,7 +97,7 @@ include 'header.php';
         <div class="mt-4">
             <a href="deleted_user.php" class="flex items-center justify-center gap-2 w-full bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/20 rounded-xl px-4 py-3 text-sm text-gray-500 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                 <i class="fa-solid fa-trash"></i>
-                <span>Supprimer le compte</span>
+                <span data-i18n="dashboard.delete_account">Supprimer le compte</span>
             </a>
         </div>
     </div>

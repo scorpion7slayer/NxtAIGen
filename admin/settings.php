@@ -93,7 +93,7 @@ try {
 }
 ?>
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 
 <head>
   <meta charset="UTF-8" />
@@ -106,51 +106,54 @@ try {
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
   <!-- Font Awesome non-bloquant -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
-  <title>Paramètres Admin - NxtGenAI</title>
+  <title>Parametres Admin - NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
+  <script>
+    document.documentElement.classList.add('dark');
+    document.documentElement.lang = 'fr';
+  </script>
 </head>
 
-<body class="min-h-screen text-gray-600 dark:text-neutral-400 overflow-x-hidden">
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[oklch(21%_0.006_285.885)]/90 backdrop-blur-md border-b border-gray-200 dark:border-neutral-700/50">
+<body class="min-h-screen bg-bg-dark text-neutral-400 overflow-x-hidden">
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[oklch(21%_0.006_285.885)]/90 backdrop-blur-md border-b border-neutral-700/50">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-gray-800 dark:text-neutral-200 hover:text-gray-900 dark:hover:text-white transition-colors">
+      <a href="../index.php" class="flex items-center gap-2.5 text-sm font-medium text-neutral-200 hover:text-white transition-colors">
         <img src="../assets/images/logo.svg" alt="NxtGenAI" class="w-7 h-7" />
         <span class="hidden sm:inline">NxtGenAI</span>
       </a>
       <!-- Navigation Desktop -->
       <nav class="hidden md:flex items-center gap-4">
-        <span class="text-sm text-gray-500 dark:text-neutral-400"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
-        <div class="w-px h-4 bg-gray-300 dark:bg-neutral-700"></div>
-        <a href="../zone_membres/dashboard.php" class="text-sm text-gray-500 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+        <span class="text-sm text-neutral-400"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+        <a href="../zone_membres/dashboard.php" class="text-sm text-neutral-400 hover:text-green-400 transition-colors">
           <i class="fa-solid fa-user mr-1.5"></i>Compte
         </a>
-        <a href="../zone_membres/logout.php" class="text-sm text-gray-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+        <a href="../zone_membres/logout.php" class="text-sm text-neutral-500 hover:text-red-400 transition-colors">
           <i class="fa-solid fa-sign-out-alt"></i>
         </a>
       </nav>
       <!-- Navigation Mobile - Menu hamburger -->
       <div class="md:hidden relative">
-        <button onclick="toggleNavMenu()" class="p-2.5 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 border border-gray-200 dark:border-neutral-600 rounded-lg text-gray-600 dark:text-neutral-300 transition-colors">
+        <button onclick="toggleNavMenu()" class="p-2.5 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 transition-colors">
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-45 py-1">
-          <div class="px-4 py-2 border-b border-gray-100 dark:border-neutral-700">
-            <span class="text-sm font-medium text-gray-700 dark:text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+        <div id="navMenu" class="hidden absolute right-0 top-full mt-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-45 py-1">
+          <div class="px-4 py-2 border-b border-neutral-700">
+            <span class="text-sm font-medium text-neutral-300"><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
-          <a href="models_manager.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-            <i class="fa-solid fa-robot text-purple-500 dark:text-purple-400 w-5 mr-2"></i>Modèles
+          <a href="models_manager.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-robot text-purple-400 w-5 mr-2"></i>Modèles
           </a>
-          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-            <i class="fa-solid fa-gauge-high text-amber-500 dark:text-amber-400 w-5 mr-2"></i>Rate Limits
+          <a href="rate_limits.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-gauge-high text-amber-400 w-5 mr-2"></i>Rate Limits
           </a>
-          <a href="../zone_membres/dashboard.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-            <i class="fa-solid fa-user text-green-500 w-5 mr-2"></i>Compte
+          <a href="../zone_membres/dashboard.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-user text-green-400 w-5 mr-2"></i>Compte
           </a>
-          <a href="../index.php" class="block px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-            <i class="fa-solid fa-home text-blue-500 w-5 mr-2"></i>Accueil
+          <a href="../index.php" class="block px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+            <i class="fa-solid fa-home text-blue-400 w-5 mr-2"></i>Accueil
           </a>
-          <div class="border-t border-gray-100 dark:border-neutral-700 mt-1 pt-1">
-            <a href="../zone_membres/logout.php" class="block px-4 py-3 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+          <div class="border-t border-neutral-700 mt-1 pt-1">
+            <a href="../zone_membres/logout.php" class="block px-4 py-3 text-sm text-red-400 hover:bg-neutral-700 transition-colors">
               <i class="fa-solid fa-sign-out-alt w-5 mr-2"></i>Déconnexion
             </a>
           </div>
@@ -162,13 +165,13 @@ try {
   <main class="pt-20 pb-10 min-h-screen px-4">
     <div class="max-w-4xl mx-auto">
       <div class="mb-8">
-        <a href="../zone_membres/dashboard.php" class="text-sm text-gray-500 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+        <a href="../zone_membres/dashboard.php" class="text-sm text-neutral-400 hover:text-green-400 transition-colors">
           <i class="fa-solid fa-chevron-left mr-1"></i>Retour au tableau de bord
         </a>
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mt-4 mb-2">
-          <i class="fa-solid fa-shield-halved text-purple-500 dark:text-purple-400 mr-2"></i>Paramètres administrateur
+        <h1 class="text-3xl font-bold text-white mt-4 mb-2">
+          <i class="fa-solid fa-shield-halved text-purple-400 mr-2"></i>Paramètres administrateur
         </h1>
-        <p class="text-gray-500 dark:text-neutral-400">Gérez les utilisateurs et les paramètres de l'application</p>
+        <p class="text-neutral-400">Gérez les utilisateurs et les paramètres de l'application</p>
       </div>
 
       <?php if (!empty($message)): ?>
@@ -185,68 +188,68 @@ try {
         </div>
       <?php endif; ?>
       <!-- option admin supplémentaires -->
-      <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-6 mb-8 shadow-sm dark:shadow-none">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-6">
-          <i class="fa-solid fa-gear text-purple-500 dark:text-purple-400 mr-2"></i>Options supplémentaires
+      <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-6 mb-8">
+        <h2 class="text-xl font-semibold text-white mb-6">
+          <i class="fa-solid fa-gear text-purple-400 mr-2"></i>Options supplémentaires
         </h2>
         <div class="flex flex-wrap gap-3">
-          <a href="models_manager.php" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/20 rounded-lg text-sm text-purple-600 dark:text-purple-400 font-medium transition-colors">
-            <i class="fa-solid fa-robot text-purple-500 dark:text-purple-400"></i>Gestion des modèles
+          <a href="models_manager.php" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/20 rounded-lg text-sm text-purple-400 font-medium transition-colors">
+            <i class="fa-solid fa-robot text-purple-400"></i>Gestion des modèles
           </a>
-          <a href="rate_limits.php" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/20 rounded-lg text-sm text-amber-600 dark:text-amber-400 font-medium transition-colors">
-            <i class="fa-solid fa-gauge-high text-amber-500 dark:text-amber-400"></i>Rate Limiting
+          <a href="rate_limits.php" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/20 rounded-lg text-sm text-amber-400 font-medium transition-colors">
+            <i class="fa-solid fa-gauge-high text-amber-400"></i>Rate Limiting
           </a>
         </div>
       </div>
       <!-- Tableau des utilisateurs -->
-      <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-6 shadow-sm dark:shadow-none">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-6">
-          <i class="fa-solid fa-users text-purple-500 dark:text-purple-400 mr-2"></i>Gestion des utilisateurs
+      <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-white mb-6">
+          <i class="fa-solid fa-users text-purple-400 mr-2"></i>Gestion des utilisateurs
         </h2>
 
         <?php if (empty($users)): ?>
-          <p class="text-gray-500 dark:text-neutral-400 text-center py-8">Aucun utilisateur trouvé.</p>
+          <p class="text-neutral-400 text-center py-8">Aucun utilisateur trouvé.</p>
         <?php else: ?>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-gray-200 dark:border-neutral-700/50">
-                  <th class="text-left py-3 px-4 font-semibold text-gray-700 dark:text-neutral-300">Utilisateur</th>
-                  <th class="text-left py-3 px-4 font-semibold text-gray-700 dark:text-neutral-300">Email</th>
-                  <th class="text-left py-3 px-4 font-semibold text-gray-700 dark:text-neutral-300">Statut</th>
-                  <th class="text-left py-3 px-4 font-semibold text-gray-700 dark:text-neutral-300">Inscrit</th>
-                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-neutral-300">Actions</th>
+                <tr class="border-b border-neutral-700/50">
+                  <th class="text-left py-3 px-4 font-semibold text-neutral-300">Utilisateur</th>
+                  <th class="text-left py-3 px-4 font-semibold text-neutral-300">Email</th>
+                  <th class="text-left py-3 px-4 font-semibold text-neutral-300">Statut</th>
+                  <th class="text-left py-3 px-4 font-semibold text-neutral-300">Inscrit</th>
+                  <th class="text-right py-3 px-4 font-semibold text-neutral-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <?php foreach ($users as $user): ?>
-                  <tr class="border-b border-gray-100 dark:border-neutral-700/30 hover:bg-gray-50 dark:hover:bg-neutral-700/20 transition-colors">
+                  <tr class="border-b border-neutral-700/30 hover:bg-neutral-700/20 transition-colors">
                     <td class="py-3 px-4">
                       <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-xs font-semibold text-purple-500 dark:text-purple-400">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-xs font-semibold text-purple-400">
                           <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
                         </div>
-                        <span class="text-gray-700 dark:text-neutral-200 font-medium"><?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="text-neutral-200 font-medium"><?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php if ($user['id'] == $_SESSION['user_id']): ?>
-                          <span class="text-xs px-2 py-1 bg-green-500/20 text-green-600 dark:text-green-400 rounded">Vous</span>
+                          <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">Vous</span>
                         <?php endif; ?>
                       </div>
                     </td>
-                    <td class="py-3 px-4 text-gray-500 dark:text-neutral-400">
+                    <td class="py-3 px-4 text-neutral-400">
                       <?php echo htmlspecialchars($user['email'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?>
                     </td>
                     <td class="py-3 px-4">
                       <?php if ($user['is_admin']): ?>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-600 dark:text-purple-400 font-medium">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-400 font-medium">
                           <i class="fa-solid fa-crown"></i>Admin
                         </span>
                       <?php else: ?>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-200 dark:bg-neutral-700/50 border border-gray-300 dark:border-neutral-600/30 rounded-lg text-xs text-gray-600 dark:text-neutral-400 font-medium">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-700/50 border border-neutral-600/30 rounded-lg text-xs text-neutral-400 font-medium">
                           <i class="fa-solid fa-user"></i>Utilisateur
                         </span>
                       <?php endif; ?>
                     </td>
-                    <td class="py-3 px-4 text-gray-400 dark:text-neutral-500 text-xs">
+                    <td class="py-3 px-4 text-neutral-500 text-xs">
                       <?php echo date('d/m/Y', strtotime($user['created_at'])); ?>
                     </td>
                     <td class="py-3 px-4 text-right">
@@ -271,14 +274,14 @@ try {
                           <button onclick="toggleUserActionsMenu(<?php echo $user['id']; ?>)" class="p-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg text-neutral-300 hover:text-white transition-colors">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                           </button>
-                          <div id="userActionsMenu-<?php echo $user['id']; ?>" class="hidden absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 min-w-40 py-1">
-                            <button onclick="closeAllUserMenus(); openConfirmModal('toggle_admin', <?php echo $user['id']; ?>, '<?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?> cet utilisateur ?', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                          <div id="userActionsMenu-<?php echo $user['id']; ?>" class="hidden absolute right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 min-w-40 py-1">
+                            <button onclick="closeAllUserMenus(); openConfirmModal('toggle_admin', <?php echo $user['id']; ?>, '<?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?> cet utilisateur ?', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
                               <i class="fa-solid fa-<?php echo $user['is_admin'] ? 'arrow-down' : 'arrow-up'; ?> text-purple-400 w-5 mr-2"></i><?php echo $user['is_admin'] ? 'Rétrograder' : 'Promouvoir'; ?>
                             </button>
-                            <button onclick="closeAllUserMenus(); openResetModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                            <button onclick="closeAllUserMenus(); openResetModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
                               <i class="fa-solid fa-key text-amber-400 w-5 mr-2"></i>Réinitialiser MDP
                             </button>
-                            <button onclick="closeAllUserMenus(); openConfirmModal('delete_user', <?php echo $user['id']; ?>, 'Êtes-vous sûr ? Cette action est irréversible.', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                            <button onclick="closeAllUserMenus(); openConfirmModal('delete_user', <?php echo $user['id']; ?>, 'Êtes-vous sûr ? Cette action est irréversible.', '<?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-neutral-700 transition-colors">
                               <i class="fa-solid fa-trash w-5 mr-2"></i>Supprimer
                             </button>
                           </div>
@@ -300,12 +303,12 @@ try {
 
   <!-- Modal de confirmation -->
   <div id="confirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm items-center justify-center z-50 hidden">
-    <div class="bg-white dark:bg-neutral-800/95 border border-gray-200 dark:border-neutral-700/50 rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl">
+    <div class="bg-neutral-800/95 border border-neutral-700/50 rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl">
       <div class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/20 mb-6">
-        <i class="fa-solid fa-exclamation text-amber-500 dark:text-amber-400 text-lg"></i>
+        <i class="fa-solid fa-exclamation text-amber-400 text-lg"></i>
       </div>
-      <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2" id="confirmTitle">Confirmation</h3>
-      <p class="text-gray-500 dark:text-neutral-400 mb-8" id="confirmMessage">Êtes-vous sûr ?</p>
+      <h3 class="text-xl font-semibold text-white mb-2" id="confirmTitle">Confirmation</h3>
+      <p class="text-neutral-400 mb-8" id="confirmMessage">Êtes-vous sûr ?</p>
 
       <form method="POST" id="confirmForm" style="display: none;">
         <input type="hidden" name="action" id="confirmAction">

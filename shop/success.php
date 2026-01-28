@@ -6,7 +6,7 @@ session_start();
  * Met à jour le plan de l'utilisateur
  */
 
-define('STRIPE_SECRET_KEY', 'REDACTED_STRIPE_SECRET_KEY');
+require_once __DIR__ . '/stripe_config.php';
 
 $sessionId = $_GET['session_id'] ?? '';
 $success = false;
@@ -91,11 +91,16 @@ if (!empty($sessionId) && isset($_SESSION['user_id'])) {
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg">
   <!-- Font Awesome non-bloquant -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" media="print" onload="this.media='all'">
-  <title><?php echo $success ? 'Paiement réussi' : 'Erreur'; ?> - NxtGenAI</title>
+  <title><?php echo $success ? 'Paiement reussi' : 'Erreur'; ?> - NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
+  <!-- Forçage du thème sombre et du français -->
+  <script>
+    document.documentElement.classList.add('dark');
+    document.documentElement.lang = 'fr';
+  </script>
 </head>
 
-<body class="min-h-screen text-neutral-400 flex items-center justify-center px-4">
+<body class="min-h-screen bg-gray-50 dark:bg-bg-dark text-gray-900 dark:text-neutral-400 flex items-center justify-center px-4">
   <div class="max-w-md w-full text-center">
     <?php if ($success): ?>
       <div class="success-animation mb-6">

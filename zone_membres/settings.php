@@ -93,10 +93,10 @@ include 'header.php';
     <div class="mb-8">
       <a href="dashboard.php" class="inline-flex items-center gap-2 text-gray-500 dark:text-neutral-500 hover:text-gray-700 dark:hover:text-neutral-300 transition-colors text-sm mb-4">
         <i class="fa-solid fa-arrow-left"></i>
-        <span>Retour au dashboard</span>
+        <span data-i18n="nav.back_dashboard">Retour au dashboard</span>
       </a>
-      <h1 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Mes paramètres</h1>
-      <p class="text-sm text-gray-500 dark:text-neutral-500 mt-1">Gérez vos connexions et préférences</p>
+      <h1 class="text-xl font-semibold text-gray-800 dark:text-neutral-200" data-i18n="settings.title">Mes paramètres</h1>
+      <p class="text-sm text-gray-500 dark:text-neutral-500 mt-1" data-i18n="settings.subtitle">Gérez vos connexions et préférences</p>
     </div>
 
     <?php if (isset($_GET['oauth_success'])): ?>
@@ -118,7 +118,7 @@ include 'header.php';
     <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-4 mb-6 shadow-sm dark:shadow-none">
       <h2 class="text-sm font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
         <i class="fa-solid fa-link"></i>
-        Comptes connectés
+        <span data-i18n="settings.connected_accounts">Comptes connectés</span>
       </h2>
 
       <!-- GitHub -->
@@ -136,7 +136,7 @@ include 'header.php';
                   Connecté : @<?php echo htmlspecialchars($githubUsername, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
               <?php else: ?>
-                <p class="text-xs text-gray-500 dark:text-neutral-500">Non connecté</p>
+                <p class="text-xs text-gray-500 dark:text-neutral-500" data-i18n="settings.not_connected">Non connecté</p>
               <?php endif; ?>
             </div>
           </div>
@@ -146,18 +146,18 @@ include 'header.php';
               class="px-2 sm:px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-500 dark:text-red-400 transition-colors flex items-center"
               onclick="return confirm('Voulez-vous vraiment déconnecter votre compte GitHub ?');">
               <i class="fa-solid fa-unlink sm:mr-1"></i>
-              <span class="hidden sm:inline">Déconnecter</span>
+              <span class="hidden sm:inline" data-i18n="settings.disconnect">Déconnecter</span>
             </a>
           <?php else: ?>
             <a href="../api/github/connect.php"
               class="px-2 sm:px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-600 dark:text-green-400 transition-colors flex items-center">
               <i class="fa-brands fa-github sm:mr-1"></i>
-              <span class="hidden sm:inline">Connecter</span>
+              <span class="hidden sm:inline" data-i18n="settings.connect">Connecter</span>
             </a>
           <?php endif; ?>
         </div>
 
-        <p class="mt-3 text-xs text-gray-500 dark:text-neutral-500">
+        <p class="mt-3 text-xs text-gray-500 dark:text-neutral-500" data-i18n="settings.github_desc">
           Connectez votre compte GitHub pour utiliser l'API GitHub Models avec les modèles GPT-4o, Claude, et plus.
         </p>
       </div>
@@ -167,10 +167,10 @@ include 'header.php';
     <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-4 shadow-sm dark:shadow-none">
       <h2 class="text-sm font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
         <i class="fa-solid fa-key"></i>
-        Clés API personnelles
+        <span data-i18n="settings.personal_api_keys">Clés API personnelles</span>
       </h2>
 
-      <p class="text-xs text-gray-500 dark:text-neutral-500 mb-4">
+      <p class="text-xs text-gray-500 dark:text-neutral-500 mb-4" data-i18n="settings.api_keys_desc">
         Ajoutez vos propres clés API pour utiliser les différents providers.
         Vos clés personnelles ont priorité sur les clés globales.
       </p>

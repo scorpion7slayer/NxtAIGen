@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * Configuration Stripe
+ *
+ * INSTRUCTIONS :
+ * 1. Copiez ce fichier vers stripe_config.php : cp stripe_config.php.example stripe_config.php
+ * 2. Allez sur https://dashboard.stripe.com/test/apikeys
+ * 3. Copiez vos cles de test (ou de production)
+ * 4. Pour le webhook secret, configurez un webhook sur https://dashboard.stripe.com/test/webhooks
+ *    pointant vers : https://votre-domaine.com/shop/webhook.php
+ *
+ * CLES STRIPE (mode test) :
+ * - Publishable key : commence par pk_test_
+ * - Secret key : commence par sk_test_
+ * - Webhook secret : commence par whsec_
+ */
+
+// Cle secrete Stripe (utilisee cote serveur)
+define('STRIPE_SECRET_KEY', 'sk_test_VOTRE_CLE_SECRETE');
+
+// Cle publique Stripe (utilisee cote client pour Checkout)
+define('STRIPE_PUBLISHABLE_KEY', 'pk_test_VOTRE_CLE_PUBLIQUE');
+
+// Secret du webhook (pour verifier les signatures)
+define('STRIPE_WEBHOOK_SECRET', 'whsec_VOTRE_CLE_WEBHOOK');
+
+// Price IDs des plans (a creer dans Stripe Dashboard > Products)
+define('STRIPE_PRICE_BASIC', 'price_VOTRE_PRICE_ID_BASIC');
+define('STRIPE_PRICE_PREMIUM', 'price_VOTRE_PRICE_ID_PREMIUM');
+define('STRIPE_PRICE_ULTRA', 'price_VOTRE_PRICE_ID_ULTRA');
