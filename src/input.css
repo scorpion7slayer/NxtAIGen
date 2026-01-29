@@ -1135,8 +1135,66 @@
         border-top: 1px solid rgba(75, 85, 99, 0.3);
     }
 
-    /* === TOGGLE SWITCH migrated to Tailwind utilities (peer / peer-checked) === */
-    /* Use markup: <input class="sr-only peer"/> + sibling div with peer-checked utilities for the visual state. */
+    /* === TOGGLE SWITCH === */
+    /* Provider toggle (large) */
+    .toggle-switch-lg {
+        @apply w-11 h-6 bg-neutral-700 rounded-full relative transition-colors;
+    }
+    .toggle-switch-lg::after {
+        content: '';
+        @apply absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform;
+    }
+    .peer:checked ~ .toggle-switch-lg {
+        @apply bg-green-500;
+    }
+    .peer:checked ~ .toggle-switch-lg::after {
+        transform: translateX(1.25rem);
+    }
+
+    /* Model toggle (small) */
+    .toggle-switch-sm {
+        @apply w-9 h-5 bg-neutral-700 rounded-full relative transition-colors;
+    }
+    .toggle-switch-sm::after {
+        content: '';
+        @apply absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform;
+    }
+    .peer:checked ~ .toggle-switch-sm {
+        @apply bg-green-500;
+    }
+    .peer:checked ~ .toggle-switch-sm::after {
+        transform: translateX(1rem);
+    }
+
+    /* User settings toggle (light/dark mode support) */
+    .toggle-switch-user {
+        @apply w-9 h-5 bg-gray-300 dark:bg-neutral-600 rounded-full relative transition-colors;
+    }
+    .toggle-switch-user::after {
+        content: '';
+        @apply absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform;
+    }
+    .peer:checked ~ .toggle-switch-user {
+        @apply bg-green-500;
+    }
+    .peer:checked ~ .toggle-switch-user::after {
+        transform: translateX(1rem);
+    }
+
+    /* Mini toggle for options (xs size) */
+    .toggle-switch-xs {
+        @apply w-8 h-4 bg-neutral-700 rounded-full relative transition-colors;
+    }
+    .toggle-switch-xs::after {
+        content: '';
+        @apply absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform;
+    }
+    .peer:checked ~ .toggle-switch-xs {
+        @apply bg-purple-500;
+    }
+    .peer:checked ~ .toggle-switch-xs::after {
+        transform: translateX(1rem);
+    }
 
     /* === PLAN CARDS converted to Tailwind utilities === */
     /* Visuals for plan cards are implemented with Tailwind utility classes in templates. */
@@ -1158,17 +1216,21 @@
 
     /* === COLLAPSE ANIMATION === */
     .collapse-content {
-        max-height: 0;
-        overflow: hidden;
-        transition:
-            max-height 0.3s ease-out,
-            opacity 0.2s ease-out;
+        display: grid;
+        grid-template-rows: 0fr;
         opacity: 0;
-        will-change: max-height, opacity;
+        transition:
+            grid-template-rows 0.3s ease-out,
+            opacity 0.2s ease-out;
+        will-change: grid-template-rows, opacity;
+    }
+
+    .collapse-content > * {
+        overflow: hidden;
     }
 
     .collapse-content.expanded {
-        max-height: 2000px;
+        grid-template-rows: 1fr;
         opacity: 1;
     }
 

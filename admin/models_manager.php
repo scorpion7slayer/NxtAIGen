@@ -278,7 +278,7 @@ $providerApiKeys = [
   'deepseek' => ['key' => 'DEEPSEEK_API_KEY', 'label' => 'DeepSeek API Key', 'url' => 'https://platform.deepseek.com/'],
   'mistral' => ['key' => 'MISTRAL_API_KEY', 'label' => 'Mistral AI API Key', 'url' => 'https://console.mistral.ai/'],
   'huggingface' => ['key' => 'HUGGINGFACE_API_KEY', 'label' => 'Hugging Face Token', 'url' => 'https://huggingface.co/settings/tokens'],
-  'openrouter' => ['key' => 'OPENROUTER_API_KEY', 'label' => 'OpenRouter API Key', 'url' => 'https://openrouter.ai/keys'],
+  'openrouter' => ['key' => 'OPENROUTER_API_KEY', 'label' => 'OpenRouter API Key', 'url' => 'https://openrouter.ai/keys', 'options' => ['OPENROUTER_FREE_ONLY' => ['label' => 'Modèles gratuits uniquement', 'type' => 'toggle']]],
   'perplexity' => ['key' => 'PERPLEXITY_API_KEY', 'label' => 'Perplexity API Key', 'url' => 'https://www.perplexity.ai/settings/api'],
   'xai' => ['key' => 'XAI_API_KEY', 'label' => 'xAI (Grok) API Key', 'url' => 'https://console.x.ai/'],
   'moonshot' => ['key' => 'MOONSHOT_API_KEY', 'label' => 'Moonshot API Key', 'url' => 'https://platform.moonshot.cn/'],
@@ -419,6 +419,9 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
   <title>Gestion des Modeles - NxtAIGen</title>
   <link href="../src/output.css" rel="stylesheet">
+  <!-- Anime.js v4 (local via npm) -->
+  <script src="../assets/js/anime.min.js"></script>
+  <script src="../assets/js/animations.js" defer></script>
   <script>
     document.documentElement.classList.add('dark');
     document.documentElement.lang = 'fr';
@@ -631,7 +634,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
             $isProviderEnabled = $providerStatuses[$prov] ?? $hasKey;
             $modelCount = isset($block['models']) && is_array($block['models']) ? count($block['models']) : 0;
           ?>
-            <section class="provider-section rounded-xl border border-neutral-700/50 bg-neutral-900/50 overflow-hidden" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" data-models="<?php echo $modelCount; ?>" data-status="<?php echo $isProviderEnabled ? '1' : '0'; ?>">
+            <section class="provider-section rounded-xl border border-neutral-700/50 bg-neutral-900/50 overflow-hidden transition-all duration-300<?php echo !$isProviderEnabled ? ' opacity-50 grayscale' : ''; ?>" data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" data-models="<?php echo $modelCount; ?>" data-status="<?php echo $isProviderEnabled ? '1' : '0'; ?>">
               <!-- Provider Header -->
               <div
                 class="flex items-center justify-between px-4 py-3 bg-neutral-800/30 border-b border-neutral-700/30 cursor-pointer hover:bg-neutral-800/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -665,64 +668,76 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                   <?php if ($modelCount > 0): ?>
                     <span class="text-xs text-neutral-500 bg-neutral-800 px-2 py-1 rounded-full"><?php echo $modelCount; ?> modèle<?php echo $modelCount > 1 ? 's' : ''; ?></span>
                   <?php endif; ?>
+                  <?php
+                  // Options spécifiques au provider
+                  $providerOptions = $providerApiKeys[$prov]['options'] ?? [];
+                  foreach ($providerOptions as $optKey => $optConfig):
+                    $optValue = $dbApiKeys[$prov][$optKey]['value'] ?? '0';
+                    $isChecked = $optValue === '1';
+                  ?>
+                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-neutral-400 hover:text-neutral-200 transition-colors" title="<?php echo htmlspecialchars($optConfig['label'], ENT_QUOTES, 'UTF-8'); ?>">
+                      <span class="hidden sm:inline"><?php echo htmlspecialchars($optConfig['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                      <span class="sm:hidden"><i class="fa-solid fa-gift"></i></span>
+                      <input type="checkbox" <?php echo $isChecked ? 'checked' : ''; ?> onchange="toggleProviderOption('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($optKey, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
+                      <div class="toggle-switch-xs"></div>
+                    </label>
+                  <?php endforeach; ?>
                   <!-- Test API Button -->
                   <button onclick="testApi('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-500 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Tester la connexion">
                     <i class="fa-solid fa-plug" id="testIcon_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"></i>
                   </button>
-                  <!-- Toggle Provider (Tailwind peer) -->
+                  <!-- Toggle Provider -->
                   <label class="inline-flex items-center cursor-pointer" title="Activer/Désactiver ce provider">
                     <input type="checkbox" id="providerToggle_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $isProviderEnabled ? 'checked' : ''; ?> onchange="toggleProvider('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
-                    <div class="w-11 h-6 bg-neutral-700 rounded-full peer-checked:bg-green-500 transition-colors relative">
-                      <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
-                    </div>
+                    <div class="toggle-switch-lg"></div>
                   </label>
                 </div>
               </div>
 
               <!-- Models List (Collapsible) -->
-              <div class="collapse-content expanded p-4 transition-all duration-300 ease-in-out" id="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
-                <?php if (isset($block['error'])): ?>
-                  <div class="flex items-center gap-2 text-sm text-amber-300/80">
-                    <i class="fa-solid fa-info-circle"></i>
-                    <span><?php echo htmlspecialchars($block['error'], ENT_QUOTES, 'UTF-8'); ?></span>
-                  </div>
-                <?php elseif (empty($block['models'])): ?>
-                  <p class="text-sm text-neutral-500 italic">Aucun modèle détecté pour ce provider.</p>
-                <?php else: ?>
-                  <div class="grid gap-2">
-                    <?php foreach ($block['models'] as $idx => $m):
-                      $modelId = $m['id'] ?? '';
-                      $modelName = $m['name'] ?? $modelId;
-                      $modelDesc = $m['description'] ?? '';
-                      $modelData = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
-                      $isModelEnabled = $modelStatuses[$prov][$modelId] ?? true;
-                    ?>
-                      <div class="model-item flex items-center justify-between p-3 rounded-lg bg-neutral-800/40 hover:bg-neutral-800/60 transition-colors group" data-model-name="<?php echo htmlspecialchars(strtolower($modelName . ' ' . $modelId), ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                          <!-- Toggle Model -->
-                          <label class="inline-flex items-center cursor-pointer shrink-0" title="Activer/Désactiver ce modèle">
-                            <input type="checkbox" <?php echo $isModelEnabled ? 'checked' : ''; ?> onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
-                            <div class="w-9 h-5 bg-neutral-700 rounded-full peer-checked:bg-green-500 transition-colors relative">
-                              <span class="absolute left-1 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
+              <div class="collapse-content expanded" id="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="p-4">
+                  <?php if (isset($block['error'])): ?>
+                    <div class="flex items-center gap-2 text-sm text-amber-300/80">
+                      <i class="fa-solid fa-info-circle"></i>
+                      <span><?php echo htmlspecialchars($block['error'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </div>
+                  <?php elseif (empty($block['models'])): ?>
+                    <p class="text-sm text-neutral-500 italic">Aucun modèle détecté pour ce provider.</p>
+                  <?php else: ?>
+                    <div class="grid gap-2">
+                      <?php foreach ($block['models'] as $idx => $m):
+                        $modelId = $m['id'] ?? '';
+                        $modelName = $m['name'] ?? $modelId;
+                        $modelDesc = $m['description'] ?? '';
+                        $modelData = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
+                        $isModelEnabled = $modelStatuses[$prov][$modelId] ?? true;
+                      ?>
+                        <div class="model-item flex items-center justify-between p-3 rounded-lg bg-neutral-800/40 hover:bg-neutral-800/60 transition-all duration-300 group<?php echo !$isModelEnabled ? ' opacity-40 grayscale' : ''; ?>" data-model-name="<?php echo htmlspecialchars(strtolower($modelName . ' ' . $modelId), ENT_QUOTES, 'UTF-8'); ?>">
+                          <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <!-- Toggle Model -->
+                            <label class="inline-flex items-center cursor-pointer shrink-0" title="Activer/Désactiver ce modèle">
+                              <input type="checkbox" <?php echo $isModelEnabled ? 'checked' : ''; ?> onchange="toggleModel('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>', this.checked)" class="sr-only peer" />
+                              <div class="toggle-switch-sm"></div>
+                            </label>
+                            <div class="min-w-0">
+                              <div class="text-sm text-neutral-200 font-medium truncate model-name"><?php echo htmlspecialchars($modelName, ENT_QUOTES, 'UTF-8'); ?></div>
+                              <div class="text-xs text-neutral-500 truncate model-id"><?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?></div>
                             </div>
-                          </label>
-                          <div class="min-w-0">
-                            <div class="text-sm text-neutral-200 font-medium truncate model-name"><?php echo htmlspecialchars($modelName, ENT_QUOTES, 'UTF-8'); ?></div>
-                            <div class="text-xs text-neutral-500 truncate model-id"><?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?></div>
+                          </div>
+                          <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="copyToClipboard('<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-400 hover:text-green-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Copier l'ID">
+                              <i class="fa-solid fa-copy"></i>
+                            </button>
+                            <button onclick='showModelDetails(<?php echo $modelData; ?>, "<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>")' class="p-2 text-neutral-400 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Voir les détails">
+                              <i class="fa-solid fa-info-circle"></i>
+                            </button>
                           </div>
                         </div>
-                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onclick="copyToClipboard('<?php echo htmlspecialchars($modelId, ENT_QUOTES, 'UTF-8'); ?>')" class="p-2 text-neutral-400 hover:text-green-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Copier l'ID">
-                            <i class="fa-solid fa-copy"></i>
-                          </button>
-                          <button onclick='showModelDetails(<?php echo $modelData; ?>, "<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>")' class="p-2 text-neutral-400 hover:text-blue-400 hover:bg-neutral-700/50 rounded-lg transition-colors" title="Voir les détails">
-                            <i class="fa-solid fa-info-circle"></i>
-                          </button>
-                        </div>
-                      </div>
-                    <?php endforeach; ?>
-                  </div>
-                <?php endif; ?>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </div>
               </div>
             </section>
           <?php endforeach; ?>
@@ -1037,46 +1052,89 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       }
     }
 
-    // Expand all providers
+    // Expand all providers with animation
     function expandAll() {
       document.getElementById('bulkDropdown').classList.add('hidden');
-      document.querySelectorAll('.collapse-content').forEach(el => {
-        el.classList.add('expanded');
-      });
-      document.querySelectorAll('.collapse-btn i').forEach(icon => {
-        icon.classList.remove('-rotate-90');
-        icon.classList.add('rotate-0');
-      });
+      const contents = document.querySelectorAll('.collapse-content');
+      const icons = document.querySelectorAll('.collapse-btn i');
+
+      contents.forEach(el => el.classList.add('expanded'));
+
+      // Animate icons with Anime.js if available
+      if (typeof anime !== 'undefined' && anime.animate) {
+        anime.animate(icons, {
+          rotate: ['-90deg', '0deg'],
+          duration: 300,
+          ease: 'outCubic'
+        });
+      } else {
+        icons.forEach(icon => {
+          icon.classList.remove('-rotate-90');
+          icon.classList.add('rotate-0');
+        });
+      }
     }
 
-    // Collapse all providers
+    // Collapse all providers with animation
     function collapseAll() {
       document.getElementById('bulkDropdown').classList.add('hidden');
-      document.querySelectorAll('.collapse-content').forEach(el => {
-        el.classList.remove('expanded');
-      });
-      document.querySelectorAll('.collapse-btn i').forEach(icon => {
-        icon.classList.remove('rotate-0');
-        icon.classList.add('-rotate-90');
-      });
+      const contents = document.querySelectorAll('.collapse-content');
+      const icons = document.querySelectorAll('.collapse-btn i');
+
+      contents.forEach(el => el.classList.remove('expanded'));
+
+      // Animate icons with Anime.js if available
+      if (typeof anime !== 'undefined' && anime.animate) {
+        anime.animate(icons, {
+          rotate: ['0deg', '-90deg'],
+          duration: 300,
+          ease: 'outCubic'
+        });
+      } else {
+        icons.forEach(icon => {
+          icon.classList.remove('rotate-0');
+          icon.classList.add('-rotate-90');
+        });
+      }
     }
 
-    // Toggle provider collapse
+    // Toggle provider collapse with animation
     function toggleProviderCollapse(provider) {
       const content = document.getElementById('models_' + provider);
       const btn = document.querySelector(`.collapse-btn[data-provider="${provider}"] i`);
       const header = document.querySelector(`.provider-section[data-provider="${provider}"] > div[role="button"]`);
       const expanded = content.classList.contains('expanded');
+
       if (expanded) {
         content.classList.remove('expanded');
-        btn.classList.remove('rotate-0');
-        btn.classList.add('-rotate-90');
-        if(header) header.setAttribute('aria-expanded', 'false');
+        if (header) header.setAttribute('aria-expanded', 'false');
+
+        // Animate icon with Anime.js if available
+        if (typeof anime !== 'undefined' && anime.animate) {
+          anime.animate(btn, {
+            rotate: ['0deg', '-90deg'],
+            duration: 300,
+            ease: 'outCubic'
+          });
+        } else {
+          btn.classList.remove('rotate-0');
+          btn.classList.add('-rotate-90');
+        }
       } else {
         content.classList.add('expanded');
-        btn.classList.remove('-rotate-90');
-        btn.classList.add('rotate-0');
-        if(header) header.setAttribute('aria-expanded', 'true');
+        if (header) header.setAttribute('aria-expanded', 'true');
+
+        // Animate icon with Anime.js if available
+        if (typeof anime !== 'undefined' && anime.animate) {
+          anime.animate(btn, {
+            rotate: ['-90deg', '0deg'],
+            duration: 300,
+            ease: 'outCubic'
+          });
+        } else {
+          btn.classList.remove('-rotate-90');
+          btn.classList.add('rotate-0');
+        }
       }
     }
 
@@ -1180,7 +1238,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       animateNumber('statActiveModels', activeModels);
     }
 
-    // Animate number change
+    // Animate number change with Anime.js v4
     function animateNumber(elementId, newValue) {
       const el = document.getElementById(elementId);
       if (!el) return;
@@ -1188,15 +1246,71 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       const currentValue = parseInt(el.textContent) || 0;
       if (currentValue === newValue) return;
 
-      // Quick flash animation
-      el.style.transform = 'scale(1.2)';
-      el.style.color = newValue > currentValue ? '#22c55e' : '#ef4444';
+      // Use Anime.js if available
+      if (typeof anime !== 'undefined' && anime.animate) {
+        const color = newValue > currentValue ? '#22c55e' : '#ef4444';
 
-      setTimeout(() => {
-        el.textContent = newValue;
-        el.style.transform = 'scale(1)';
-        el.style.color = '';
-      }, 150);
+        anime.animate(el, {
+          scale: [1, 1.2, 1],
+          duration: 400,
+          ease: 'outBack'
+        });
+
+        // Animate the number counting
+        const obj = { val: currentValue };
+        anime.animate(obj, {
+          val: newValue,
+          duration: 300,
+          ease: 'outCubic',
+          onUpdate: () => {
+            el.textContent = Math.round(obj.val);
+            el.style.color = color;
+          },
+          onComplete: () => {
+            el.style.color = '';
+          }
+        });
+      } else {
+        // Fallback to simple animation
+        el.style.transform = 'scale(1.2)';
+        el.style.color = newValue > currentValue ? '#22c55e' : '#ef4444';
+        setTimeout(() => {
+          el.textContent = newValue;
+          el.style.transform = 'scale(1)';
+          el.style.color = '';
+        }, 150);
+      }
+    }
+
+    // Toggle provider option (ex: openrouter free only)
+    async function toggleProviderOption(provider, optionKey, enabled) {
+      try {
+        const response = await fetch('../api/api_keys.php?action=save&scope=global', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            provider: provider,
+            key_name: optionKey,
+            key_value: '', // Pas de clé API, juste un setting
+            settings: {
+              [optionKey]: enabled ? '1' : '0'
+            }
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          showToast(enabled ? 'Option activée' : 'Option désactivée', 'success');
+          // Rafraîchir la page pour recharger les modèles
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showToast(data.error || 'Erreur lors de la mise à jour', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Erreur de connexion', 'error');
+      }
     }
 
     // Toggle provider - sauvegarde en DB
@@ -1205,6 +1319,14 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       const section = document.querySelector(`.provider-section[data-provider="${provider}"]`);
       if (section) {
         section.dataset.status = enabled ? '1' : '0';
+        // Visual feedback - griser la section si désactivée
+        if (enabled) {
+          section.classList.remove('opacity-50', 'grayscale');
+          section.querySelector('.collapse-content')?.classList.remove('pointer-events-none');
+        } else {
+          section.classList.add('opacity-50', 'grayscale');
+          section.querySelector('.collapse-content')?.classList.add('pointer-events-none');
+        }
       }
 
       try {
@@ -1236,6 +1358,26 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
     // Toggle model - sauvegarde en DB
     async function toggleModel(provider, modelId, enabled) {
+      // Find the model item element for visual feedback
+      const section = document.querySelector(`.provider-section[data-provider="${provider}"]`);
+      const modelItems = section?.querySelectorAll('.model-item');
+      let modelItem = null;
+      modelItems?.forEach(item => {
+        const idEl = item.querySelector('.model-id');
+        if (idEl && idEl.textContent === modelId) {
+          modelItem = item;
+        }
+      });
+
+      // Apply visual feedback immediately
+      if (modelItem) {
+        if (enabled) {
+          modelItem.classList.remove('opacity-40', 'grayscale');
+        } else {
+          modelItem.classList.add('opacity-40', 'grayscale');
+        }
+      }
+
       try {
         const response = await fetch('../api/api_keys.php?action=toggle_model', {
           method: 'POST',
@@ -1254,6 +1396,14 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           updateStats(); // Mise à jour dynamique des stats
         } else {
           showToast(data.error || 'Erreur lors de la mise à jour', 'error');
+          // Revert visual state on error
+          if (modelItem) {
+            if (enabled) {
+              modelItem.classList.add('opacity-40', 'grayscale');
+            } else {
+              modelItem.classList.remove('opacity-40', 'grayscale');
+            }
+          }
         }
       } catch (err) {
         console.error(err);
@@ -1261,10 +1411,12 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       }
     }
 
-    // Show model details modal
+    // Show model details modal with NxtAnim
     function showModelDetails(model, provider) {
       currentModalModel = model;
       const modal = document.getElementById('modelModal');
+      const backdrop = modal.querySelector('.modal-backdrop');
+      const content = modal.querySelector('.bg-neutral-900');
       const icon = providerIcons[provider] || 'openai.svg';
 
       document.getElementById('modalProviderIcon').src = `../assets/images/providers/${icon}`;
@@ -1303,13 +1455,31 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+
+      // Use NxtAnim if available
+      if (typeof NxtAnim !== 'undefined' && NxtAnim.modalOpen) {
+        NxtAnim.modalOpen(backdrop, content);
+      }
     }
 
-    // Close modal
+    // Close modal with NxtAnim
     function closeModal() {
-      document.getElementById('modelModal').classList.add('hidden');
-      document.body.style.overflow = '';
-      currentModalModel = null;
+      const modal = document.getElementById('modelModal');
+      const backdrop = modal.querySelector('.modal-backdrop');
+      const content = modal.querySelector('.bg-neutral-900');
+
+      // Use NxtAnim if available
+      if (typeof NxtAnim !== 'undefined' && NxtAnim.modalClose) {
+        NxtAnim.modalClose(backdrop, content, () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+          currentModalModel = null;
+        });
+      } else {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        currentModalModel = null;
+      }
     }
 
     // Copy model ID
@@ -1447,7 +1617,8 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       }
     }
 
-    // Show toast notification
+    // Show toast notification with NxtAnim
+    let toastTimeout = null;
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       const icon = document.getElementById('toastIcon');
@@ -1470,13 +1641,32 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
           break;
       }
 
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+      // Clear any pending hide timeout
+      if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+      }
 
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-        toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 3000);
+      // Use NxtAnim if available
+      if (typeof NxtAnim !== 'undefined' && NxtAnim.toastIn) {
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        NxtAnim.toastIn(toast);
+
+        toastTimeout = setTimeout(() => {
+          NxtAnim.toastOut(toast, () => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+          });
+        }, 3000);
+      } else {
+        // Fallback to CSS animation
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        toastTimeout = setTimeout(() => {
+          toast.classList.add('translate-y-20', 'opacity-0');
+          toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 3000);
+      }
     }
 
     // Escape HTML
@@ -1512,12 +1702,25 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       }
     });
 
-    // Initialize toggle states from localStorage
+    // Initialize animations and states on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
+      // Animate provider sections on load with NxtAnim stagger
+      if (typeof NxtAnim !== 'undefined' && NxtAnim.staggerIn) {
+        const sections = document.querySelectorAll('.provider-section');
+        if (sections.length > 0) {
+          NxtAnim.staggerIn(sections, { stagger: 50, duration: 400 });
+        }
+
+        // Animate stats cards
+        const statCards = document.querySelectorAll('.grid > div');
+        if (statCards.length > 0) {
+          NxtAnim.staggerIn(statCards, { stagger: 80, duration: 500 });
+        }
+      }
+
+      // Apply saved provider states from localStorage
       const providerState = JSON.parse(localStorage.getItem('nxtgenai_providers') || '{}');
       const modelState = JSON.parse(localStorage.getItem('nxtgenai_models') || '{}');
-
-      // Apply saved provider states
       // (States are initialized on page load based on API key presence)
     });
   </script>

@@ -53,6 +53,20 @@ if (!$isGuest && $userId) {
   $userGithubToken = $user['github_token'] ?? null;
 }
 
+// Récupérer les paramètres provider_settings (ex: openrouter_free_only)
+$providerSettings = [];
+try {
+  $settingsStmt = $pdo->query("SELECT provider, setting_key, setting_value FROM provider_settings WHERE is_global = 1");
+  while ($row = $settingsStmt->fetch()) {
+    $providerSettings[$row['provider']][$row['setting_key']] = $row['setting_value'];
+  }
+} catch (PDOException $e) {
+  // Table might not exist yet
+}
+
+// OpenRouter: modèles gratuits uniquement ?
+$openrouterFreeOnly = ($providerSettings['openrouter']['OPENROUTER_FREE_ONLY'] ?? '0') === '1';
+
 /**
  * Fonction helper pour les requêtes cURL
  */
@@ -75,7 +89,7 @@ function fetchModels($url, $headers = [])
 
 /**
  * Récupère les modèles OpenAI
- * Filtrage amélioré - décembre 2025
+ * Filtrage amélioré - décembre 2026
  */
 function getOpenAIModels($apiKey)
 {
@@ -92,10 +106,10 @@ function getOpenAIModels($apiKey)
   $seenIds = [];
 
   // Modèles à exclure (anciens, embeddings, audio, etc.)
-  $excludePatterns = ['embed', 'whisper', 'tts', 'dall-e', 'davinci', 'babbage', 'ada', 'curie', 'instruct', 'search', 'similarity', 'code-', 'text-'];
+  $excludePatterns = ['embed', 'whisper', 'tts', 'dall-e', 'davinci', 'babbage', 'ada', 'curie', 'instruct', 'search', 'similarity', 'code-', 'text-', 'realtime'];
 
-  // Modèles prioritaires à garder (décembre 2025)
-  $priorityModels = ['gpt-4o', 'gpt-4o-mini', 'o1', 'o1-mini', 'o3-mini', 'gpt-4-turbo', 'chatgpt-4o-latest'];
+  // Modèles prioritaires à garder (janvier 2026)
+  $priorityModels = ['gpt-5.2', 'gpt-5-mini', 'gpt-5-nano', 'o3', 'o4-mini', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'o1', 'chatgpt-4o-latest'];
 
   foreach ($data['data'] ?? [] as $model) {
     $id = $model['id'];
@@ -113,8 +127,8 @@ function getOpenAIModels($apiKey)
     }
     if ($exclude) continue;
 
-    // Garder uniquement gpt-*, o1-*, o3-*, chatgpt-*
-    if (strpos($id, 'gpt') === false && strpos($id, 'o1') === false && strpos($id, 'o3') === false && strpos($id, 'chatgpt') === false) {
+    // Garder uniquement gpt-*, o1-*, o3-*, o4-*, chatgpt-*
+    if (strpos($id, 'gpt') === false && strpos($id, 'o1') === false && strpos($id, 'o3') === false && strpos($id, 'o4') === false && strpos($id, 'chatgpt') === false) {
       continue;
     }
 
@@ -143,21 +157,52 @@ function getOpenAIModels($apiKey)
 }
 
 /**
- * Récupère les modèles Anthropic
- * Mise à jour décembre 2025 - Documentation officielle
- * Source: platform.claude.com/docs/en/about-claude/models
+ * Récupère les modèles Anthropic dynamiquement via l'API
+ * Endpoint: GET https://api.anthropic.com/v1/models
+ * Source: platform.claude.com/docs/en/api/models-list
  */
 function getAnthropicModels($apiKey)
 {
   if (empty($apiKey)) return ['error' => 'Clé API non configurée'];
 
-  // Liste officielle décembre 2025
-  return ['models' => [
-    ['id' => 'claude-sonnet-4-5-20250929', 'name' => 'Claude Sonnet 4.5', 'description' => 'Le plus intelligent pour agents et code'],
-    ['id' => 'claude-haiku-4-5-20251001', 'name' => 'Claude Haiku 4.5', 'description' => 'Rapide avec intelligence frontier'],
-    ['id' => 'claude-opus-4-5-20251101', 'name' => 'Claude Opus 4.5', 'description' => 'Maximum intelligence (preview)'],
-    ['id' => 'claude-sonnet-4-20250514', 'name' => 'Claude Sonnet 4', 'description' => 'Équilibré et polyvalent'],
-  ]];
+  $result = fetchModels('https://api.anthropic.com/v1/models?limit=100', [
+    'x-api-key: ' . $apiKey,
+    'anthropic-version: 2023-06-01',
+    'Content-Type: application/json'
+  ]);
+
+  if ($result['httpCode'] !== 200) {
+    // Fallback sur liste statique en cas d'erreur
+    return ['models' => [
+      ['id' => 'claude-sonnet-4-5-20250929', 'name' => 'Claude Sonnet 4.5', 'description' => 'Le plus intelligent pour agents et code'],
+      ['id' => 'claude-haiku-4-5-20251001', 'name' => 'Claude Haiku 4.5', 'description' => 'Rapide avec intelligence frontier'],
+      ['id' => 'claude-opus-4-5-20251101', 'name' => 'Claude Opus 4.5', 'description' => 'Maximum intelligence (preview)'],
+      ['id' => 'claude-sonnet-4-20250514', 'name' => 'Claude Sonnet 4', 'description' => 'Équilibré et polyvalent'],
+    ]];
+  }
+
+  $data = json_decode($result['response'], true);
+  $models = [];
+
+  foreach ($data['data'] ?? [] as $model) {
+    $models[] = [
+      'id' => $model['id'],
+      'name' => $model['display_name'] ?? $model['id'],
+      'created_at' => $model['created_at'] ?? null
+    ];
+  }
+
+  // Retourner les modèles récupérés ou fallback
+  if (empty($models)) {
+    return ['models' => [
+      ['id' => 'claude-sonnet-4-5-20250929', 'name' => 'Claude Sonnet 4.5', 'description' => 'Le plus intelligent pour agents et code'],
+      ['id' => 'claude-haiku-4-5-20251001', 'name' => 'Claude Haiku 4.5', 'description' => 'Rapide avec intelligence frontier'],
+      ['id' => 'claude-opus-4-5-20251101', 'name' => 'Claude Opus 4.5', 'description' => 'Maximum intelligence (preview)'],
+      ['id' => 'claude-sonnet-4-20250514', 'name' => 'Claude Sonnet 4', 'description' => 'Équilibré et polyvalent'],
+    ]];
+  }
+
+  return ['models' => $models];
 }
 
 /**
@@ -276,8 +321,10 @@ function getMistralModels($apiKey)
 
 /**
  * Récupère les modèles OpenRouter
+ * @param string $apiKey Clé API OpenRouter
+ * @param bool $freeOnly Si true, ne retourne que les modèles gratuits
  */
-function getOpenRouterModels($apiKey)
+function getOpenRouterModels($apiKey, $freeOnly = false)
 {
   if (empty($apiKey)) return ['error' => 'Clé API non configurée'];
 
@@ -294,29 +341,81 @@ function getOpenRouterModels($apiKey)
   $models = [];
 
   foreach ($data['data'] ?? [] as $model) {
+    // Filtrer les modèles gratuits si demandé
+    if ($freeOnly) {
+      // Les modèles gratuits ont ":free" dans leur ID ou un pricing à 0
+      $isFree = strpos($model['id'], ':free') !== false;
+      if (!$isFree && isset($model['pricing'])) {
+        $prompt = floatval($model['pricing']['prompt'] ?? 1);
+        $completion = floatval($model['pricing']['completion'] ?? 1);
+        $isFree = ($prompt == 0 && $completion == 0);
+      }
+      if (!$isFree) continue;
+    }
+
     $models[] = [
       'id' => $model['id'],
       'name' => $model['name'] ?? $model['id'],
       'context_length' => $model['context_length'] ?? null,
-      'pricing' => $model['pricing'] ?? null
+      'pricing' => $model['pricing'] ?? null,
+      'is_free' => strpos($model['id'], ':free') !== false ||
+                   (isset($model['pricing']) &&
+                    floatval($model['pricing']['prompt'] ?? 1) == 0 &&
+                    floatval($model['pricing']['completion'] ?? 1) == 0)
     ];
   }
 
-  // Limiter à 50 modèles les plus populaires
-  $models = array_slice($models, 0, 50);
+  // Limiter à 100 modèles (plus si free only car moins de résultats)
+  $models = array_slice($models, 0, $freeOnly ? 100 : 50);
 
   return ['models' => $models];
 }
 
 /**
- * Récupère les modèles Hugging Face
- * Mise à jour décembre 2025
+ * Récupère les modèles Hugging Face dynamiquement via l'API Hub
+ * Endpoint: GET https://huggingface.co/api/models
+ * Filtré pour text-generation avec conversational tag
  */
 function getHuggingFaceModels($apiKey)
 {
   if (empty($apiKey)) return ['error' => 'Clé API non configurée'];
 
-  // Hugging Face Inference API - modèles populaires décembre 2025
+  // Récupérer les modèles de text-generation les plus populaires
+  $url = 'https://huggingface.co/api/models?' . http_build_query([
+    'pipeline_tag' => 'text-generation',
+    'sort' => 'likes',
+    'direction' => -1,
+    'limit' => 20,
+    'filter' => 'conversational'
+  ]);
+
+  $result = fetchModels($url, [
+    'Authorization: Bearer ' . $apiKey
+  ]);
+
+  if ($result['httpCode'] === 200) {
+    $data = json_decode($result['response'], true);
+    $models = [];
+
+    foreach ($data ?? [] as $model) {
+      // Filtrer les modèles avec "Instruct" ou "Chat" dans le nom (conversationnels)
+      $modelId = $model['modelId'] ?? $model['id'] ?? '';
+      if (empty($modelId)) continue;
+
+      $models[] = [
+        'id' => $modelId,
+        'name' => $model['modelId'] ?? $modelId,
+        'likes' => $model['likes'] ?? 0,
+        'downloads' => $model['downloads'] ?? 0
+      ];
+    }
+
+    if (!empty($models)) {
+      return ['models' => array_slice($models, 0, 15)];
+    }
+  }
+
+  // Fallback sur liste statique si l'API échoue
   return ['models' => [
     ['id' => 'meta-llama/Llama-3.3-70B-Instruct', 'name' => 'Llama 3.3 70B', 'description' => 'Meta - Dernier modèle'],
     ['id' => 'Qwen/Qwen2.5-72B-Instruct', 'name' => 'Qwen 2.5 72B', 'description' => 'Alibaba Qwen'],
@@ -329,20 +428,22 @@ function getHuggingFaceModels($apiKey)
 
 /**
  * Récupère les modèles Perplexity
- * Mise à jour décembre 2025
- * Source: docs.perplexity.ai
+ * Mise à jour janvier 2026 - Liste officielle Sonar
+ * Note: Perplexity n'a pas d'endpoint /models, liste curatée
+ * Source: docs.perplexity.ai/guides/model-cards
  */
 function getPerplexityModels($apiKey)
 {
   if (empty($apiKey)) return ['error' => 'Clé API non configurée'];
 
-  // Perplexity API - modèles Sonar (basés sur Llama 3.3 70B)
+  // Perplexity API - famille Sonar (basée sur Llama 3.3 70B)
+  // Pas d'endpoint de listing disponible - liste officielle
   return ['models' => [
-    ['id' => 'sonar-pro', 'name' => 'Sonar Pro', 'description' => 'Recherche multi-sources avancée'],
-    ['id' => 'sonar', 'name' => 'Sonar', 'description' => 'Recherche web standard'],
-    ['id' => 'sonar-reasoning-pro', 'name' => 'Sonar Reasoning Pro', 'description' => 'Raisonnement avancé avec recherche'],
-    ['id' => 'sonar-reasoning', 'name' => 'Sonar Reasoning', 'description' => 'Raisonnement avec recherche'],
-    ['id' => 'sonar-deep-research', 'name' => 'Sonar Deep Research', 'description' => 'Recherche approfondie'],
+    ['id' => 'sonar', 'name' => 'Sonar', 'description' => 'Recherche web rapide (128k tokens)', 'context' => 128000],
+    ['id' => 'sonar-pro', 'name' => 'Sonar Pro', 'description' => 'Recherche approfondie (200k tokens)', 'context' => 200000],
+    ['id' => 'sonar-reasoning', 'name' => 'Sonar Reasoning', 'description' => 'Raisonnement avec recherche (128k)', 'context' => 128000],
+    ['id' => 'sonar-reasoning-pro', 'name' => 'Sonar Reasoning Pro', 'description' => 'Raisonnement avancé DeepSeek-R1 (128k)', 'context' => 128000],
+    ['id' => 'sonar-deep-research', 'name' => 'Sonar Deep Research', 'description' => 'Recherche exhaustive multi-sources', 'context' => 128000],
   ]];
 }
 
@@ -473,7 +574,7 @@ switch ($provider) {
     break;
 
   case 'openrouter':
-    $response = getOpenRouterModels($config['OPENROUTER_API_KEY'] ?? '');
+    $response = getOpenRouterModels($config['OPENROUTER_API_KEY'] ?? '', $openrouterFreeOnly);
     break;
 
   case 'huggingface':
@@ -506,7 +607,7 @@ switch ($provider) {
       'gemini' => getGeminiModels($config['GEMINI_API_KEY'] ?? ''),
       'deepseek' => getDeepSeekModels($config['DEEPSEEK_API_KEY'] ?? ''),
       'mistral' => getMistralModels($config['MISTRAL_API_KEY'] ?? ''),
-      'openrouter' => getOpenRouterModels($config['OPENROUTER_API_KEY'] ?? ''),
+      'openrouter' => getOpenRouterModels($config['OPENROUTER_API_KEY'] ?? '', $openrouterFreeOnly),
       'huggingface' => getHuggingFaceModels($config['HUGGINGFACE_API_KEY'] ?? ''),
       'perplexity' => getPerplexityModels($config['PERPLEXITY_API_KEY'] ?? ''),
       'xai' => getXAIModels($config['XAI_API_KEY'] ?? ''),
@@ -518,5 +619,94 @@ switch ($provider) {
 
 $response['provider'] = $provider;
 $response['timestamp'] = date('c');
+
+// =====================================================
+// FILTRE 1: Modèles désactivés par l'admin (models_status)
+// S'applique à tous les utilisateurs (invités et connectés)
+// =====================================================
+$tableCheck = $pdo->query("SHOW TABLES LIKE 'models_status'");
+if ($tableCheck->rowCount() > 0) {
+  // Charger les modèles désactivés par l'admin
+  $adminDisabledStmt = $pdo->query("SELECT provider, model_id FROM models_status WHERE is_enabled = 0");
+  $adminDisabled = [];
+  while ($row = $adminDisabledStmt->fetch()) {
+    $key = strtolower($row['provider']) . '::' . $row['model_id'];
+    $adminDisabled[$key] = true;
+  }
+
+  // Filtrer les modèles désactivés par l'admin
+  if (!empty($adminDisabled)) {
+    if ($provider === 'all') {
+      foreach ($response as $prov => &$provData) {
+        if (is_array($provData) && isset($provData['models'])) {
+          $provData['models'] = array_values(array_filter($provData['models'], function ($model) use ($prov, $adminDisabled) {
+            $modelId = $model['id'] ?? '';
+            $key = strtolower($prov) . '::' . $modelId;
+            return !isset($adminDisabled[$key]);
+          }));
+        }
+      }
+      unset($provData);
+    } else {
+      if (isset($response['models'])) {
+        $response['models'] = array_values(array_filter($response['models'], function ($model) use ($provider, $adminDisabled) {
+          $modelId = $model['id'] ?? '';
+          $key = strtolower($provider) . '::' . $modelId;
+          return !isset($adminDisabled[$key]);
+        }));
+      }
+    }
+  }
+}
+
+// =====================================================
+// FILTRE 2: Préférences utilisateur (user_models_preferences)
+// S'applique uniquement aux utilisateurs connectés
+// =====================================================
+// Sauf si ?no_filter=1 est passé (pour la page settings)
+$applyUserFilter = !isset($_GET['no_filter']) && !$isGuest && $userId;
+
+if ($applyUserFilter) {
+  // Vérifier si la table existe
+  $tableCheck = $pdo->query("SHOW TABLES LIKE 'user_models_preferences'");
+  if ($tableCheck->rowCount() > 0) {
+    // Charger les préférences utilisateur
+    $prefStmt = $pdo->prepare("SELECT provider, model_id, is_enabled FROM user_models_preferences WHERE user_id = ?");
+    $prefStmt->execute([$userId]);
+
+    $userPrefs = [];
+    while ($row = $prefStmt->fetch()) {
+      if (!isset($userPrefs[$row['provider']])) {
+        $userPrefs[$row['provider']] = [];
+      }
+      $userPrefs[$row['provider']][$row['model_id']] = (bool)$row['is_enabled'];
+    }
+
+    // Filtrer les modèles si des préférences existent
+    if (!empty($userPrefs)) {
+      if ($provider === 'all') {
+        // Filtrer chaque provider
+        foreach ($response as $prov => &$provData) {
+          if (is_array($provData) && isset($provData['models'])) {
+            $provData['models'] = array_values(array_filter($provData['models'], function ($model) use ($prov, $userPrefs) {
+              $modelId = $model['id'] ?? '';
+              // Si pas de préférence définie, garder le modèle (true par défaut)
+              return !isset($userPrefs[$prov][$modelId]) || $userPrefs[$prov][$modelId] === true;
+            }));
+          }
+        }
+        unset($provData);
+      } else {
+        // Filtrer un seul provider
+        if (isset($response['models']) && isset($userPrefs[$provider])) {
+          $response['models'] = array_values(array_filter($response['models'], function ($model) use ($provider, $userPrefs) {
+            $modelId = $model['id'] ?? '';
+            return !isset($userPrefs[$provider][$modelId]) || $userPrefs[$provider][$modelId] === true;
+          }));
+        }
+      }
+    }
+  }
+}
 
 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);

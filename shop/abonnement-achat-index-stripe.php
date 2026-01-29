@@ -220,6 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
   <title>Abonnements - NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
+  <!-- Anime.js v4 (local via npm) -->
+  <script src="../assets/js/anime.min.js"></script>
+  <script src="../assets/js/animations.js" defer></script>
   <!-- Forçage du thème sombre et du français -->
   <script>
     document.documentElement.classList.add('dark');

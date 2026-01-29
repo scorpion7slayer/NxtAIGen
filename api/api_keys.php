@@ -2,7 +2,7 @@
 
 /**
  * API Endpoint pour la gestion des clés API
- * 
+ *
  * Endpoints:
  * - GET    ?action=list&scope=global         Liste les clés API globales (admin)
  * - GET    ?action=list&scope=user           Liste les clés API de l'utilisateur
@@ -13,6 +13,8 @@
  * - POST   ?action=toggle_provider           Active/désactive un provider (admin)
  * - POST   ?action=toggle_model              Active/désactive un modèle (admin)
  * - GET    ?action=get_config                Récupère la config pour un provider
+ * - POST   ?action=toggle_user_model         Active/désactive un modèle pour l'utilisateur
+ * - GET    ?action=list_user_models          Liste les préférences de modèles utilisateur
  */
 
 session_start();
@@ -124,6 +126,14 @@ try {
 
     case 'init_from_config':
       handleInitFromConfig($pdo, $userId, $isAdminUser);
+      break;
+
+    case 'toggle_user_model':
+      handleToggleUserModel($pdo, $userId);
+      break;
+
+    case 'list_user_models':
+      handleListUserModels($pdo, $userId);
       break;
 
     default:
@@ -539,4 +549,61 @@ function handleInitFromConfig($pdo, $userId, $isAdminUser)
     'success' => true,
     'message' => "Import terminé: {$imported} clés importées, {$skipped} ignorées"
   ]);
+}
+
+function handleToggleUserModel($pdo, $userId)
+{
+  $input = json_decode(file_get_contents('php://input'), true);
+
+  $provider = $input['provider'] ?? '';
+  $modelId = $input['model_id'] ?? '';
+  $enabled = isset($input['enabled']) ? ($input['enabled'] ? 1 : 0) : 1;
+
+  if (empty($provider) || empty($modelId)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Provider et model_id requis']);
+    return;
+  }
+
+  // Vérifier si la table existe
+  $tableCheck = $pdo->query("SHOW TABLES LIKE 'user_models_preferences'");
+  if ($tableCheck->rowCount() === 0) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Table user_models_preferences non créée. Exécutez la migration.']);
+    return;
+  }
+
+  $stmt = $pdo->prepare("
+        INSERT INTO user_models_preferences (user_id, provider, model_id, is_enabled)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            is_enabled = VALUES(is_enabled),
+            updated_at = CURRENT_TIMESTAMP
+    ");
+  $stmt->execute([$userId, $provider, $modelId, $enabled]);
+
+  echo json_encode(['success' => true, 'message' => $enabled ? 'Modèle activé' : 'Modèle masqué']);
+}
+
+function handleListUserModels($pdo, $userId)
+{
+  // Vérifier si la table existe
+  $tableCheck = $pdo->query("SHOW TABLES LIKE 'user_models_preferences'");
+  if ($tableCheck->rowCount() === 0) {
+    echo json_encode(['success' => true, 'preferences' => [], 'table_exists' => false]);
+    return;
+  }
+
+  $stmt = $pdo->prepare("SELECT provider, model_id, is_enabled FROM user_models_preferences WHERE user_id = ?");
+  $stmt->execute([$userId]);
+
+  $preferences = [];
+  while ($row = $stmt->fetch()) {
+    if (!isset($preferences[$row['provider']])) {
+      $preferences[$row['provider']] = [];
+    }
+    $preferences[$row['provider']][$row['model_id']] = (bool)$row['is_enabled'];
+  }
+
+  echo json_encode(['success' => true, 'preferences' => $preferences, 'table_exists' => true]);
 }

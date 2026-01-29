@@ -2,8 +2,7 @@
 # NxtGenAI - .gitignore
 # ============================================
 
-# === FICHIERS DE CONFIGURATION SENSIBLES ===
-# (contiennent des cles API, mots de passe, secrets)
+# === FICHIERS DE CONFIGURATION ===
 api/config.php
 api/github/config.php
 zone_membres/db.php
@@ -11,7 +10,6 @@ shop/stripe_config.php
 shop/stripe_secrets.php
 
 # === BASE DE DONNEES ===
-# Le dump complet contient des donnees utilisateur et des cles chiffrees
 # Utiliser database/nxtgenai.schema.sql pour le schema propre
 database/nxtgenai.sql
 
@@ -36,6 +34,7 @@ package.json
 # === OUTILS DE DEVELOPPEMENT ===
 .grepai/
 .claude/settings.local.json
+agents/
 
 # === SYSTEME ===
 .DS_Store

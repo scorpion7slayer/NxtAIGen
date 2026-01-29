@@ -1,463 +1,1365 @@
 <!doctype html>
 <html lang="fr" class="dark scroll-smooth">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NxtAIGen — Plateforme IA Multi-Fournisseurs</title>
-    <meta name="description" content="Une interface, 12 fournisseurs d'IA, streaming en temps reel. Discutez avec OpenAI, Claude, Gemini, DeepSeek et bien plus." />
-    <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="src/output.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        @keyframes glow {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.8; }
-        }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-float-delay { animation: float 6s ease-in-out 2s infinite; }
-        .animate-glow { animation: glow 3s ease-in-out infinite; }
-        .gradient-text {
-            background: linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .card-hover {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .pricing-popular {
-            border: 2px solid #10b981;
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
-        }
-        .hero-grid {
-            background-image:
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
-    </style>
-</head>
-<body class="bg-gray-950 text-gray-100 antialiased">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>NxtAIGen - Une interface pour tous vos modèles IA</title>
+        <meta
+            name="description"
+            content="Plateforme multi-fournisseurs pour interagir avec les meilleurs modèles d'IA : OpenAI, Claude, Gemini, DeepSeek et plus encore. Streaming en temps réel."
+        />
+        <meta
+            name="keywords"
+            content="IA, chatbot, OpenAI, Claude, Gemini, DeepSeek, GPT, streaming"
+        />
+        <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
+        <link
+            rel="preconnect"
+            href="https://cdnjs.cloudflare.com"
+            crossorigin
+        />
+        <link rel="preload" href="src/output.css" as="style" />
+        <link rel="stylesheet" href="src/output.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+            integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <!-- Anime.js v4 (local via npm) -->
+        <script src="assets/js/anime.min.js"></script>
+        <style>
+            /* Animations gérées par anime.js - classes de base */
+            .animate-float,
+            .animate-float-delay,
+            .animate-glow {
+                will-change: transform, opacity;
+            }
+            .gradient-text {
+                background: linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6);
+                background-size: 200% 200%;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            .glass {
+                background: rgba(255, 255, 255, 0.02);
+                backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .card-hover {
+                will-change: transform, box-shadow;
+            }
+            .pricing-popular {
+                border: 2px solid #10b981;
+                box-shadow:
+                    0 0 60px rgba(16, 185, 129, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            }
+            .hero-grid {
+                background-image:
+                    linear-gradient(
+                        rgba(255, 255, 255, 0.02) 1px,
+                        transparent 1px
+                    ),
+                    linear-gradient(
+                        90deg,
+                        rgba(255, 255, 255, 0.02) 1px,
+                        transparent 1px
+                    );
+                background-size: 80px 80px;
+            }
 
-    <!-- Barre de navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-gray-950/80 backdrop-blur-xl">
-        <div class="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-3">
-                <img src="assets/images/logo.svg" alt="NxtAIGen" class="h-8 w-8" />
-                <span class="text-xl font-bold tracking-tight">NxtAIGen</span>
-            </a>
-            <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
-                <a href="#fonctionnalites" class="hover:text-white transition-colors">Fonctionnalites</a>
-                <a href="#fournisseurs" class="hover:text-white transition-colors">Fournisseurs</a>
-                <a href="#tarifs" class="hover:text-white transition-colors">Tarifs</a>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="zone_membres/login.php" class="hidden sm:inline-flex text-sm text-gray-400 hover:text-white transition-colors px-4 py-2">
-                    Se connecter
+            .provider-logo {
+                filter: grayscale(100%) brightness(0.7);
+                will-change: transform, filter;
+            }
+            /* Fade-in initial state pour anime.js */
+            .fade-in-up {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            .fade-in-left {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            .fade-in-right {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            .scale-in {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        </style>
+    </head>
+    <body class="bg-bg-dark text-neutral-100 antialiased overflow-x-hidden">
+        <!-- Navigation -->
+        <nav
+            class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-bg-dark/80 backdrop-blur-xl"
+        >
+            <div
+                class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between"
+            >
+                <a href="#" class="flex items-center gap-3 group">
+                    <img
+                        src="assets/images/logo.svg"
+                        alt="NxtAIGen"
+                        class="h-8 w-8 transition-transform group-hover:scale-110"
+                    />
+                    <span class="text-xl font-bold tracking-tight"
+                        >NxtAIGen</span
+                    >
                 </a>
-                <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-5 py-2.5 transition-colors">
-                    Lancer l'appli
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </a>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Hero -->
-    <section class="relative min-h-screen flex items-center justify-center overflow-hidden hero-grid">
-        <!-- Effets de fond -->
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-glow"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-glow" style="animation-delay: 1.5s;"></div>
-        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/8 rounded-full blur-3xl animate-glow" style="animation-delay: 3s;"></div>
-
-        <div class="relative z-10 mx-auto max-w-5xl px-6 text-center pt-24">
-            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-400 mb-8">
-                <span class="relative flex h-2 w-2">
-                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                12 fournisseurs d'IA connectes
-            </div>
-
-            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6">
-                Une seule interface pour<br/>
-                <span class="gradient-text">tous vos modeles d'IA</span>
-            </h1>
-
-            <p class="mx-auto max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed mb-10">
-                Discutez avec OpenAI, Claude, Gemini, DeepSeek et 8 autres fournisseurs via une plateforme unifiee avec streaming en temps reel.
-            </p>
-
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all hover:shadow-lg hover:shadow-emerald-500/25">
-                    Commencer gratuitement
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-                <a href="#fonctionnalites" class="inline-flex items-center gap-2 rounded-full border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium px-8 py-4 text-lg transition-all">
-                    En savoir plus
-                    <i class="fa-solid fa-chevron-down text-sm"></i>
-                </a>
-            </div>
-
-            <!-- Icones des fournisseurs flottantes -->
-            <div class="relative mt-20 mb-10">
-                <div class="flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
-                    <img src="assets/images/providers/openai.svg" alt="OpenAI" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" />
-                    <img src="assets/images/providers/anthropic.svg" alt="Anthropic" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" />
-                    <img src="assets/images/providers/gemini.svg" alt="Gemini" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" style="animation-delay: 0.5s;" />
-                    <img src="assets/images/providers/deepseek.svg" alt="DeepSeek" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" style="animation-delay: 0.8s;" />
-                    <img src="assets/images/providers/mistral.svg" alt="Mistral" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float" style="animation-delay: 1s;" />
-                    <img src="assets/images/providers/xai.svg" alt="xAI" class="h-10 w-10 rounded-xl opacity-60 hover:opacity-100 transition-opacity animate-float-delay" style="animation-delay: 1.3s;" />
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Fonctionnalites -->
-    <section id="fonctionnalites" class="relative py-24 sm:py-32">
-        <div class="mx-auto max-w-7xl px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tout ce dont vous avez besoin</h2>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Une plateforme puissante et unifiee pour interagir avec les meilleurs modeles d'IA disponibles.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Fonctionnalite 1 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 mb-4">
-                        <i class="fa-solid fa-bolt text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Streaming en temps reel</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Recevez les reponses token par token via Server-Sent Events. Aucune attente.</p>
+                <div
+                    class="hidden md:flex items-center gap-8 text-sm text-neutral-400"
+                >
+                    <a
+                        href="#fonctionnalites"
+                        class="hover:text-white transition-colors duration-200"
+                        >Fonctionnalités</a
+                    >
+                    <a
+                        href="#fournisseurs"
+                        class="hover:text-white transition-colors duration-200"
+                        >Fournisseurs</a
+                    >
+                    <a
+                        href="#tarifs"
+                        class="hover:text-white transition-colors duration-200"
+                        >Tarifs</a
+                    >
                 </div>
 
-                <!-- Fonctionnalite 2 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 mb-4">
-                        <i class="fa-solid fa-layer-group text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">12 fournisseurs</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Basculez entre OpenAI, Claude, Gemini, DeepSeek, Mistral et plus en un clic.</p>
-                </div>
-
-                <!-- Fonctionnalite 3 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 mb-4">
-                        <i class="fa-solid fa-file-lines text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Entree multi-format</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Envoyez des images, PDF et fichiers DOCX. Les modeles vision analysent vos images directement.</p>
-                </div>
-
-                <!-- Fonctionnalite 4 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 mb-4">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Chiffrement AES-256</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Toutes les cles API chiffrees en AES-256-CBC. Jamais stockees en clair.</p>
-                </div>
-
-                <!-- Fonctionnalite 5 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 mb-4">
-                        <i class="fa-solid fa-clock-rotate-left text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Historique des conversations</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Toutes vos conversations sont sauvegardees et recherchables. Reprenez la ou vous en etiez.</p>
-                </div>
-
-                <!-- Fonctionnalite 6 -->
-                <div class="glass rounded-2xl p-6 card-hover">
-                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 mb-4">
-                        <i class="fa-solid fa-user-shield text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Acces invite</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Testez la plateforme sans creer de compte. 5 messages gratuits toutes les 24 heures.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Fournisseurs -->
-    <section id="fournisseurs" class="relative py-24 sm:py-32 border-t border-white/5">
-        <div class="mx-auto max-w-7xl px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tous les grands fournisseurs</h2>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Accedez aux meilleurs modeles d'IA via une couche API unifiee.</p>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/openai.svg" alt="OpenAI" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">OpenAI</p>
-                        <p class="text-gray-500 text-xs">GPT-4o, o1, o3</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/anthropic.svg" alt="Anthropic" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Anthropic</p>
-                        <p class="text-gray-500 text-xs">Claude 4, Opus</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/gemini.svg" alt="Google" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Google Gemini</p>
-                        <p class="text-gray-500 text-xs">Gemini 2.5 Pro</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/deepseek.svg" alt="DeepSeek" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">DeepSeek</p>
-                        <p class="text-gray-500 text-xs">V3, R1</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/mistral.svg" alt="Mistral" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Mistral</p>
-                        <p class="text-gray-500 text-xs">Large, Medium</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/xai.svg" alt="xAI" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">xAI</p>
-                        <p class="text-gray-500 text-xs">Grok</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/perplexity.svg" alt="Perplexity" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Perplexity</p>
-                        <p class="text-gray-500 text-xs">Sonar</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/openrouter.svg" alt="OpenRouter" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">OpenRouter</p>
-                        <p class="text-gray-500 text-xs">Multi-modele</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/huggingface.svg" alt="Hugging Face" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Hugging Face</p>
-                        <p class="text-gray-500 text-xs">Modeles ouverts</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/moonshot.svg" alt="Moonshot" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Moonshot</p>
-                        <p class="text-gray-500 text-xs">Kimi</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/githubcopilot.svg" alt="GitHub Copilot" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">GitHub Copilot</p>
-                        <p class="text-gray-500 text-xs">OAuth</p>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-5 flex items-center gap-4 card-hover">
-                    <img src="assets/images/providers/ollama.svg" alt="Ollama" class="w-10 h-10 rounded-lg" />
-                    <div>
-                        <p class="font-semibold text-sm">Ollama</p>
-                        <p class="text-gray-500 text-xs">Modeles locaux</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tarifs -->
-    <section id="tarifs" class="relative py-24 sm:py-32 border-t border-white/5">
-        <div class="mx-auto max-w-7xl px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Tarifs simples</h2>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Commencez gratuitement, evoluez selon vos besoins.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-                <!-- Gratuit -->
-                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
-                    <h3 class="text-lg font-semibold mb-1">Gratuit</h3>
-                    <div class="flex items-baseline gap-1 mb-4">
-                        <span class="text-4xl font-bold">0$</span>
-                        <span class="text-gray-500 text-sm">/mois</span>
-                    </div>
-                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            10 requetes / heure
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            30 requetes / jour
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            150 requetes / mois
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Tous les fournisseurs
-                        </li>
-                    </ul>
-                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
-                        Commencer
-                    </a>
-                </div>
-
-                <!-- Basic -->
-                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
-                    <h3 class="text-lg font-semibold mb-1">Basic</h3>
-                    <div class="flex items-baseline gap-1 mb-4">
-                        <span class="text-4xl font-bold">5$</span>
-                        <span class="text-gray-500 text-sm">/mois</span>
-                    </div>
-                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            20 requetes / heure
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            50 requetes / jour
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            1 000 requetes / mois
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Historique des conversations
-                        </li>
-                    </ul>
-                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
-                        S'abonner
-                    </a>
-                </div>
-
-                <!-- Premium (Populaire) -->
-                <div class="rounded-2xl p-6 flex flex-col card-hover pricing-popular relative bg-gray-900/50">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <span class="inline-flex items-center rounded-full bg-emerald-500 text-white text-xs font-semibold px-3 py-1">Populaire</span>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-1">Premium</h3>
-                    <div class="flex items-baseline gap-1 mb-4">
-                        <span class="text-4xl font-bold">15$</span>
-                        <span class="text-gray-500 text-sm">/mois</span>
-                    </div>
-                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            50 requetes / heure
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            200 requetes / jour
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            5 000 requetes / mois
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Support prioritaire
-                        </li>
-                    </ul>
-                    <a href="zone_membres/register.php" class="block text-center rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium py-3 transition-all">
-                        S'abonner
-                    </a>
-                </div>
-
-                <!-- Ultra -->
-                <div class="glass rounded-2xl p-6 flex flex-col card-hover">
-                    <h3 class="text-lg font-semibold mb-1">Ultra</h3>
-                    <div class="flex items-baseline gap-1 mb-4">
-                        <span class="text-4xl font-bold">29$</span>
-                        <span class="text-gray-500 text-sm">/mois</span>
-                    </div>
-                    <ul class="space-y-3 text-sm text-gray-400 mb-8 flex-1">
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            100 requetes / heure
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Illimite par jour
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Illimite par mois
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                            Cles API personnelles
-                        </li>
-                    </ul>
-                    <a href="zone_membres/register.php" class="block text-center rounded-xl border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white font-medium py-3 transition-all">
-                        S'abonner
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="relative py-24 sm:py-32 border-t border-white/5">
-        <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"></div>
-        </div>
-        <div class="relative mx-auto max-w-3xl px-6 text-center">
-            <h2 class="text-3xl sm:text-4xl font-bold mb-4">Pret a commencer ?</h2>
-            <p class="text-gray-400 text-lg mb-8">Essayez NxtAIGen gratuitement. Aucune carte bancaire requise.</p>
-            <a href="index.php" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all hover:shadow-lg hover:shadow-emerald-500/25">
-                Lancer l'application
-                <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </div>
-    </section>
-
-    <!-- Pied de page -->
-    <footer class="border-t border-white/5 py-12">
-        <div class="mx-auto max-w-7xl px-6">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div class="flex items-center gap-3">
-                    <img src="assets/images/logo.svg" alt="NxtAIGen" class="h-6 w-6 opacity-60" />
-                    <span class="text-sm text-gray-500">&copy; 2025 NxtAIGen. Tous droits reserves.</span>
-                </div>
-                <div class="flex items-center gap-6 text-sm text-gray-500">
-                    <a href="#fonctionnalites" class="hover:text-gray-300 transition-colors">Fonctionnalites</a>
-                    <a href="#fournisseurs" class="hover:text-gray-300 transition-colors">Fournisseurs</a>
-                    <a href="#tarifs" class="hover:text-gray-300 transition-colors">Tarifs</a>
-                    <a href="https://github.com/scorpion7slayer/NxtAIGen" target="_blank" rel="noopener" class="hover:text-gray-300 transition-colors">
-                        <i class="fa-brands fa-github text-base"></i>
+                    <a
+                        href="zone_membres/login.php"
+                        class="hidden sm:inline-flex text-sm text-neutral-400 hover:text-white transition-colors px-4 py-2"
+                    >
+                        Se connecter
+                    </a>
+                    <a
+                        href="index.php"
+                        class="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-5 py-2.5 transition-all"
+                    >
+                        <span class="hidden xs:inline">Lancer l'appli</span>
+                        <span class="xs:hidden">Essayer</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
                 </div>
             </div>
-        </div>
-    </footer>
+        </nav>
 
-</body>
+        <!-- Hero Section -->
+        <section
+            class="relative min-h-screen flex items-center justify-center overflow-hidden hero-grid"
+        >
+            <!-- Background Effects -->
+            <div
+                class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-[120px] animate-glow"
+            ></div>
+            <div
+                class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-cyan-500/8 rounded-full blur-[100px] animate-glow"
+                style="animation-delay: 1.5s"
+            ></div>
+            <div
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-violet-500/6 rounded-full blur-[80px] animate-glow"
+                style="animation-delay: 3s"
+            ></div>
+
+            <div
+                class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 text-center pt-24 pb-16"
+            >
+                <!-- Badge -->
+                <div
+                    class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-400 mb-8"
+                >
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
+                        ></span>
+                        <span
+                            class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"
+                        ></span>
+                    </span>
+                    12 fournisseurs d'IA connectés
+                </div>
+
+                <!-- Main Heading -->
+                <h1
+                    class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6"
+                >
+                    Une seule interface pour<br />
+                    <span class="gradient-text">tous vos modèles d'IA</span>
+                </h1>
+
+                <!-- Subheading -->
+                <p
+                    class="mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed mb-10"
+                >
+                    Discutez avec OpenAI, Claude, Gemini, DeepSeek et 8 autres
+                    fournisseurs via une plateforme unifiée avec streaming en
+                    temps réel.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-center gap-4"
+                >
+                    <a
+                        href="index.php"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all"
+                    >
+                        Commencer gratuitement
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a
+                        href="#fonctionnalites"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-medium px-8 py-4 text-lg transition-all"
+                    >
+                        En savoir plus
+                        <i class="fa-solid fa-chevron-down text-sm"></i>
+                    </a>
+                </div>
+
+                <!-- Provider Icons -->
+                <div class="relative mt-16 mb-8">
+                    <p class="text-neutral-500 text-sm mb-6">
+                        Compatible avec les meilleurs modèles
+                    </p>
+                    <div
+                        class="flex items-center justify-center gap-4 sm:gap-6 flex-wrap"
+                    >
+                        <img
+                            src="assets/images/providers/openai.svg"
+                            alt="OpenAI"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float"
+                        />
+                        <img
+                            src="assets/images/providers/anthropic.svg"
+                            alt="Anthropic"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float-delay"
+                        />
+                        <img
+                            src="assets/images/providers/gemini.svg"
+                            alt="Gemini"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float"
+                            style="animation-delay: 0.5s"
+                        />
+                        <img
+                            src="assets/images/providers/deepseek.svg"
+                            alt="DeepSeek"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float-delay"
+                            style="animation-delay: 0.8s"
+                        />
+                        <img
+                            src="assets/images/providers/mistral.svg"
+                            alt="Mistral"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float"
+                            style="animation-delay: 1s"
+                        />
+                        <img
+                            src="assets/images/providers/xai.svg"
+                            alt="xAI"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float-delay"
+                            style="animation-delay: 1.3s"
+                        />
+                        <img
+                            src="assets/images/providers/ollama.svg"
+                            alt="Ollama"
+                            class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl provider-logo animate-float-delay"
+                            style="animation-delay: 0.5s"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!--  -->
+        <section id="fonctionnalites" class="relative py-20 sm:py-28 lg:py-32">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 sm:mb-16">
+                    <span
+                        class="inline-block text-emerald-400 text-sm font-medium uppercase tracking-wider mb-4"
+                        >Fonctionnalités</span
+                    >
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                        Tout ce dont vous avez besoin
+                    </h2>
+                    <p
+                        class="text-neutral-400 text-base sm:text-lg max-w-2xl mx-auto"
+                    >
+                        Une plateforme puissante et unifiée pour interagir avec
+                        les meilleurs modèles d'IA disponibles.
+                    </p>
+                </div>
+
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-5"
+                        >
+                            <i class="fa-solid fa-bolt text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            Streaming en temps réel
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Recevez les réponses token par token via Server-Sent
+                            Events. Aucune attente, fluidité maximale.
+                        </p>
+                    </div>
+
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-400 mb-5"
+                        >
+                            <i class="fa-solid fa-layer-group text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            12 fournisseurs IA connectés
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Basculez entre OpenAI, Claude, Gemini, DeepSeek,
+                            Mistral et plus en un seul clic.
+                        </p>
+                    </div>
+
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-violet-500/10 text-violet-400 mb-5"
+                        >
+                            <i class="fa-solid fa-file-lines text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            Entrée multi-format
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Envoyez des images, PDF et fichiers DOCX. Les
+                            modèles vision analysent vos images directement.
+                        </p>
+                    </div>
+
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 mb-5"
+                        >
+                            <i class="fa-solid fa-shield-halved text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            Chiffrement AES-256
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Toutes les clés API chiffrées en AES-256-CBC. Jamais
+                            stockées en clair, sécurité maximale.
+                        </p>
+                    </div>
+
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-400 mb-5"
+                        >
+                            <i
+                                class="fa-solid fa-clock-rotate-left text-2xl"
+                            ></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            Historique complet
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Toutes vos conversations sont sauvegardées et
+                            recherchables. Reprenez où vous en étiez.
+                        </p>
+                    </div>
+
+                    <!--  -->
+                    <div class="glass rounded-2xl p-6 sm:p-8 card-hover">
+                        <div
+                            class="flex items-center justify-center w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-400 mb-5"
+                        >
+                            <i class="fa-solid fa-user-shield text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-semibold mb-3">
+                            Accès invité
+                        </h3>
+                        <p
+                            class="text-neutral-400 text-sm sm:text-base leading-relaxed"
+                        >
+                            Testez la plateforme sans créer de compte. 5
+                            messages gratuits toutes les 24 heures.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!--  -->
+        <section
+            id="fournisseurs"
+            class="relative py-20 sm:py-28 lg:py-32 border-t border-white/5"
+        >
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 sm:mb-16">
+                    <span
+                        class="inline-block text-cyan-400 text-sm font-medium uppercase tracking-wider mb-4"
+                        >Fournisseurs</span
+                    >
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                        Tous les grands fournisseurs
+                    </h2>
+                    <p
+                        class="text-neutral-400 text-base sm:text-lg max-w-2xl mx-auto"
+                    >
+                        Accédez aux meilleurs modèles d'IA via une couche API
+                        unifiée et simplifiée.
+                    </p>
+                </div>
+
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+                >
+                    <!-- Provider Cards -->
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/openai.svg"
+                            alt="OpenAI"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                OpenAI
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                GPT-5
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/anthropic.svg"
+                            alt="Anthropic"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Anthropic
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Claude 4.5
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/gemini.svg"
+                            alt="Google"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Google Gemini
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Gemini 3
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/deepseek.svg"
+                            alt="DeepSeek"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                DeepSeek
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                V3.2, R1
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/mistral.svg"
+                            alt="Mistral"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Mistral
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm"></p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/xai.svg"
+                            alt="xAI"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                xAI
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Grok 4
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/perplexity.svg"
+                            alt="Perplexity"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Perplexity
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Sonar Pro
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/openrouter.svg"
+                            alt="OpenRouter"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                OpenRouter
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Multi-modèle
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/huggingface.svg"
+                            alt="Hugging Face"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Hugging Face
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Modèles ouverts
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/moonshot.svg"
+                            alt="Moonshot"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Moonshot
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Kimi
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/githubcopilot.svg"
+                            alt="GitHub Copilot"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                GitHub Copilot
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                OAuth
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 card-hover"
+                    >
+                        <img
+                            src="assets/images/providers/ollama.svg"
+                            alt="Ollama"
+                            class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <p
+                                class="font-semibold text-sm sm:text-base truncate"
+                            >
+                                Ollama
+                            </p>
+                            <p class="text-neutral-500 text-xs sm:text-sm">
+                                Modèles locaux
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section
+            id="tarifs"
+            class="relative py-20 sm:py-28 lg:py-32 border-t border-white/5"
+        >
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 sm:mb-16">
+                    <span
+                        class="inline-block text-violet-400 text-sm font-medium uppercase tracking-wider mb-4"
+                        >Tarifs</span
+                    >
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                        Des plans pour tous
+                    </h2>
+                    <p
+                        class="text-neutral-400 text-base sm:text-lg max-w-2xl mx-auto"
+                    >
+                        Commencez gratuitement, évoluez selon vos besoins.
+                        Annulez à tout moment.
+                    </p>
+                </div>
+
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
+                >
+                    <!-- Free Plan -->
+                    <div
+                        class="glass rounded-2xl p-6 sm:p-8 flex flex-col card-hover"
+                    >
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-2">Gratuit</h3>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-4xl sm:text-5xl font-bold"
+                                    >0€</span
+                                >
+                                <span class="text-neutral-500 text-sm"
+                                    >/mois</span
+                                >
+                            </div>
+                        </div>
+                        <ul
+                            class="space-y-3 text-sm text-neutral-400 mb-8 flex-1"
+                        >
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>10 requêtes / heure</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>30 requêtes / jour</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>150 requêtes / mois</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>Tous les fournisseurs</span>
+                            </li>
+                        </ul>
+                        <a
+                            href="zone_membres/register.php"
+                            class="block text-center rounded-xl border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-medium py-3 transition-all"
+                        >
+                            Commencer
+                        </a>
+                    </div>
+
+                    <!-- Basic Plan -->
+                    <div
+                        class="glass rounded-2xl p-6 sm:p-8 flex flex-col card-hover"
+                    >
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-2">Basic</h3>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-4xl sm:text-5xl font-bold"
+                                    >5€</span
+                                >
+                                <span class="text-neutral-500 text-sm"
+                                    >/mois</span
+                                >
+                            </div>
+                        </div>
+                        <ul
+                            class="space-y-3 text-sm text-neutral-400 mb-8 flex-1"
+                        >
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>20 requêtes / heure</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>50 requêtes / jour</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>1 000 requêtes / mois</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>Historique complet</span>
+                            </li>
+                        </ul>
+                        <a
+                            href="zone_membres/register.php"
+                            class="block text-center rounded-xl border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-medium py-3 transition-all"
+                        >
+                            S'abonner
+                        </a>
+                    </div>
+
+                    <!-- Premium Plan -->
+                    <div
+                        class="rounded-2xl p-6 sm:p-8 flex flex-col card-hover pricing-popular relative bg-neutral-900/50"
+                    >
+                        <div
+                            class="absolute -top-3 left-1/2 -translate-x-1/2 z-10"
+                        >
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 text-white text-xs font-semibold px-3 py-1 shadow-lg"
+                            >
+                                <i class="fa-solid fa-star text-[10px]"></i>
+                                Populaire
+                            </span>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-2">Premium</h3>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-4xl sm:text-5xl font-bold"
+                                    >15€</span
+                                >
+                                <span class="text-neutral-500 text-sm"
+                                    >/mois</span
+                                >
+                            </div>
+                        </div>
+                        <ul
+                            class="space-y-3 text-sm text-neutral-400 mb-8 flex-1"
+                        >
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>50 requêtes / heure</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>200 requêtes / jour</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>5 000 requêtes / mois</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>Support prioritaire</span>
+                            </li>
+                        </ul>
+                        <a
+                            href="zone_membres/register.php"
+                            class="block text-center rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium py-3 transition-all"
+                        >
+                            S'abonner
+                        </a>
+                    </div>
+
+                    <!-- Ultra Plan -->
+                    <div
+                        class="glass rounded-2xl p-6 sm:p-8 flex flex-col card-hover"
+                    >
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-2">Ultra</h3>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-4xl sm:text-5xl font-bold"
+                                    >29€</span
+                                >
+                                <span class="text-neutral-500 text-sm"
+                                    >/mois</span
+                                >
+                            </div>
+                        </div>
+                        <ul
+                            class="space-y-3 text-sm text-neutral-400 mb-8 flex-1"
+                        >
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-check text-emerald-400 w-4"
+                                ></i>
+                                <span>100 requêtes / heure</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-infinity text-emerald-400 w-4"
+                                ></i>
+                                <span>Illimité par jour</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-infinity text-emerald-400 w-4"
+                                ></i>
+                                <span>Illimité par mois</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i
+                                    class="fa-solid fa-key text-emerald-400 w-4"
+                                ></i>
+                                <span>Clés API personnelles</span>
+                            </li>
+                        </ul>
+                        <a
+                            href="zone_membres/register.php"
+                            class="block text-center rounded-xl border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-medium py-3 transition-all"
+                        >
+                            S'abonner
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section
+            class="relative py-20 sm:py-28 lg:py-32 border-t border-white/5"
+        >
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div
+                    class="w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px]"
+                ></div>
+            </div>
+            <div class="relative mx-auto max-w-3xl px-4 sm:px-6 text-center">
+                <h2
+                    class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6"
+                >
+                    Prêt à commencer ?
+                </h2>
+                <p class="text-neutral-400 text-base sm:text-lg mb-8 sm:mb-10">
+                    Essayez NxtAIGen gratuitement. Aucune carte bancaire
+                    requise, aucun engagement.
+                </p>
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-center gap-4"
+                >
+                    <a
+                        href="index.php"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 text-lg transition-all"
+                    >
+                        Lancer l'application
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a
+                        href="https://github.com/scorpion7slayer/NxtAIGen"
+                        target="_blank"
+                        rel="noopener"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-medium px-8 py-4 text-lg transition-all"
+                    >
+                        <i class="fa-brands fa-github"></i>
+                        Voir sur GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/5 py-10 sm:py-12">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-between gap-6"
+                >
+                    <div class="flex items-center gap-3">
+                        <img
+                            src="assets/images/logo.svg"
+                            alt="NxtAIGen"
+                            class="h-6 w-6 opacity-60"
+                        />
+                        <span class="text-sm text-neutral-500">
+                            &copy; 2026 Théo Darville. Tous droits réservés.
+                        </span>
+                    </div>
+                    <div
+                        class="flex items-center gap-6 text-sm text-neutral-500"
+                    >
+                        <a
+                            href="#fonctionnalités"
+                            class="hover:text-neutral-300 transition-colors"
+                            >Fonctionnalités</a
+                        >
+                        <a
+                            href="#fournisseurs"
+                            class="hover:text-neutral-300 transition-colors"
+                            >Fournisseurs</a
+                        >
+                        <a
+                            href="#tarifs"
+                            class="hover:text-neutral-300 transition-colors"
+                            >Tarifs</a
+                        >
+                        <a
+                            href="https://github.com/scorpion7slayer/NxtAIGen"
+                            target="_blank"
+                            rel="noopener"
+                            class="hover:text-neutral-300 transition-colors"
+                        >
+                            <i class="fa-brands fa-github text-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Mobile Menu Button (Hidden by default, visible on small screens) -->
+        <button
+            id="mobileMenuBtn"
+            class="fixed bottom-6 right-6 z-50 sm:hidden w-14 h-14 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+            onclick="
+                document
+                    .getElementById('mobileMenu')
+                    .classList.toggle('translate-y-full')
+            "
+        >
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+
+        <!-- Mobile Menu -->
+        <div
+            id="mobileMenu"
+            class="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-neutral-900 border-t border-white/10 rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300"
+        >
+            <div class="flex flex-col gap-4">
+                <a
+                    href="#fonctionnalites"
+                    class="text-neutral-300 hover:text-white py-3 text-center transition-colors"
+                    onclick="
+                        document
+                            .getElementById('mobileMenu')
+                            .classList.add('translate-y-full')
+                    "
+                    >Fonctionnalités</a
+                >
+                <a
+                    href="#fournisseurs"
+                    class="text-neutral-300 hover:text-white py-3 text-center transition-colors"
+                    onclick="
+                        document
+                            .getElementById('mobileMenu')
+                            .classList.add('translate-y-full')
+                    "
+                    >Fournisseurs</a
+                >
+                <a
+                    href="#tarifs"
+                    class="text-neutral-300 hover:text-white py-3 text-center transition-colors"
+                    onclick="
+                        document
+                            .getElementById('mobileMenu')
+                            .classList.add('translate-y-full')
+                    "
+                    >Tarifs</a
+                >
+                <hr class="border-white/10" />
+                <a
+                    href="zone_membres/login.php"
+                    class="text-neutral-300 hover:text-white py-3 text-center transition-colors"
+                    >Se connecter</a
+                >
+                <a
+                    href="index.php"
+                    class="bg-emerald-500 hover:bg-emerald-400 text-white py-3 rounded-xl text-center font-medium transition-colors"
+                    >Lancer l'appli</a
+                >
+            </div>
+        </div>
+
+        <script>
+            // Close mobile menu when clicking outside
+            document.addEventListener("click", (e) => {
+                const menu = document.getElementById("mobileMenu");
+                const btn = document.getElementById("mobileMenuBtn");
+                if (
+                    !menu.contains(e.target) &&
+                    !btn.contains(e.target) &&
+                    !menu.classList.contains("translate-y-full")
+                ) {
+                    menu.classList.add("translate-y-full");
+                }
+            });
+
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+                anchor.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(
+                        this.getAttribute("href"),
+                    );
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                    }
+                });
+            });
+
+            // Navbar background on scroll
+            const nav = document.querySelector("nav");
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > 50) {
+                    nav.classList.add("bg-bg-dark/95");
+                    nav.classList.remove("bg-bg-dark/80");
+                } else {
+                    nav.classList.remove("bg-bg-dark/95");
+                    nav.classList.add("bg-bg-dark/80");
+                }
+            });
+
+            // ===== ANIME.JS V4 ANIMATIONS =====
+            (function () {
+                "use strict";
+
+                // Vérifier que anime.js est chargé
+                if (
+                    typeof anime === "undefined" ||
+                    typeof anime.animate === "undefined"
+                ) {
+                    console.warn("anime.js v4 non chargé");
+                    return;
+                }
+
+                const { animate, stagger } = anime;
+
+                // ===== ANIMATIONS FLOTTANTES =====
+                document.querySelectorAll(".animate-float").forEach((el, i) => {
+                    animate(el, {
+                        translateY: [0, -20, 0],
+                        duration: 6000,
+                        ease: "inOutSine",
+                        loop: true,
+                        delay: i * 500,
+                    });
+                });
+
+                document
+                    .querySelectorAll(".animate-float-delay")
+                    .forEach((el, i) => {
+                        animate(el, {
+                            translateY: [0, -20, 0],
+                            duration: 6000,
+                            ease: "inOutSine",
+                            loop: true,
+                            delay: 2000 + i * 500,
+                        });
+                    });
+
+                // ===== ANIMATION GLOW =====
+                document.querySelectorAll(".animate-glow").forEach((el, i) => {
+                    animate(el, {
+                        opacity: [0.3, 0.7, 0.3],
+                        duration: 4000,
+                        ease: "inOutSine",
+                        loop: true,
+                        delay: i * 1500,
+                    });
+                });
+
+                // ===== ANIMATION GRADIENT TEXT =====
+                const gradientElements =
+                    document.querySelectorAll(".gradient-text");
+                if (gradientElements.length > 0) {
+                    let pos = 0;
+                    const animateGradient = () => {
+                        pos = (pos + 0.5) % 200;
+                        gradientElements.forEach((el) => {
+                            el.style.backgroundPosition = pos + "% 50%";
+                        });
+                        requestAnimationFrame(animateGradient);
+                    };
+                    animateGradient();
+                }
+
+                // ===== ANIMATIONS HOVER CARTES =====
+                document.querySelectorAll(".card-hover").forEach((card) => {
+                    card.addEventListener("mouseenter", function () {
+                        animate(this, {
+                            translateY: -8,
+                            scale: 1.02,
+                            duration: 300,
+                            ease: "outCubic",
+                        });
+                        this.style.boxShadow = "0 25px 50px rgba(0, 0, 0, 0.4)";
+                        this.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                    });
+
+                    card.addEventListener("mouseleave", function () {
+                        animate(this, {
+                            translateY: 0,
+                            scale: 1,
+                            duration: 300,
+                            ease: "outCubic",
+                        });
+                        this.style.boxShadow = "";
+                        this.style.borderColor = "";
+                    });
+                });
+
+                // ===== ANIMATIONS HOVER LOGOS PROVIDERS =====
+                document.querySelectorAll(".provider-logo").forEach((logo) => {
+                    logo.addEventListener("mouseenter", function () {
+                        animate(this, {
+                            scale: 1.15,
+                            duration: 300,
+                            ease: "outBack",
+                        });
+                        this.style.filter = "grayscale(0%) brightness(1)";
+                    });
+
+                    logo.addEventListener("mouseleave", function () {
+                        animate(this, {
+                            scale: 1,
+                            duration: 300,
+                            ease: "outCubic",
+                        });
+                        this.style.filter = "grayscale(100%) brightness(0.7)";
+                    });
+                });
+
+                // ===== ANIMATION SCROLL REVEAL =====
+                const revealElements = document.querySelectorAll("section[id]");
+
+                const revealObserver = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                const section = entry.target;
+                                const children = section.querySelectorAll(
+                                    ".glass, .card-hover, h2, h3, p:not(.gradient-text)",
+                                );
+
+                                animate(children, {
+                                    opacity: [0, 1],
+                                    translateY: [40, 0],
+                                    duration: 800,
+                                    delay: stagger(100),
+                                    ease: "outCubic",
+                                });
+
+                                revealObserver.unobserve(section);
+                            }
+                        });
+                    },
+                    { threshold: 0.15, rootMargin: "0px 0px -100px 0px" },
+                );
+
+                revealElements.forEach((el) => {
+                    const children = el.querySelectorAll(
+                        ".glass, .card-hover, h2, h3, p:not(.gradient-text)",
+                    );
+                    children.forEach((child) => {
+                        child.style.opacity = "0";
+                    });
+                    revealObserver.observe(el);
+                });
+
+                // ===== ANIMATION HERO AU CHARGEMENT =====
+                // Navbar
+                animate("nav", {
+                    opacity: [0, 1],
+                    translateY: [-30, 0],
+                    duration: 800,
+                    ease: "outCubic",
+                    delay: 100,
+                });
+
+                // Hero section - premier élément visible
+                const heroSection = document.querySelector("section");
+                if (heroSection) {
+                    // Titre principal
+                    const heroTitle = heroSection.querySelector("h1");
+                    if (heroTitle) {
+                        heroTitle.style.opacity = "0";
+                        animate(heroTitle, {
+                            opacity: [0, 1],
+                            translateY: [60, 0],
+                            duration: 1200,
+                            ease: "outExpo",
+                            delay: 300,
+                        });
+                    }
+
+                    // Sous-titre
+                    const heroSubtitle = heroSection.querySelector("h1 + p");
+                    if (heroSubtitle) {
+                        heroSubtitle.style.opacity = "0";
+                        animate(heroSubtitle, {
+                            opacity: [0, 1],
+                            translateY: [40, 0],
+                            duration: 1000,
+                            ease: "outCubic",
+                            delay: 600,
+                        });
+                    }
+
+                    // Boutons CTA
+                    const heroBtns = heroSection.querySelectorAll(
+                        'a[href="index.php"]',
+                    );
+                    if (heroBtns.length > 0) {
+                        heroBtns.forEach((btn) => (btn.style.opacity = "0"));
+                        animate(heroBtns, {
+                            opacity: [0, 1],
+                            translateY: [30, 0],
+                            scale: [0.9, 1],
+                            duration: 800,
+                            delay: stagger(150, { start: 900 }),
+                            ease: "outBack",
+                        });
+                    }
+                }
+
+                // ===== ANIMATION PULSATION PRICING POPULAR =====
+                const popularCards =
+                    document.querySelectorAll(".pricing-popular");
+                popularCards.forEach((card) => {
+                    setInterval(() => {
+                        card.style.transition = "box-shadow 1.5s ease-in-out";
+                        card.style.boxShadow =
+                            "0 0 80px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05)";
+                        setTimeout(() => {
+                            card.style.boxShadow =
+                                "0 0 60px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)";
+                        }, 1500);
+                    }, 3000);
+                });
+
+                // ===== ANIMATION COMPTEUR STATS =====
+                document.querySelectorAll("[data-count]").forEach((el) => {
+                    const target = parseInt(el.dataset.count) || 0;
+                    const countObj = { val: 0 };
+
+                    const countObserver = new IntersectionObserver(
+                        (entries) => {
+                            if (entries[0].isIntersecting) {
+                                animate(countObj, {
+                                    val: target,
+                                    duration: 2000,
+                                    ease: "outExpo",
+                                    onUpdate: () => {
+                                        el.textContent = Math.round(
+                                            countObj.val,
+                                        ).toLocaleString("fr-FR");
+                                    },
+                                });
+                                countObserver.unobserve(el);
+                            }
+                        },
+                        { threshold: 0.5 },
+                    );
+
+                    countObserver.observe(el);
+                });
+            })();
+        </script>
+    </body>
 </html>

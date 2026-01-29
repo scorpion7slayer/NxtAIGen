@@ -108,6 +108,9 @@ try {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
   <title>Parametres Admin - NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
+  <!-- Anime.js v4 (local via npm) -->
+  <script src="../assets/js/anime.min.js"></script>
+  <script src="../assets/js/animations.js" defer></script>
   <script>
     document.documentElement.classList.add('dark');
     document.documentElement.lang = 'fr';

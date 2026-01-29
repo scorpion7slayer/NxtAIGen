@@ -98,6 +98,9 @@ if ($user) {
   <!-- Marked.js - chargement synchrone (requis avant le script inline) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.4/marked.min.js"></script>
 
+  <!-- Anime.js v4 (local via npm) -->
+  <script src="assets/js/anime.min.js"></script>
+
   <!-- Variables globales pour les scripts externes -->
   <script>
     window.isGuest = <?php echo $isGuest ? 'true' : 'false'; ?>;
@@ -105,6 +108,7 @@ if ($user) {
   </script>
   <script src="assets/js/models.js" defer></script>
   <script src="assets/js/rate_limit_widget.js" defer></script>
+  <script src="assets/js/animations.js" defer></script>
   <!-- Theme initialization (inline to prevent FOUC) -->
   <script>
     document.documentElement.classList.add('dark');
@@ -406,7 +410,7 @@ if ($user) {
                 aria-label="Sélectionner un modèle IA"
                 class="inline-flex items-center justify-center gap-x-2 rounded-lg bg-gray-700/50 border border-gray-600/50 px-3 py-2 text-sm text-gray-300 hover:bg-gray-600/50 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
                 <img id="modelIcon" src="assets/images/providers/openai.svg" alt="" aria-hidden="true" class="w-4 h-4 rounded">
-                <span id="modelName">GPT-4o Mini</span>
+                <span id="modelName">Chargement...</span>
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400 transition-transform duration-200" id="modelChevron" aria-hidden="true">
                   <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
                 </svg>
@@ -501,7 +505,7 @@ if ($user) {
             <!-- Sélecteur modèle mobile -->
             <button id="mobileModelSelector" aria-label="Sélectionner un modèle" aria-haspopup="true">
               <img id="mobileModelIcon" src="assets/images/providers/openai.svg" alt="" aria-hidden="true">
-              <span id="mobileModelName">GPT-4o Mini</span>
+              <span id="mobileModelName">Chargement...</span>
               <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" />
               </svg>
@@ -704,11 +708,13 @@ if ($user) {
       }
     }
 
-    // Ã‰tat du modèle sélectionné (global pour models.js)
-    let selectedModel = {
-      provider: 'openai',
-      model: 'gpt-4o-mini',
-      display: 'GPT-4o Mini'
+    // État du modèle sélectionné (global pour models.js)
+    // IMPORTANT: var est nécessaire pour l'accessibilité globale depuis models.js
+    // Le modèle sera défini dynamiquement par models.js avec le premier modèle disponible
+    var selectedModel = {
+      provider: '',
+      model: '',
+      display: ''
     };
 
     const messageInput = document.getElementById("messageInput");

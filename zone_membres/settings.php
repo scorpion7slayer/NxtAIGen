@@ -284,6 +284,32 @@ include 'header.php';
         </p>
       </div>
     </div>
+
+    <!-- Section Gestion des Modèles -->
+    <div class="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 rounded-2xl p-4 mt-6 shadow-sm dark:shadow-none">
+      <h2 class="text-sm font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-robot"></i>
+        <span data-i18n="settings.model_preferences">Préférences des modèles</span>
+      </h2>
+
+      <p class="text-xs text-gray-500 dark:text-neutral-500 mb-4" data-i18n="settings.model_preferences_desc">
+        Masquez les modèles que vous n'utilisez pas pour simplifier votre interface.
+      </p>
+
+      <div id="modelsContainer">
+        <div class="flex items-center justify-center py-8">
+          <i class="fa-solid fa-spinner animate-spin text-neutral-500 mr-2"></i>
+          <span class="text-sm text-neutral-500">Chargement des modèles...</span>
+        </div>
+      </div>
+
+      <div class="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <p class="text-xs text-amber-600 dark:text-amber-300">
+          <i class="fa-solid fa-info-circle mr-1"></i>
+          Les modèles masqués ne seront plus visibles dans le sélecteur de modèles de l'interface de chat.
+        </p>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -429,6 +455,187 @@ include 'header.php';
       toast.classList.add('translate-y-20', 'opacity-0');
       toast.classList.remove('translate-y-0', 'opacity-100');
     }, 3000);
+  }
+
+  // =====================================================
+  // Gestion des modèles utilisateur
+  // =====================================================
+
+  // Provider icons mapping
+  const providerIcons = {
+    openai: 'openai.svg',
+    anthropic: 'anthropic.svg',
+    ollama: 'ollama.svg',
+    gemini: 'gemini.svg',
+    deepseek: 'deepseek.svg',
+    mistral: 'mistral.svg',
+    huggingface: 'huggingface.svg',
+    openrouter: 'openrouter.svg',
+    perplexity: 'perplexity.svg',
+    xai: 'xai.svg',
+    moonshot: 'moonshot.svg',
+    github: 'githubcopilot.svg'
+  };
+
+  // Load models on page load
+  document.addEventListener('DOMContentLoaded', loadUserModels);
+
+  async function loadUserModels() {
+    const container = document.getElementById('modelsContainer');
+
+    try {
+      // Fetch all models from API (no_filter=1 pour voir tous les modèles, même masqués)
+      const modelsResponse = await fetch('../api/models.php?provider=all&no_filter=1');
+      const modelsData = await modelsResponse.json();
+
+      // Fetch user preferences
+      const prefsResponse = await fetch('../api/api_keys.php?action=list_user_models');
+      const prefsData = await prefsResponse.json();
+
+      const userPrefs = prefsData.preferences || {};
+      const tableExists = prefsData.table_exists !== false;
+
+      if (!tableExists) {
+        container.innerHTML = `
+          <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <p class="text-xs text-amber-500 dark:text-amber-400">
+              <i class="fa-solid fa-warning mr-1"></i>
+              La table de préférences n'existe pas encore.
+              <a href="../database/user_models_migration.sql" target="_blank" class="underline">Exécutez la migration</a>.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      // Build the UI
+      const providers = Object.keys(modelsData).filter(k => !['provider', 'timestamp', 'error'].includes(k));
+
+      if (providers.length === 0) {
+        container.innerHTML = `
+          <p class="text-sm text-neutral-500 italic text-center py-4">Aucun modèle disponible.</p>
+        `;
+        return;
+      }
+
+      let html = '<div class="space-y-3">';
+
+      providers.sort().forEach(provider => {
+        const block = modelsData[provider];
+        if (!block.models || block.models.length === 0) return;
+
+        const icon = providerIcons[provider] || 'openai.svg';
+        const providerPrefs = userPrefs[provider] || {};
+
+        html += `
+          <div class="bg-gray-100 dark:bg-neutral-700/20 rounded-xl border border-gray-200 dark:border-neutral-600/20 overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2 bg-gray-200/50 dark:bg-neutral-700/30 cursor-pointer" onclick="toggleProviderModels('${provider}')">
+              <div class="flex items-center gap-2">
+                <img src="../assets/images/providers/${icon}" alt="${provider}" class="w-5 h-5">
+                <span class="text-sm font-medium text-gray-700 dark:text-neutral-200 capitalize">${provider}</span>
+                <span class="text-xs text-gray-500 dark:text-neutral-500">(${block.models.length} modèles)</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-gray-400 dark:text-neutral-500 transition-transform" id="chevron_${provider}"></i>
+            </div>
+            <div class="hidden p-2 space-y-1" id="models_${provider}">
+        `;
+
+        block.models.forEach(model => {
+          const modelId = model.id || '';
+          const modelName = model.name || modelId;
+          // Default to enabled (true) if no preference set
+          const isEnabled = providerPrefs[modelId] !== undefined ? providerPrefs[modelId] : true;
+
+          html += `
+            <div class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-200/50 dark:hover:bg-neutral-700/30 transition-colors ${!isEnabled ? 'opacity-40' : ''}">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <span class="text-sm text-gray-700 dark:text-neutral-300 truncate">${escapeHtml(modelName)}</span>
+              </div>
+              <label class="inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleUserModel('${provider}', '${escapeAttr(modelId)}', this.checked, this.closest('div'))" class="sr-only peer">
+                <div class="toggle-switch-user"></div>
+              </label>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+    } catch (err) {
+      console.error('Error loading models:', err);
+      container.innerHTML = `
+        <div class="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+          <p class="text-xs text-red-500 dark:text-red-400">
+            <i class="fa-solid fa-exclamation-circle mr-1"></i>
+            Erreur lors du chargement des modèles.
+          </p>
+        </div>
+      `;
+    }
+  }
+
+  function toggleProviderModels(provider) {
+    const content = document.getElementById(`models_${provider}`);
+    const chevron = document.getElementById(`chevron_${provider}`);
+
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      chevron.style.transform = 'rotate(180deg)';
+    } else {
+      content.classList.add('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  async function toggleUserModel(provider, modelId, enabled, container) {
+    // Visual feedback
+    if (enabled) {
+      container.classList.remove('opacity-40');
+    } else {
+      container.classList.add('opacity-40');
+    }
+
+    try {
+      const response = await fetch('../api/api_keys.php?action=toggle_user_model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, model_id: modelId, enabled })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showNotification(enabled ? 'Modèle activé' : 'Modèle masqué', enabled ? 'success' : 'info');
+      } else {
+        showNotification(data.error || 'Erreur', 'error');
+        // Revert visual state
+        if (enabled) {
+          container.classList.add('opacity-40');
+        } else {
+          container.classList.remove('opacity-40');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('Erreur de connexion', 'error');
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function escapeAttr(text) {
+    return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
   }
 </script>
 </body>

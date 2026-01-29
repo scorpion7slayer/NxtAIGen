@@ -341,6 +341,9 @@ const ModelManager = {
         // Réattacher les événements
         this.attachModelEvents();
 
+        // Vérifier si le modèle sélectionné est disponible, sinon sélectionner le premier
+        this.validateSelectedModel();
+
         // Émettre un événement pour signaler que les modèles sont chargés
         document.dispatchEvent(
             new CustomEvent("modelsLoaded", {
@@ -476,6 +479,49 @@ const ModelManager = {
     },
 
     /**
+     * Vérifie si le modèle sélectionné est disponible, sinon sélectionne le premier disponible
+     */
+    validateSelectedModel() {
+        // Vérifier que les modèles sont chargés
+        if (!this.models || this.models.length === 0) {
+            return;
+        }
+
+        // Chercher le modèle actuellement sélectionné dans la liste
+        let currentModelExists = false;
+        if (typeof selectedModel !== 'undefined' && selectedModel.model && selectedModel.model !== '') {
+            currentModelExists = this.models.some(
+                m => m.model === selectedModel.model && m.provider === selectedModel.provider
+            );
+        }
+
+        // Si le modèle n'existe pas ou est vide, sélectionner le premier disponible
+        if (!currentModelExists) {
+            const firstModel = this.models[0];
+            const providerInfo = this.providers[firstModel.provider];
+
+            // Mettre à jour la variable globale
+            window.selectedModel = {
+                provider: firstModel.provider,
+                model: firstModel.model,
+                display: firstModel.display
+            };
+
+            // Mettre à jour l'affichage desktop
+            const modelIcon = document.getElementById("modelIcon");
+            const modelName = document.getElementById("modelName");
+            if (modelIcon && providerInfo) modelIcon.src = providerInfo.icon;
+            if (modelName) modelName.textContent = firstModel.display;
+
+            // Mettre à jour l'affichage mobile
+            const mobileModelIcon = document.getElementById("mobileModelIcon");
+            const mobileModelName = document.getElementById("mobileModelName");
+            if (mobileModelIcon && providerInfo) mobileModelIcon.src = providerInfo.icon;
+            if (mobileModelName) mobileModelName.textContent = firstModel.display;
+        }
+    },
+
+    /**
      * Attache les événements aux options de modèle
      */
     attachModelEvents() {
@@ -526,8 +572,10 @@ const ModelManager = {
      * Initialise le gestionnaire de modèles
      */
     init() {
-        // Restaurer le cache depuis localStorage
-        this.initCache();
+        // IMPORTANT: Toujours vider le cache au chargement pour avoir les modèles à jour
+        // (les préférences admin/utilisateur peuvent avoir changé)
+        this.cache = {};
+        localStorage.removeItem(this.localStorageKey);
 
         // Charger les modèles au premier clic sur le menu
         const modelSelectorBtn = document.getElementById("modelSelectorBtn");
