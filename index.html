@@ -1018,6 +1018,15 @@
             </div>
         </footer>
 
+        <!-- Scroll to Top Button -->
+        <button
+            id="scrollTopBtn"
+            class="fixed bottom-24 right-6 sm:bottom-8 sm:right-8 z-50 w-12 h-12 rounded-full bg-neutral-800/80 backdrop-blur-md border border-white/10 text-neutral-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-500/50 shadow-lg flex items-center justify-center transition-all duration-300 opacity-0 translate-y-4 pointer-events-none"
+            aria-label="Retour en haut"
+        >
+            <i class="fa-solid fa-arrow-up"></i>
+        </button>
+
         <!-- Mobile Menu Button (Hidden by default, visible on small screens) -->
         <button
             id="mobileMenuBtn"
@@ -1111,8 +1120,14 @@
                 });
             });
 
-            // Navbar background on scroll
+            // Navbar background on scroll + Scroll to top button
             const nav = document.querySelector("nav");
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+            scrollTopBtn.addEventListener("click", () => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+
             window.addEventListener("scroll", () => {
                 if (window.scrollY > 50) {
                     nav.classList.add("bg-bg-dark/95");
@@ -1120,6 +1135,21 @@
                 } else {
                     nav.classList.remove("bg-bg-dark/95");
                     nav.classList.add("bg-bg-dark/80");
+                }
+
+                // Show/hide scroll to top button
+                if (window.scrollY > 300) {
+                    scrollTopBtn.classList.remove(
+                        "opacity-0",
+                        "translate-y-4",
+                        "pointer-events-none",
+                    );
+                } else {
+                    scrollTopBtn.classList.add(
+                        "opacity-0",
+                        "translate-y-4",
+                        "pointer-events-none",
+                    );
                 }
             });
 
