@@ -1018,6 +1018,16 @@
             </div>
         </footer>
 
+        <!-- Scroll to Top Button -->
+        <button
+            id="scrollTopBtn"
+            class="fixed bottom-24 right-6 sm:bottom-8 sm:right-8 z-50 w-12 h-12 rounded-full bg-neutral-800/80 backdrop-blur-md border border-white/10 text-neutral-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-500/50 shadow-lg flex items-center justify-center"
+            style="opacity: 0; pointer-events: none; transform: translateY(16px) scale(0.8)"
+            aria-label="Retour en haut"
+        >
+            <i class="fa-solid fa-arrow-up"></i>
+        </button>
+
         <!-- Mobile Menu Button (Hidden by default, visible on small screens) -->
         <button
             id="mobileMenuBtn"
@@ -1366,6 +1376,51 @@
                     );
 
                     countObserver.observe(el);
+                });
+
+                // ===== SCROLL TO TOP BUTTON =====
+                const scrollTopBtn =
+                    document.getElementById("scrollTopBtn");
+                let scrollTopVisible = false;
+
+                // Click: animated scroll to top
+                scrollTopBtn.addEventListener("click", () => {
+                    const scrollPos = { y: window.scrollY };
+                    animate(scrollPos, {
+                        y: 0,
+                        duration: 800,
+                        ease: "outQuart",
+                        onUpdate: () => {
+                            window.scrollTo(0, scrollPos.y);
+                        },
+                    });
+                });
+
+                // Show/hide on scroll with anime.js
+                window.addEventListener("scroll", () => {
+                    const shouldShow = window.scrollY > 300;
+
+                    if (shouldShow && !scrollTopVisible) {
+                        scrollTopVisible = true;
+                        scrollTopBtn.style.pointerEvents = "auto";
+                        animate(scrollTopBtn, {
+                            opacity: [0, 1],
+                            translateY: [16, 0],
+                            scale: [0.8, 1],
+                            duration: 500,
+                            ease: "outBack",
+                        });
+                    } else if (!shouldShow && scrollTopVisible) {
+                        scrollTopVisible = false;
+                        scrollTopBtn.style.pointerEvents = "none";
+                        animate(scrollTopBtn, {
+                            opacity: [1, 0],
+                            translateY: [0, 16],
+                            scale: [1, 0.8],
+                            duration: 300,
+                            ease: "inCubic",
+                        });
+                    }
                 });
             })();
         </script>
