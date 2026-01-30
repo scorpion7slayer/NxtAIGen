@@ -1383,17 +1383,9 @@
                     document.getElementById("scrollTopBtn");
                 let scrollTopVisible = false;
 
-                // Click: animated scroll to top
+                // Click: scroll to top using native smooth scroll
                 scrollTopBtn.addEventListener("click", () => {
-                    const scrollPos = { y: window.scrollY };
-                    animate(scrollPos, {
-                        y: 0,
-                        duration: 800,
-                        ease: "outQuart",
-                        onUpdate: () => {
-                            window.scrollTo(0, scrollPos.y);
-                        },
-                    });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                 });
 
                 // Show/hide on scroll with anime.js
