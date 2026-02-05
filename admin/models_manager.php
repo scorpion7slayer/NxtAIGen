@@ -412,14 +412,13 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
   <!-- Preconnect CDN -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-  <!-- Preload CSS critique -->
   <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
-  <!-- Font Awesome non-bloquant -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
   <title>Gestion des Modeles - NxtAIGen</title>
   <link href="../src/output.css" rel="stylesheet">
-  <!-- Anime.js v4 (local via npm) -->
+  <!-- Anime.js v4,-->
   <script src="../assets/js/anime.min.js"></script>
   <script src="../assets/js/animations.js" defer></script>
   <script>
@@ -535,8 +534,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         role="tab"
         aria-selected="true"
         aria-controls="panelModels"
-        tabindex="0"
-      >
+        tabindex="0">
         <i class="fa-solid fa-robot mr-2"></i>Modèles IA
       </button>
       <button
@@ -546,8 +544,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         role="tab"
         aria-selected="false"
         aria-controls="panelApi"
-        tabindex="0"
-      >
+        tabindex="0">
         <i class="fa-solid fa-key mr-2"></i>Clés API
       </button>
     </div>
@@ -643,15 +640,13 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
                 role="button"
                 aria-expanded="true"
                 aria-controls="models_<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
-                onkeydown="if(event.key==='Enter'||event.key===' '){toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>'); event.preventDefault();}"
-              >
+                onkeydown="if(event.key==='Enter'||event.key===' '){toggleProviderCollapse('<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>'); event.preventDefault();}">
                 <div class="flex items-center gap-3">
                   <button
                     class="collapse-btn text-neutral-500 hover:text-neutral-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     data-provider="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
                     tabindex="-1"
-                    aria-label="Ouvrir/Replier <?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>"
-                  >
+                    aria-label="Ouvrir/Replier <?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>">
                     <i class="fa-solid fa-chevron-down transition-transform duration-300 ease-in-out"></i>
                   </button>
                   <img src="../assets/images/providers/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prov, ENT_QUOTES, 'UTF-8'); ?>" class="w-6 h-6" onerror="this.src='../assets/images/logo.svg'" />
@@ -1257,7 +1252,9 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
         });
 
         // Animate the number counting
-        const obj = { val: currentValue };
+        const obj = {
+          val: currentValue
+        };
         anime.animate(obj, {
           val: newValue,
           duration: 300,
@@ -1619,6 +1616,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
     // Show toast notification with NxtAnim
     let toastTimeout = null;
+
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       const icon = document.getElementById('toastIcon');
@@ -1708,13 +1706,19 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
       if (typeof NxtAnim !== 'undefined' && NxtAnim.staggerIn) {
         const sections = document.querySelectorAll('.provider-section');
         if (sections.length > 0) {
-          NxtAnim.staggerIn(sections, { stagger: 50, duration: 400 });
+          NxtAnim.staggerIn(sections, {
+            stagger: 50,
+            duration: 400
+          });
         }
 
         // Animate stats cards
         const statCards = document.querySelectorAll('.grid > div');
         if (statCards.length > 0) {
-          NxtAnim.staggerIn(statCards, { stagger: 80, duration: 500 });
+          NxtAnim.staggerIn(statCards, {
+            stagger: 80,
+            duration: 500
+          });
         }
       }
 
