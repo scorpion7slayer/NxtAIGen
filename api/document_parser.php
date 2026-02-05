@@ -11,7 +11,7 @@ class DocumentParser
   private $allowedMimeTypes = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-    'application/msword', // DOC (ancien format)
+    'application/msword', // DOC
   ];
 
   /**
@@ -52,13 +52,13 @@ class DocumentParser
   }
 
   /**
-   * Parser un PDF avec pdftotext (Poppler) ou PdfParser
+   * Parser un PDF
    * @param string $filePath Chemin temporaire du fichier
    * @return array
    */
   private function parsePDF($filePath)
   {
-    // Méthode 1: Utiliser pdftotext (Poppler) si disponible
+    // Utiliser pdftotext si disponible
     $pdftotextPath = $this->findPdfToText();
     if ($pdftotextPath) {
       $outputFile = tempnam(sys_get_temp_dir(), 'pdf_');
@@ -73,27 +73,7 @@ class DocumentParser
           return ['success' => true, 'text' => $this->cleanText($text)];
         }
       }
-    }
-
-    // Méthode 2: Utiliser smalot/pdfparser (pure PHP)
-    if (class_exists('\Smalot\PdfParser\Parser')) {
-      try {
-        $parser = new \Smalot\PdfParser\Parser();
-        $pdf = $parser->parseFile($filePath);
-        $text = $pdf->getText();
-
-        if (!empty(trim($text))) {
-          return ['success' => true, 'text' => $this->cleanText($text)];
-        }
-      } catch (Exception $e) {
-        return ['success' => false, 'error' => 'Erreur parsing PDF: ' . $e->getMessage()];
-      }
-    }
-
-    return [
-      'success' => false,
-      'error' => 'Aucune bibliothèque PDF disponible. Installez pdftotext ou composer require smalot/pdfparser'
-    ];
+    };
   }
 
   /**
@@ -155,9 +135,8 @@ class DocumentParser
   {
     // Remplacer les multiples espaces par un seul
     $text = preg_replace('/\s+/', ' ', $text);
-    // Trim
     $text = trim($text);
-    // Limiter à 50 000 caractères pour éviter les contextes trop longs
+    // Limiter à 50 000 caractères
     if (mb_strlen($text) > 50000) {
       $text = mb_substr($text, 0, 50000) . '... [tronqué]';
     }
@@ -165,7 +144,7 @@ class DocumentParser
   }
 
   /**
-   * Trouver l'exécutable pdftotext (Poppler)
+   * Trouver l'exécutable pdftotext
    */
   private function findPdfToText()
   {
@@ -182,7 +161,6 @@ class DocumentParser
       }
     }
 
-    // Essayer via which/where
     $command = PHP_OS_FAMILY === 'Windows' ? 'where pdftotext' : 'which pdftotext';
     $output = @shell_exec($command);
     if ($output && trim($output)) {
@@ -195,9 +173,7 @@ class DocumentParser
     return null;
   }
 
-  /**
-   * Obtenir les types MIME autorisés
-   */
+
   public function getAllowedMimeTypes()
   {
     return $this->allowedMimeTypes;

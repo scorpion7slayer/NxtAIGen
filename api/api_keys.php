@@ -42,9 +42,7 @@ function isAdmin($pdo, $userId)
 
 $isAdminUser = isAdmin($pdo, $userId);
 
-// =====================================================
-// Fonctions de chiffrement AES-256-CBC
-// =====================================================
+// Fonctions de chiffrement
 
 function getEncryptionKey($pdo)
 {
@@ -91,9 +89,9 @@ function maskApiKey($key)
   return substr($key, 0, 4) . str_repeat('•', min($len - 8, 20)) . substr($key, -4);
 }
 
-// =====================================================
+
 // Actions
-// =====================================================
+
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $scope = $_GET['scope'] ?? $_POST['scope'] ?? 'global';
@@ -145,9 +143,9 @@ try {
   echo json_encode(['error' => 'Erreur serveur: ' . $e->getMessage()]);
 }
 
-// =====================================================
+
 // Handlers
-// =====================================================
+
 
 function handleList($pdo, $userId, $isAdminUser, $scope)
 {
@@ -233,7 +231,6 @@ function handleSave($pdo, $userId, $isAdminUser, $scope)
     // Chiffrer la clé
     $encryptedKey = !empty($keyValue) ? encryptApiKey($keyValue, $pdo) : '';
 
-    // Upsert la clé API
     $stmt = $pdo->prepare("
             INSERT INTO api_keys_global (provider, key_name, key_value, is_active, created_by, updated_by)
             VALUES (?, ?, ?, 1, ?, ?)
@@ -244,7 +241,7 @@ function handleSave($pdo, $userId, $isAdminUser, $scope)
         ");
     $stmt->execute([$provider, $keyName, $encryptedKey, $userId, $userId]);
 
-    // Sauvegarder les settings supplémentaires (DELETE + INSERT car NULL != NULL en MySQL)
+    // Sauvegarder les settings supplémentaires
     foreach ($extraSettings as $settingKey => $settingValue) {
       // Supprimer l'ancien setting global s'il existe
       $deleteStmt = $pdo->prepare("DELETE FROM provider_settings WHERE provider = ? AND setting_key = ? AND is_global = 1");
@@ -423,7 +420,7 @@ function handleGetConfig($pdo, $userId, $isAdminUser)
     }
   }
 
-  // Clé utilisateur (override)
+  // Clé utilisateur
   $userStmt = $pdo->prepare("SELECT key_name, key_value, is_active FROM api_keys_user WHERE user_id = ? AND provider = ?");
   $userStmt->execute([$userId, $provider]);
   while ($row = $userStmt->fetch()) {
@@ -448,7 +445,7 @@ function handleGetConfig($pdo, $userId, $isAdminUser)
     ];
   }
 
-  // Settings utilisateur (override)
+  // Settings utilisateur
   $userSettingsStmt = $pdo->prepare("SELECT setting_key, setting_value FROM provider_settings WHERE provider = ? AND is_global = 0 AND user_id = ?");
   $userSettingsStmt->execute([$provider, $userId]);
   while ($row = $userSettingsStmt->fetch()) {
@@ -484,7 +481,7 @@ function handleInitFromConfig($pdo, $userId, $isAdminUser)
     return;
   }
 
-  // Mapping des clés vers leurs providers
+  // clés vers leurs providers
   $keyMapping = [
     'OPENAI_API_KEY' => 'openai',
     'ANTHROPIC_API_KEY' => 'anthropic',
@@ -518,7 +515,6 @@ function handleInitFromConfig($pdo, $userId, $isAdminUser)
 
     // Vérifier si c'est une URL ou une clé API
     if (strpos($keyName, '_URL') !== false) {
-      // C'est un setting, pas une clé API - DELETE + INSERT car NULL != NULL en MySQL
       $deleteStmt = $pdo->prepare("DELETE FROM provider_settings WHERE provider = ? AND setting_key = ? AND is_global = 1");
       $deleteStmt->execute([$provider, $keyName]);
 
@@ -528,7 +524,6 @@ function handleInitFromConfig($pdo, $userId, $isAdminUser)
             ");
       $stmt->execute([$provider, $keyName, $keyValue]);
     } else {
-      // C'est une clé API - chiffrer
       $encryptedKey = encryptApiKey($keyValue, $pdo);
 
       $stmt = $pdo->prepare("

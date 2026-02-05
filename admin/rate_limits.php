@@ -128,7 +128,7 @@ $stats = $pdo->query("
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
   <title>Gestion Rate Limiting - Admin NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
-  <!-- Font Awesome non-bloquant -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" media="print" onload="this.media='all'" />
   <!-- Theme initialization (inline to prevent FOUC) -->
   <script>

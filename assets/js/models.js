@@ -73,7 +73,7 @@ const ModelManager = {
     cacheExpiry: 5 * 60 * 1000, // 5 minutes
     localStorageKey: "nxtgenai_models_cache",
 
-    // Liste plate de tous les modèles (pour le bottom sheet mobile)
+    // Liste plate de tous les modèles (mobile)
     models: [],
 
     /**
@@ -115,7 +115,7 @@ const ModelManager = {
      * Charge les modèles pour un provider spécifique
      */
     async loadModels(provider) {
-        // Vérifier le cache (mémoire d'abord)
+        // Vérifier le cache
         const cached = this.cache[provider];
         if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
             return cached.data;
@@ -292,7 +292,7 @@ const ModelManager = {
         ];
 
         let hasModels = false;
-        let globalSeenIds = new Set(); // Pour dédupliquer entre providers
+        let globalSeenIds = new Set();
 
         for (const provider of providerOrder) {
             const data = allModels[provider];
@@ -335,7 +335,7 @@ const ModelManager = {
 
         menuContent.innerHTML = html;
 
-        // Construire la liste plate des modèles pour le bottom sheet mobile
+        // Construire la liste plate des modèles pour mobile
         this.buildFlatModelsList(allModels);
 
         // Réattacher les événements
@@ -399,7 +399,9 @@ const ModelManager = {
      */
     filterDesktopModels(query) {
         const q = query.toLowerCase().trim();
-        const sections = document.querySelectorAll("#modelMenu .provider-section");
+        const sections = document.querySelectorAll(
+            "#modelMenu .provider-section",
+        );
 
         sections.forEach((section) => {
             const providerName = section.dataset.provider.toLowerCase();
@@ -416,12 +418,14 @@ const ModelManager = {
             }
 
             // Vérifier si le nom du provider correspond
-            const providerMatches = providerName.includes(q) || displayName.includes(q);
+            const providerMatches =
+                providerName.includes(q) || displayName.includes(q);
 
             models.forEach((model) => {
                 const modelId = model.dataset.model?.toLowerCase() || "";
                 const modelDisplay = model.dataset.display?.toLowerCase() || "";
-                const modelMatches = modelId.includes(q) || modelDisplay.includes(q);
+                const modelMatches =
+                    modelId.includes(q) || modelDisplay.includes(q);
 
                 if (providerMatches || modelMatches) {
                     model.style.display = "";
@@ -437,7 +441,7 @@ const ModelManager = {
     },
 
     /**
-     * Construit une liste plate de tous les modèles (pour le bottom sheet mobile)
+     * Construit une liste plate de tous les modèles (mobile)
      */
     buildFlatModelsList(allModels) {
         this.models = [];
@@ -489,9 +493,15 @@ const ModelManager = {
 
         // Chercher le modèle actuellement sélectionné dans la liste
         let currentModelExists = false;
-        if (typeof selectedModel !== 'undefined' && selectedModel.model && selectedModel.model !== '') {
+        if (
+            typeof selectedModel !== "undefined" &&
+            selectedModel.model &&
+            selectedModel.model !== ""
+        ) {
             currentModelExists = this.models.some(
-                m => m.model === selectedModel.model && m.provider === selectedModel.provider
+                (m) =>
+                    m.model === selectedModel.model &&
+                    m.provider === selectedModel.provider,
             );
         }
 
@@ -504,7 +514,7 @@ const ModelManager = {
             window.selectedModel = {
                 provider: firstModel.provider,
                 model: firstModel.model,
-                display: firstModel.display
+                display: firstModel.display,
             };
 
             // Mettre à jour l'affichage desktop
@@ -516,8 +526,10 @@ const ModelManager = {
             // Mettre à jour l'affichage mobile
             const mobileModelIcon = document.getElementById("mobileModelIcon");
             const mobileModelName = document.getElementById("mobileModelName");
-            if (mobileModelIcon && providerInfo) mobileModelIcon.src = providerInfo.icon;
-            if (mobileModelName) mobileModelName.textContent = firstModel.display;
+            if (mobileModelIcon && providerInfo)
+                mobileModelIcon.src = providerInfo.icon;
+            if (mobileModelName)
+                mobileModelName.textContent = firstModel.display;
         }
     },
 
@@ -572,8 +584,6 @@ const ModelManager = {
      * Initialise le gestionnaire de modèles
      */
     init() {
-        // IMPORTANT: Toujours vider le cache au chargement pour avoir les modèles à jour
-        // (les préférences admin/utilisateur peuvent avoir changé)
         this.cache = {};
         localStorage.removeItem(this.localStorageKey);
 
@@ -598,5 +608,5 @@ document.addEventListener("DOMContentLoaded", () => {
     ModelManager.init();
 });
 
-// Exposer ModelManager globalement pour le bottom sheet mobile
+// Exposer ModelManager globalement pour mobile
 window.modelManager = ModelManager;

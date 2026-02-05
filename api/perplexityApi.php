@@ -2,9 +2,6 @@
 
 /**
  * Perplexity AI API Integration
- * Documentation: https://docs.perplexity.ai/api-reference
- * Endpoint: https://api.perplexity.ai/chat/completions
- * Models: llama-3.1-sonar-small-128k-online, llama-3.1-sonar-large-128k-online, llama-3.1-sonar-huge-128k-online
  */
 
 session_start();
@@ -92,7 +89,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {

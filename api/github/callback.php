@@ -1,8 +1,7 @@
 <?php
 
 /**
- * Callback OAuth GitHub
- * Reçoit le code d'autorisation et l'échange contre un token d'accès
+ * OAuth GitHub
  */
 
 session_start();
@@ -31,7 +30,7 @@ if (!isset($_GET['code'])) {
   exit();
 }
 
-// Vérifier le state (protection CSRF)
+// Vérifier le state
 if (!isset($_GET['state']) || $_GET['state'] !== ($_SESSION['github_oauth_state'] ?? '')) {
   header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('State invalide - tentative CSRF détectée'));
   exit();
@@ -60,7 +59,6 @@ curl_setopt_array($ch, [
     'Content-Type: application/x-www-form-urlencoded',
     'User-Agent: NxtGenAI'
   ],
-  // Désactiver vérification SSL pour dev local (WAMP)
   CURLOPT_SSL_VERIFYPEER => false,
   CURLOPT_SSL_VERIFYHOST => 0,
   CURLOPT_TIMEOUT => 30,
@@ -69,7 +67,7 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 $curlError = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Debug en cas d'erreur cURL
 if ($response === false) {
@@ -110,14 +108,14 @@ curl_setopt_array($ch, [
     'User-Agent: NxtGenAI',
     'X-GitHub-Api-Version: 2022-11-28'
   ],
-  // Désactiver vérification SSL pour dev local (WAMP)
+
   CURLOPT_SSL_VERIFYPEER => false,
   CURLOPT_SSL_VERIFYHOST => 0,
 ]);
 
 $userResponse = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 if ($httpCode !== 200) {
   header('Location: ../../zone_membres/dashboard.php?oauth_error=' . urlencode('Erreur lors de la récupération du profil GitHub'));
@@ -149,13 +147,12 @@ try {
   $stmt->execute([
     $githubUser['id'],
     $githubUser['login'],
-    $accessToken, // En production, chiffrez ce token !
+    $accessToken,
     $refreshToken,
     $expiresAt,
     $_SESSION['user_id']
   ]);
 
-  // Stocker en session pour accès rapide
   $_SESSION['github_connected'] = true;
   $_SESSION['github_username'] = $githubUser['login'];
   $_SESSION['oauth_success'] = 'Compte GitHub "' . $githubUser['login'] . '" connecté avec succès !';

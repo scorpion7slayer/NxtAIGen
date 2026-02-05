@@ -4,9 +4,6 @@
  * Fonctions d'aide pour le traitement des fichiers dans les APIs
  */
 
-// =============================================================================
-// CONSTANTS & SHARED HELPERS
-// =============================================================================
 
 /** Types MIME d'images supportés par les providers AI */
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -57,10 +54,6 @@ function formatTextFileContent(string $fileName, string $base64Data): string
   $fileContent = base64_decode($base64Data);
   return "Contenu du fichier {$fileName}:\n```\n{$fileContent}\n```";
 }
-
-// =============================================================================
-// PROVIDER-SPECIFIC MESSAGE FORMATTERS
-// =============================================================================
 
 /**
  * Prépare le contenu du message au format OpenAI (utilisé par OpenAI, Mistral, DeepSeek, xAI, etc.)

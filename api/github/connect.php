@@ -2,7 +2,6 @@
 
 /**
  * Initie la connexion OAuth GitHub
- * Redirige l'utilisateur vers GitHub pour autorisation
  */
 
 session_start();
@@ -23,7 +22,6 @@ if (empty($config['GITHUB_CLIENT_ID'])) {
   exit();
 }
 
-// Générer un state unique pour protéger contre CSRF
 $state = bin2hex(random_bytes(32));
 $_SESSION['github_oauth_state'] = $state;
 
@@ -33,7 +31,7 @@ $params = [
   'redirect_uri' => $config['GITHUB_CALLBACK_URL'],
   'scope' => implode(' ', $config['GITHUB_SCOPES']),
   'state' => $state,
-  'allow_signup' => 'false', // Ne pas permettre l'inscription via OAuth
+  'allow_signup' => 'false',
 ];
 
 $authorizeUrl = $config['GITHUB_AUTHORIZE_URL'] . '?' . http_build_query($params);

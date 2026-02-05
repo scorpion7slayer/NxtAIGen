@@ -1,19 +1,11 @@
 <?php
-
-/**
- * Webhook Stripe pour NxtGenAI
- * Gère les événements d'abonnement (création, annulation, paiement échoué, etc.)
- * 
- * URL à configurer dans Stripe Dashboard: https://votre-domaine.com/shop/webhook.php
- */
-
-// Désactiver l'affichage des erreurs en production
+// Désactiver l'affichage des erreurs
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// Configuration Stripe (cles dans stripe_config.php, hors du repo)
+// Configuration Stripe
 require_once __DIR__ . '/stripe_config.php';
-// Log des webhooks (optionnel, pour debug)
+// Log des webhooks
 function logWebhook($message, $data = [])
 {
   $logFile = __DIR__ . '/webhook_logs.txt';
@@ -29,7 +21,7 @@ function logWebhook($message, $data = [])
 $payload = @file_get_contents('php://input');
 $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-// Vérifier la signature (en production)
+// Vérifier la signature
 if (!empty(STRIPE_WEBHOOK_SECRET) && STRIPE_WEBHOOK_SECRET !== 'whsec_VOTRE_CLE_WEBHOOK') {
   $timestamp = null;
   $signature = null;
@@ -58,7 +50,7 @@ if (!empty(STRIPE_WEBHOOK_SECRET) && STRIPE_WEBHOOK_SECRET !== 'whsec_VOTRE_CLE_
     exit('Invalid signature');
   }
 
-  // Vérifier que le timestamp n'est pas trop vieux (5 min)
+  // Vérifier que le timestamp n'est pas trop vieux
   if (abs(time() - $timestamp) > 300) {
     http_response_code(400);
     logWebhook('Signature expirée');
@@ -83,7 +75,7 @@ require_once '../api/rate_limiter.php';
 
 $rateLimiter = new RateLimiter($pdo);
 
-// Mapping plan → données
+// limite de plan
 $planLimits = [
   'basic' => ['daily' => 50, 'hourly' => 20, 'monthly' => 1000],
   'premium' => ['daily' => 200, 'hourly' => 50, 'monthly' => 5000],
@@ -132,7 +124,7 @@ function getUserBySubscription($pdo, $subscriptionId)
 // Fonction pour récupérer l'utilisateur par customer ID ou email
 function getUserByCustomerOrEmail($pdo, $customerId, $email = null)
 {
-  // D'abord essayer par customer ID si stocké
+
   $stmt = $pdo->prepare("SELECT id, user_plan FROM users WHERE stripe_customer_id = ?");
   $stmt->execute([$customerId]);
   $user = $stmt->fetch();
@@ -221,15 +213,10 @@ try {
       }
 
       if ($user) {
-        // Optionnel: envoyer un email de notification
-        // Pour l'instant, on log juste
         logWebhook("Paiement échoué pour user {$user['id']}", [
           'invoice_id' => $invoice['id'],
           'attempt_count' => $invoice['attempt_count'] ?? 1
         ]);
-
-        // Après plusieurs échecs, Stripe annulera automatiquement l'abonnement
-        // ce qui déclenchera customer.subscription.deleted
       }
       break;
 

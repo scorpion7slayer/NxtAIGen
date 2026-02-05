@@ -122,7 +122,6 @@ class RateLimiter
       ];
     }
 
-    // Limite OK
     return [
       'allowed' => true,
       'remaining' => [
@@ -191,14 +190,14 @@ class RateLimiter
       $needsUpdate = true;
     }
 
-    // Vérifier reset quotidien (minuit)
+    // Vérifier reset quotidien
     if ($user['last_daily_reset'] && date('Y-m-d', strtotime($user['last_daily_reset'])) !== date('Y-m-d')) {
       $updates[] = "current_daily_count = 0";
       $updates[] = "last_daily_reset = CURRENT_TIMESTAMP";
       $needsUpdate = true;
     }
 
-    // Vérifier reset mensuel (1er du mois)
+    // Vérifier reset mensuel
     if ($user['last_monthly_reset'] && date('Y-m', strtotime($user['last_monthly_reset'])) !== date('Y-m')) {
       $updates[] = "current_monthly_count = 0";
       $updates[] = "last_monthly_reset = CURRENT_TIMESTAMP";

@@ -1,17 +1,15 @@
 <?php
 
-/**
- * Fonctions utilitaires pour la gestion des clés API chiffrées
- * 
+/** 
  * Ce fichier fournit les fonctions pour:
  * - Récupérer la clé de chiffrement
  * - Chiffrer/déchiffrer les clés API
  * - Charger les configurations depuis la DB
  */
 
-// =====================================================
+
 // Fonctions de chiffrement
-// =====================================================
+
 
 function getEncryptionKeyFromDb($pdo)
 {
@@ -57,9 +55,9 @@ function decryptValue($ciphertext, $pdo)
   return $decrypted !== false ? $decrypted : '';
 }
 
-// =====================================================
+
 // Chargement des configurations API
-// =====================================================
+
 
 /**
  * Charge la configuration API pour un provider donné
@@ -166,7 +164,7 @@ function getApiConfigFromFile($provider)
     }
   }
 
-  // Mapping provider -> clés
+  // provider / clés
   $mapping = [
     'openai' => ['OPENAI_API_KEY'],
     'anthropic' => ['ANTHROPIC_API_KEY'],
@@ -196,7 +194,6 @@ function getApiConfigFromFile($provider)
 
 /**
  * Charge toutes les configurations API pour tous les providers
- * Optimisé: utilise une seule requête groupée au lieu de 12 x 4 requêtes
  */
 function getAllApiConfigs($pdo, $userId = null)
 {
@@ -280,7 +277,7 @@ function getAllApiConfigs($pdo, $userId = null)
  */
 function getApiKey($pdo, $keyName, $userId = null)
 {
-  // Mapping clé -> provider
+  // clé / provider
   $keyToProvider = [
     'OPENAI_API_KEY' => 'openai',
     'ANTHROPIC_API_KEY' => 'anthropic',

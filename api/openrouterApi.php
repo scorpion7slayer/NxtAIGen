@@ -2,9 +2,6 @@
 
 /**
  * OpenRouter API Integration
- * Documentation: https://openrouter.ai/docs
- * Endpoint: https://openrouter.ai/api/v1/chat/completions
- * Models: openai/gpt-4o, anthropic/claude-3-sonnet, meta-llama/llama-3.1-70b-instruct
  */
 
 session_start();
@@ -93,7 +90,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {

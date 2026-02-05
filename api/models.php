@@ -53,7 +53,7 @@ if (!$isGuest && $userId) {
   $userGithubToken = $user['github_token'] ?? null;
 }
 
-// Récupérer les paramètres provider_settings (ex: openrouter_free_only)
+// Récupérer les paramètres provider_settings
 $providerSettings = [];
 try {
   $settingsStmt = $pdo->query("SELECT provider, setting_key, setting_value FROM provider_settings WHERE is_global = 1");
@@ -61,10 +61,9 @@ try {
     $providerSettings[$row['provider']][$row['setting_key']] = $row['setting_value'];
   }
 } catch (PDOException $e) {
-  // Table might not exist yet
 }
 
-// OpenRouter: modèles gratuits uniquement ?
+// OpenRouter: modèles gratuits uniquement
 $openrouterFreeOnly = ($providerSettings['openrouter']['OPENROUTER_FREE_ONLY'] ?? '0') === '1';
 
 /**
@@ -82,14 +81,12 @@ function fetchModels($url, $headers = [])
   ]);
   $response = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  // curl_close() supprimé - deprecated depuis PHP 8.0, handle fermé automatiquement
 
   return ['response' => $response, 'httpCode' => $httpCode];
 }
 
 /**
  * Récupère les modèles OpenAI
- * Filtrage amélioré - décembre 2026
  */
 function getOpenAIModels($apiKey)
 {
@@ -105,10 +102,10 @@ function getOpenAIModels($apiKey)
   $models = [];
   $seenIds = [];
 
-  // Modèles à exclure (anciens, embeddings, audio, etc.)
+  // Modèles à exclure (anciens, embeddings, audio)
   $excludePatterns = ['embed', 'whisper', 'tts', 'dall-e', 'davinci', 'babbage', 'ada', 'curie', 'instruct', 'search', 'similarity', 'code-', 'text-', 'realtime'];
 
-  // Modèles prioritaires à garder (janvier 2026)
+  // Modèles prioritaires à garder
   $priorityModels = ['gpt-5.2', 'gpt-5-mini', 'gpt-5-nano', 'o3', 'o4-mini', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'o1', 'chatgpt-4o-latest'];
 
   foreach ($data['data'] ?? [] as $model) {
@@ -127,7 +124,6 @@ function getOpenAIModels($apiKey)
     }
     if ($exclude) continue;
 
-    // Garder uniquement gpt-*, o1-*, o3-*, o4-*, chatgpt-*
     if (strpos($id, 'gpt') === false && strpos($id, 'o1') === false && strpos($id, 'o3') === false && strpos($id, 'o4') === false && strpos($id, 'chatgpt') === false) {
       continue;
     }
@@ -158,8 +154,6 @@ function getOpenAIModels($apiKey)
 
 /**
  * Récupère les modèles Anthropic dynamiquement via l'API
- * Endpoint: GET https://api.anthropic.com/v1/models
- * Source: platform.claude.com/docs/en/api/models-list
  */
 function getAnthropicModels($apiKey)
 {
@@ -321,8 +315,8 @@ function getMistralModels($apiKey)
 
 /**
  * Récupère les modèles OpenRouter
- * @param string $apiKey Clé API OpenRouter
- * @param bool $freeOnly Si true, ne retourne que les modèles gratuits
+ * @param string
+ * @param bool
  */
 function getOpenRouterModels($apiKey, $freeOnly = false)
 {
@@ -343,7 +337,6 @@ function getOpenRouterModels($apiKey, $freeOnly = false)
   foreach ($data['data'] ?? [] as $model) {
     // Filtrer les modèles gratuits si demandé
     if ($freeOnly) {
-      // Les modèles gratuits ont ":free" dans leur ID ou un pricing à 0
       $isFree = strpos($model['id'], ':free') !== false;
       if (!$isFree && isset($model['pricing'])) {
         $prompt = floatval($model['pricing']['prompt'] ?? 1);
@@ -359,13 +352,13 @@ function getOpenRouterModels($apiKey, $freeOnly = false)
       'context_length' => $model['context_length'] ?? null,
       'pricing' => $model['pricing'] ?? null,
       'is_free' => strpos($model['id'], ':free') !== false ||
-                   (isset($model['pricing']) &&
-                    floatval($model['pricing']['prompt'] ?? 1) == 0 &&
-                    floatval($model['pricing']['completion'] ?? 1) == 0)
+        (isset($model['pricing']) &&
+          floatval($model['pricing']['prompt'] ?? 1) == 0 &&
+          floatval($model['pricing']['completion'] ?? 1) == 0)
     ];
   }
 
-  // Limiter à 100 modèles (plus si free only car moins de résultats)
+  // Limiter à 100 modèles
   $models = array_slice($models, 0, $freeOnly ? 100 : 50);
 
   return ['models' => $models];
@@ -373,8 +366,6 @@ function getOpenRouterModels($apiKey, $freeOnly = false)
 
 /**
  * Récupère les modèles Hugging Face dynamiquement via l'API Hub
- * Endpoint: GET https://huggingface.co/api/models
- * Filtré pour text-generation avec conversational tag
  */
 function getHuggingFaceModels($apiKey)
 {
@@ -398,7 +389,6 @@ function getHuggingFaceModels($apiKey)
     $models = [];
 
     foreach ($data ?? [] as $model) {
-      // Filtrer les modèles avec "Instruct" ou "Chat" dans le nom (conversationnels)
       $modelId = $model['modelId'] ?? $model['id'] ?? '';
       if (empty($modelId)) continue;
 
@@ -428,16 +418,12 @@ function getHuggingFaceModels($apiKey)
 
 /**
  * Récupère les modèles Perplexity
- * Mise à jour janvier 2026 - Liste officielle Sonar
- * Note: Perplexity n'a pas d'endpoint /models, liste curatée
- * Source: docs.perplexity.ai/guides/model-cards
  */
 function getPerplexityModels($apiKey)
 {
   if (empty($apiKey)) return ['error' => 'Clé API non configurée'];
 
-  // Perplexity API - famille Sonar (basée sur Llama 3.3 70B)
-  // Pas d'endpoint de listing disponible - liste officielle
+  // Perplexity API
   return ['models' => [
     ['id' => 'sonar', 'name' => 'Sonar', 'description' => 'Recherche web rapide (128k tokens)', 'context' => 128000],
     ['id' => 'sonar-pro', 'name' => 'Sonar Pro', 'description' => 'Recherche approfondie (200k tokens)', 'context' => 200000],
@@ -505,7 +491,6 @@ function getMoonshotModels($apiKey)
 
 /**
  * Récupère les modèles GitHub Copilot (Pro/Pro+)
- * Liste vérifiée via Context7 - Décembre 2025
  */
 function getGitHubModels($token)
 {
@@ -620,10 +605,10 @@ switch ($provider) {
 $response['provider'] = $provider;
 $response['timestamp'] = date('c');
 
-// =====================================================
-// FILTRE 1: Modèles désactivés par l'admin (models_status)
+
+// Modèles désactivés par l'admin (models_status)
 // S'applique à tous les utilisateurs (invités et connectés)
-// =====================================================
+
 $tableCheck = $pdo->query("SHOW TABLES LIKE 'models_status'");
 if ($tableCheck->rowCount() > 0) {
   // Charger les modèles désactivés par l'admin
@@ -659,11 +644,10 @@ if ($tableCheck->rowCount() > 0) {
   }
 }
 
-// =====================================================
-// FILTRE 2: Préférences utilisateur (user_models_preferences)
+
+// Préférences utilisateur (user_models_preferences)
 // S'applique uniquement aux utilisateurs connectés
-// =====================================================
-// Sauf si ?no_filter=1 est passé (pour la page settings)
+
 $applyUserFilter = !isset($_GET['no_filter']) && !$isGuest && $userId;
 
 if ($applyUserFilter) {

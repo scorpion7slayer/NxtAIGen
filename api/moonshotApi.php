@@ -2,9 +2,6 @@
 
 /**
  * Moonshot AI (Kimi) API Integration
- * Documentation: https://platform.moonshot.ai/docs
- * Endpoint: https://api.moonshot.cn/v1/chat/completions
- * Models: moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k, kimi-latest
  */
 
 session_start();
@@ -91,7 +88,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {

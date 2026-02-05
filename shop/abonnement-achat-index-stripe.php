@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
-    // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
     // Debug: vérifier erreur cURL
     if (!$response || $curlError) {
@@ -221,18 +221,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
   <!-- Preload CSS critique -->
   <link rel="preload" href="../src/output.css" as="style">
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg">
-  <!-- Font Awesome non-bloquant -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
   <title>Abonnements - NxtGenAI</title>
   <link href="../src/output.css" rel="stylesheet">
   <!-- Anime.js v4 -->
   <script src="../assets/js/anime.min.js"></script>
   <script src="../assets/js/animations.js" defer></script>
-  <!-- Forçage du thème sombre et du français -->
-  <script>
-    document.documentElement.classList.add('dark');
-    document.documentElement.lang = 'fr';
-  </script>
 </head>
 
 <body class="min-h-screen bg-gray-50 dark:bg-bg-dark text-gray-900 dark:text-neutral-400">
@@ -244,7 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
         <span>NxtGenAI</span>
       </a>
       <nav class="flex items-center gap-4">
-        <!-- Suppression des boutons de thème et langue -->
         <div class="w-px h-4 bg-neutral-700"></div>
         <?php if ($isLoggedIn): ?>
           <span class="text-sm text-gray-600 dark:text-neutral-400 hidden sm:inline"><?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?></span>

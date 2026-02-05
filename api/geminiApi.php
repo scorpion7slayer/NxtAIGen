@@ -4,7 +4,6 @@
  * Google Gemini API Integration
  * Documentation: https://ai.google.dev/docs
  * Endpoint: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
- * Models: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash
  */
 
 session_start();
@@ -133,7 +132,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {

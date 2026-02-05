@@ -1,6 +1,5 @@
 /**
  * Affichage des limites de rate limiting pour les utilisateurs connectés
- * Ajout au DOM principal de index.php
  */
 
 // Fonction d'initialisation du widget
@@ -8,7 +7,7 @@ function initRateLimitWidget() {
     // Widget d'affichage des limites restantes (pour utilisateurs connectés)
     // S'affiche uniquement si l'utilisateur n'est pas un invité
     if (typeof isGuest !== "undefined" && !isGuest) {
-        // Créer le bouton réduit (affiché quand widget fermé)
+        // bouton réduit (affiché quand widget fermé)
         const rateLimitToggle = document.createElement("button");
         rateLimitToggle.id = "rateLimitToggle";
         rateLimitToggle.className =
@@ -27,7 +26,7 @@ function initRateLimitWidget() {
         rateLimitWidget.style.maxWidth = "280px";
         rateLimitWidget.style.display = "none"; // Masqué par défaut
 
-        // Ajouter des styles responsive pour mobile
+        // responsive pour mobile
         const styleSheet = document.createElement("style");
         styleSheet.textContent = `
             @media (max-width: 640px) {
@@ -95,14 +94,14 @@ function initRateLimitWidget() {
 
         document.body.appendChild(rateLimitWidget);
 
-        // Fonction pour réduire le widget (montrer le toggle)
+        // Fonction pour réduire le widget
         function minimizeWidget() {
             rateLimitWidget.style.display = "none";
             rateLimitToggle.style.display = "flex";
             localStorage.setItem("rateLimitWidgetMinimized", "true");
         }
 
-        // Fonction pour agrandir le widget (cacher le toggle)
+        // Fonction pour agrandir le widget
         function expandWidget() {
             rateLimitToggle.style.display = "none";
             rateLimitWidget.style.display = "block";
@@ -137,7 +136,7 @@ function initRateLimitWidget() {
                 }
             }
 
-            // Hourly
+            // Heure
             if (limits.hourly !== undefined && limits.hourly !== -1) {
                 const hourlyElement = document.getElementById("hourlyUsage");
                 const hourlyBar = document.getElementById("hourlyBar");
@@ -159,7 +158,7 @@ function initRateLimitWidget() {
                 document.getElementById("hourlyBar").style.width = "100%";
             }
 
-            // Daily
+            // Jour
             if (limits.daily !== undefined && limits.daily !== -1) {
                 const dailyElement = document.getElementById("dailyUsage");
                 const dailyBar = document.getElementById("dailyBar");
@@ -181,7 +180,7 @@ function initRateLimitWidget() {
                 document.getElementById("dailyBar").style.width = "100%";
             }
 
-            // Monthly
+            // Mois
             if (limits.monthly !== undefined && limits.monthly !== -1) {
                 const monthlyElement = document.getElementById("monthlyUsage");
                 const monthlyBar = document.getElementById("monthlyBar");

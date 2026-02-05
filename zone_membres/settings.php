@@ -457,9 +457,9 @@ include 'header.php';
     }, 3000);
   }
 
-  // =====================================================
+
   // Gestion des modèles utilisateur
-  // =====================================================
+
 
   // Provider icons mapping
   const providerIcons = {
@@ -605,8 +605,14 @@ include 'header.php';
     try {
       const response = await fetch('../api/api_keys.php?action=toggle_user_model', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, model_id: modelId, enabled })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          provider,
+          model_id: modelId,
+          enabled
+        })
       });
 
       const data = await response.json();

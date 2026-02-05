@@ -145,7 +145,7 @@ try {
       break;
 
     case 'delete':
-      // Supprimer une conversation (CASCADE supprimera les messages)
+      // Supprimer une conversation
       $conversationId = intval($input['conversation_id'] ?? $_GET['id'] ?? 0);
 
       $stmt = $pdo->prepare("DELETE FROM conversations WHERE id = ? AND user_id = ?");
@@ -176,7 +176,6 @@ try {
 
       // Générer un titre basé sur le message utilisateur
       if (!empty($userMessage)) {
-        // Tronquer à 50 caractères et ajouter "..."
         $title = mb_substr($userMessage, 0, 50);
         if (mb_strlen($userMessage) > 50) {
           $title .= '...';

@@ -10,7 +10,7 @@
     <!-- Preload CSS critique -->
     <link rel="preload" href="../src/output.css" as="style">
     <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
-    <!-- Font Awesome non-bloquant -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'" />
     <title>NxtGenAI</title>
     <link href="../src/output.css" rel="stylesheet">

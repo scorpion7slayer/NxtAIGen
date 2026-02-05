@@ -1,10 +1,7 @@
 <?php
 
 /**
- * API de streaming universelle pour tous les providers
- * Utilise Server-Sent Events (SSE) pour le streaming temps réel
- * 
- * @security SSL vérifié en production, CSRF token requis pour utilisateurs connectés
+ * API de streaming pour tous les providers 
  */
 
 // Headers de sécurité
@@ -25,13 +22,11 @@ set_time_limit(0);
 ini_set('max_execution_time', 0);
 ignore_user_abort(false);  // Arrêter si l'utilisateur ferme la connexion
 
-// Headers pour SSE
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no');
 
-// Désactiver le buffering PHP - Ordre optimisé
 while (ob_get_level() > 0) {
   ob_end_clean();
 }
@@ -45,7 +40,6 @@ echo ": ping\n\n";
 if (function_exists('ob_flush')) ob_flush();
 if (function_exists('flush')) flush();
 
-// Fonction pour envoyer un événement SSE
 function sendSSE($data, $event = 'message')
 {
   echo "event: {$event}\n";
@@ -54,10 +48,10 @@ function sendSSE($data, $event = 'message')
   if (function_exists('flush')) @flush();
 }
 
-// Constante pour la limite d'utilisations des visiteurs (messages)
+// limite d'utilisations des visiteurs (messages)
 define('GUEST_USAGE_LIMIT', 5);
 
-// Charger la connexion DB (nécessaire pour le rate limiting)
+// Charger la connexion DB
 require_once __DIR__ . '/../zone_membres/db.php';
 require_once __DIR__ . '/rate_limiter.php';
 
@@ -81,7 +75,7 @@ if ($isGuest) {
 
   // Vérifier si 24h se sont écoulées depuis la première utilisation
   $timeSinceFirstUsage = time() - $_SESSION['guest_first_usage_time'];
-  if ($timeSinceFirstUsage >= 86400) { // 86400 secondes = 24 heures
+  if ($timeSinceFirstUsage >= 86400) {
     // Réinitialiser le compteur et le timestamp
     $_SESSION['guest_usage_count'] = 0;
     $_SESSION['guest_first_usage_time'] = time();
@@ -112,8 +106,6 @@ if ($isGuest) {
     exit();
   }
 
-  // PRÉ-INCRÉMENTER le compteur AVANT de fermer la session
-  // Cette approche évite le problème de "session cannot be started after headers sent"
   $_SESSION['guest_usage_count']++;
   $guestUsageAfterIncrement = $_SESSION['guest_usage_count'];
   $guestSessionId = session_id(); // Sauvegarder l'ID pour rollback si erreur
@@ -139,7 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   exit();
 }
 
-// Vérification CSRF pour les utilisateurs connectés
 if (!$isGuest) {
   $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
   if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
@@ -168,7 +159,6 @@ $userMessage = isset($input['message']) ? trim($input['message']) : '';
 $files = isset($input['files']) ? $input['files'] : [];
 $thinkingEnabled = !empty($input['thinking']);
 
-// Validation et sanitization du provider (whitelist stricte)
 $allowedProviders = ['openai', 'anthropic', 'gemini', 'deepseek', 'mistral', 'xai', 'openrouter', 'perplexity', 'huggingface', 'moonshot', 'github', 'ollama'];
 $provider = isset($input['provider']) ? strtolower(trim($input['provider'])) : 'openai';
 if (!in_array($provider, $allowedProviders, true)) {
@@ -176,7 +166,7 @@ if (!in_array($provider, $allowedProviders, true)) {
   exit();
 }
 
-// Validation du modèle (caractères autorisés uniquement)
+// Validation du modèle
 $model = isset($input['model']) ? trim($input['model']) : '';
 if (!empty($model) && !preg_match('/^[a-zA-Z0-9\-_\.\/\:]+$/', $model)) {
   sendSSE(['error' => 'Format de modèle invalide'], 'error');
@@ -187,7 +177,7 @@ if (strlen($model) > 128) {
   exit();
 }
 
-// Charger les helpers (db.php déjà chargé au début du fichier)
+// Charger les helpers
 require_once __DIR__ . '/api_keys_helper.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -268,7 +258,7 @@ $streamConfigs = [
   ],
   'github' => [
     'url' => 'https://api.githubcopilot.com/chat/completions',
-    'key' => '', // Utilise OAuth token
+    'key' => '',
     'default_model' => 'gpt-4o'
   ],
   'ollama' => [
@@ -289,7 +279,7 @@ $apiKey = $streamConfig['key'];
 $apiUrl = $streamConfig['url'];
 $model = $model ?: $streamConfig['default_model'];
 
-// Gestion spéciale pour GitHub Copilot (OAuth token depuis la DB)
+// Gestion pour GitHub Copilot
 if ($provider === 'github') {
   // GitHub Copilot nécessite une connexion
   if ($isGuest) {
@@ -309,7 +299,7 @@ if ($provider === 'github') {
   $apiKey = $githubToken;
 }
 
-// Vérifier la clé API (sauf Ollama)
+// Vérifier la clé API
 if ($provider !== 'ollama' && $provider !== 'github' && empty($apiKey)) {
   sendSSE(['error' => "Clé API {$provider} non configurée"], 'error');
   exit();
@@ -336,7 +326,6 @@ switch ($provider) {
       'x-api-key: ' . $apiKey,
       'anthropic-version: 2023-06-01'
     ];
-    // Extended thinking requiert une version plus récente
     if ($thinkingEnabled) {
       $headers[2] = 'anthropic-version: 2025-01-01';
     }
@@ -350,12 +339,11 @@ switch ($provider) {
         ['parts' => $parts]
       ]
     ];
-    // Gemini 2.5+ a le thinking activé par défaut
-    // On peut contrôler le budget avec thinkingConfig si nécessaire
+
     if ($thinkingEnabled) {
       $postData['generationConfig'] = [
         'thinkingConfig' => [
-          'thinkingBudget' => 10000 // Budget de tokens pour le thinking
+          'thinkingBudget' => 10000
         ]
       ];
     }
@@ -374,12 +362,12 @@ switch ($provider) {
       'stream' => true,
       'keep_alive' => 0  // Décharger le modèle immédiatement après la génération
     ];
-    // Activer le thinking pour Ollama (Qwen 3, DeepSeek R1, etc.)
+    // Activer le thinking pour Ollama
     if ($thinkingEnabled) {
       $postData['think'] = true;
     }
     $headers = ['Content-Type: application/json'];
-    // Ajouter l'authentification si une clé API est fournie (pour Ollama distant)
+    // Ajouter l'authentification si une clé API est fournie
     if (!empty($apiKey)) {
       $headers[] = 'Authorization: Bearer ' . $apiKey;
     }
@@ -396,7 +384,7 @@ switch ($provider) {
       'stream' => true,
       'max_tokens' => 4096
     ];
-    // Activer le thinking pour GPT-OSS et autres modèles
+    // Activer le thinking
     if ($thinkingEnabled) {
       $postData['reasoning_effort'] = 'high';
     }
@@ -424,7 +412,7 @@ switch ($provider) {
     ];
     break;
 
-  default: // OpenAI-compatible (openai, deepseek, mistral, xai, openrouter, perplexity, moonshot)
+  default: // OpenAI-compatible
     $messageContent = prepareOpenAIMessageContent($userMessage, $files);
     $postData = [
       'model' => $model,
@@ -440,15 +428,13 @@ switch ($provider) {
       // DeepSeek: ajouter le paramètre thinking
       if ($provider === 'deepseek') {
         $postData['thinking'] = ['type' => 'enabled'];
-        $postData['max_tokens'] = 16000; // Inclut le CoT
+        $postData['max_tokens'] = 16000;
       }
       // OpenRouter: ajouter reasoning avec effort high
       if ($provider === 'openrouter') {
         $postData['reasoning'] = ['effort' => 'high'];
         $postData['max_tokens'] = 16000;
       }
-      // xAI Grok: pas de paramètre spécifique, le reasoning est automatique pour grok-3-mini
-      // Perplexity: pas de paramètre spécifique, le reasoning est dans les modèles sonar-reasoning-*
     }
 
     $headers = [
@@ -470,23 +456,21 @@ curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-// SSL: activé par défaut, désactivé pour localhost ou Ollama distant (certificat potentiellement auto-signé)
 $isLocalhost = preg_match('/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/', $apiUrl);
 $isOllamaCustomUrl = ($provider === 'ollama' && !empty($config['OLLAMA_API_URL']) && !$isLocalhost);
 
-// Option: permettre de désactiver SSL via config pour serveurs avec certificats auto-signés
 $skipSslVerify = $isLocalhost || $isOllamaCustomUrl || !empty($config['SKIP_SSL_VERIFY']);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$skipSslVerify);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $skipSslVerify ? 0 : 2);
 
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
 curl_setopt($ch, CURLOPT_TIMEOUT, 0);            // Pas de timeout global
-curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);    // 30s pour la connexion (augmenté pour serveurs distants)
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);    // 30s pour la connexion (augmenté pour ollama)
 curl_setopt($ch, CURLOPT_LOW_SPEED_LIMIT, 1);    // Au moins 1 byte/sec
 curl_setopt($ch, CURLOPT_LOW_SPEED_TIME, 120);   // 120s d'inactivité max (augmenté pour IA lentes)
 
-// Optimisations performance streaming
-curl_setopt($ch, CURLOPT_TCP_NODELAY, true);     // Désactive Nagle algorithm (-40ms latence)
+
+curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
 curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024);      // Chunks plus petits = latence réduite
 
 // Callback pour traiter les chunks
@@ -495,10 +479,8 @@ $hasError = false;
 $errorBuffer = '';
 
 curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullResponse, &$hasError, &$errorBuffer, $provider) {
-  // Vérifier le code HTTP
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-  // Si erreur HTTP, accumuler les données pour le message d'erreur
   if ($httpCode >= 400) {
     $errorBuffer .= $data;
     return strlen($data);
@@ -510,7 +492,6 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
     $line = trim($line);
     if (empty($line)) continue;
 
-    // Ignorer les lignes "event:" pour SSE
     if (strpos($line, 'event:') === 0) continue;
 
     // Extraire les données
@@ -559,14 +540,11 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
           break;
 
         case 'gemini':
-          // Gemini peut avoir plusieurs parts: thinking + text
           if (isset($decoded['candidates'][0]['content']['parts'])) {
             foreach ($decoded['candidates'][0]['content']['parts'] as $part) {
-              // Thinking part (Gemini 2.5+)
               if (isset($part['thought']) && $part['thought'] !== '') {
                 sendSSE(['thinking' => $part['thought']], 'thinking');
               }
-              // Text part
               if (isset($part['text']) && $part['text'] !== '') {
                 $content .= $part['text'];
               }
@@ -575,12 +553,9 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
           break;
 
         case 'mistral':
-          // Mistral Magistral models - thinking avec tokens [THINK]...[/THINK]
           if (isset($decoded['choices'][0]['delta']['content'])) {
             $deltaContent = $decoded['choices'][0]['delta']['content'];
             if (is_string($deltaContent)) {
-              // Vérifier si c'est du thinking inline
-              // Note: Les tokens spéciaux [THINK] et [/THINK] marquent le début/fin du thinking
               $content = $deltaContent;
             }
           }
@@ -597,22 +572,21 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
           }
           break;
 
-        default: // OpenAI-compatible (DeepSeek, xAI, OpenRouter, Perplexity, HuggingFace, Moonshot, GitHub)
-          // Vérifier reasoning_content (DeepSeek, OpenRouter, etc.)
+        default: // OpenAI-compatible
           if (isset($decoded['choices'][0]['delta']['reasoning_content'])) {
             $reasoning = $decoded['choices'][0]['delta']['reasoning_content'];
             if ($reasoning !== '') {
               sendSSE(['thinking' => $reasoning], 'thinking');
             }
           }
-          // Vérifier reasoning (HuggingFace GPT-OSS, etc.)
+          // Vérifier reasoning
           if (isset($decoded['choices'][0]['delta']['reasoning'])) {
             $reasoning = $decoded['choices'][0]['delta']['reasoning'];
             if ($reasoning !== '') {
               sendSSE(['thinking' => $reasoning], 'thinking');
             }
           }
-          // Vérifier thinking (certains modèles)
+          // Vérifier thinking
           if (isset($decoded['choices'][0]['delta']['thinking'])) {
             $thinking = $decoded['choices'][0]['delta']['thinking'];
             if ($thinking !== '') {
@@ -634,7 +608,7 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
         sendSSE(['content' => $content], 'content');
       }
     } else if ($provider === 'ollama') {
-      // Ollama ne préfixe pas avec "data:"
+      // Ollama
       $decoded = json_decode($line, true);
       if ($decoded) {
         // Vérifier erreur Ollama
@@ -643,17 +617,15 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
           $hasError = true;
           continue;
         }
-        // Thinking (Qwen 3, DeepSeek R1, etc.)
+        // Thinking
         if (isset($decoded['message']['thinking']) && $decoded['message']['thinking'] !== '') {
           sendSSE(['thinking' => $decoded['message']['thinking']], 'thinking');
         }
-        // Content
         if (isset($decoded['message']['content'])) {
           $content = $decoded['message']['content'];
           $fullResponse .= $content;
           sendSSE(['content' => $content], 'content');
         }
-        // Done
         if (isset($decoded['done']) && $decoded['done']) {
           sendSSE(['done' => true], 'done');
         }
@@ -664,18 +636,15 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
   return strlen($data);
 });
 
-// Exécuter la requête
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
 
-// Gérer les erreurs cURL (message générique pour la sécurité)
+
+// Gérer les erreurs cURL
 if ($curlError) {
-  // Log détaillé côté serveur
   error_log("[NxtAIGen] cURL Error for {$provider}: {$curlError} - URL: " . preg_replace('/key=[^&]+/', 'key=***', $apiUrl));
 
-  // Message générique pour l'utilisateur (évite l'exposition d'informations)
   $userMessage = 'Erreur de connexion au provider';
   if (strpos($curlError, 'timed out') !== false) {
     $userMessage = 'Le provider ne répond pas. Réessayez.';
@@ -706,9 +675,8 @@ if ($httpCode >= 400 && !empty($errorBuffer)) {
 // Gestion du compteur d'utilisations (visiteurs et utilisateurs connectés)
 if (!$hasError) {
   if ($isGuest) {
-    // Compteur déjà pré-incrémenté avant le streaming, rien à faire ici
   } else {
-    // Enregistrer l'usage avec le rate limiter déjà instancié
+    // Enregistrer l'usage avec le rate limiter
     $rateLimiter->incrementUsage($userId, 'message', 1, [
       'provider' => $provider,
       'model' => $model,
@@ -718,18 +686,16 @@ if (!$hasError) {
   }
 }
 
-// Envoyer l'événement de fin si pas déjà fait et pas d'erreur
+// Envoyer l'événement de fin
 if (!$hasError) {
   $doneData = ['done' => true, 'fullResponse' => $fullResponse];
 
   // Ajouter les infos d'utilisation
   if ($isGuest) {
-    // Utiliser la valeur pré-incrémentée
     $doneData['usage_count'] = $guestUsageAfterIncrement;
     $doneData['usage_limit'] = GUEST_USAGE_LIMIT;
     $doneData['remaining'] = GUEST_USAGE_LIMIT - $guestUsageAfterIncrement;
   } else {
-    // Ajouter les limites restantes pour les utilisateurs connectés
     $remaining = $rateLimiter->getRemainingLimits($userId);
     $doneData['rate_limits'] = $remaining;
   }

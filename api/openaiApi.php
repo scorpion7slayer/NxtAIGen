@@ -57,7 +57,7 @@ if (!isset($input['model']) || empty($input['model'])) {
 $ch = curl_init('https://api.openai.com/v1/chat/completions');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
-// Désactiver la vérification SSL (solution temporaire pour WAMP)
+
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -122,7 +122,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {
@@ -140,7 +140,7 @@ if ($httpCode !== 200) {
   exit();
 }
 
-// Extraire le message de la réponse (API OpenAI Chat Completions)
+// Extraire le message de la réponse
 $assistantMessage = $responseData['choices'][0]['message']['content'] ?? 'Pas de réponse';
 
 echo json_encode([

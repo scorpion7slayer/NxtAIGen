@@ -2,7 +2,6 @@
 
 /**
  * GitHub Copilot OAuth Helper
- * Gestion avancée des tokens OAuth GitHub Copilot avec refresh automatique
  */
 
 class GitHubCopilotOAuth
@@ -53,7 +52,7 @@ class GitHubCopilotOAuth
   }
 
   /**
-   * Récupérer le token de l'utilisateur (avec refresh automatique si expiré)
+   * Récupérer le token de l'utilisateur
    */
   public function getToken($userId): ?string
   {
@@ -65,7 +64,6 @@ class GitHubCopilotOAuth
       return $user['github_token'] ?? null;
     }
 
-    // Token expiré ou inexistant, tenter de le rafraîchir
     $stmt = $this->pdo->prepare("
       SELECT github_refresh_token 
       FROM users 
@@ -77,7 +75,7 @@ class GitHubCopilotOAuth
     $refreshToken = $user['github_refresh_token'] ?? null;
 
     if (empty($refreshToken)) {
-      return null; // Pas de refresh token disponible
+      return null;
     }
 
     // Tenter le refresh
@@ -112,7 +110,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
     if ($httpCode !== 200) {
       error_log("GitHub OAuth refresh failed: HTTP $httpCode - $response");
@@ -128,7 +126,7 @@ class GitHubCopilotOAuth
 
     // Sauvegarder le nouveau token
     $newToken = $data['access_token'];
-    $newRefreshToken = $data['refresh_token'] ?? $refreshToken; // Certaines APIs renvoient un nouveau refresh token
+    $newRefreshToken = $data['refresh_token'] ?? $refreshToken;
     $expiresIn = $data['expires_in'] ?? 28800; // Par défaut 8h
     $expiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
 
@@ -151,7 +149,6 @@ class GitHubCopilotOAuth
   public function hasCopilotSubscription($token): array
   {
     // Endpoint pour vérifier l'accès Copilot
-    // Note: Cette API nécessite le scope "copilot" dans l'OAuth
     $ch = curl_init('https://api.github.com/user/copilot_seats');
     curl_setopt_array($ch, [
       CURLOPT_RETURNTRANSFER => true,
@@ -165,7 +162,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
     if ($httpCode === 200) {
       $data = json_decode($response, true);
@@ -189,7 +186,7 @@ class GitHubCopilotOAuth
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
     if ($httpCode === 200) {
       return [

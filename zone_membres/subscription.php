@@ -50,13 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         'Authorization: Bearer ' . $stripeSecretKey,
         'Content-Type: application/x-www-form-urlencoded'
       ],
-      CURLOPT_SSL_VERIFYPEER => false // WAMP compatibility
+      CURLOPT_SSL_VERIFYPEER => false
     ]);
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
-    // curl_close() supprimé - deprecated depuis PHP 8.0
 
     if ($curlError) {
       $message = "Erreur de connexion: " . $curlError;

@@ -1,16 +1,7 @@
 <?php
 
 /**
- * GitHub Copilot API Integration - Version améliorée
- * Documentation: https://docs.github.com/en/copilot
- * Utilise le token OAuth GitHub de l'utilisateur avec abonnement Copilot Pro/Pro+
- * Endpoint: https://api.githubcopilot.com/chat/completions
- * 
- * Améliorations:
- * - Refresh automatique du token OAuth si expiré
- * - Vérification de l'abonnement Copilot
- * - Meilleure gestion des erreurs OAuth
- * - Messages d'erreur contextuels
+ * GitHub Copilot API Integration
  */
 
 session_start();
@@ -70,7 +61,7 @@ if (empty($GITHUB_TOKEN)) {
   exit();
 }
 
-// Vérifier l'abonnement Copilot (optionnel, peut être désactivé pour performances)
+// Vérifier l'abonnement Copilot
 $checkSubscription = $input['check_subscription'] ?? false;
 if ($checkSubscription) {
   $subscription = $oauthHelper->hasCopilotSubscription($GITHUB_TOKEN);
@@ -139,7 +130,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
-// curl_close() supprimé - deprecated depuis PHP 8.0
+
 
 // Gérer les erreurs cURL
 if ($curlError) {

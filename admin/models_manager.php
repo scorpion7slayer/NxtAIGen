@@ -119,7 +119,7 @@ function testProviderConnection($provider, $pdo)
   $latency = round((microtime(true) - $startTime) * 1000);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $error = curl_error($ch);
-  // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
   if ($error) {
     return ['success' => false, 'message' => 'Erreur: ' . $error, 'latency' => $latency];
@@ -321,7 +321,7 @@ function fetch_models_all()
   $response = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $err = curl_error($ch);
-  // curl_close() supprimé - deprecated depuis PHP 8.0
+
 
   if ($response === false || $httpCode !== 200) {
     return [
