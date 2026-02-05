@@ -146,7 +146,7 @@ $stats = $pdo->query("
       document.documentElement.lang = 'fr';
     })();
   </script>
-  <!-- Anime.js v4 (local via npm) -->
+  <!-- Anime.js v4 -->
   <script src="../assets/js/anime.min.js"></script>
   <script src="../assets/js/animations.js" defer></script>
 </head>

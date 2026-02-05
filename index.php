@@ -98,7 +98,7 @@ if ($user) {
   <!-- Marked.js - chargement synchrone (requis avant le script inline) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.4/marked.min.js"></script>
 
-  <!-- Anime.js v4 (local via npm) -->
+  <!-- Anime.js v4 -->
   <script src="assets/js/anime.min.js"></script>
 
   <!-- Variables globales pour les scripts externes -->
