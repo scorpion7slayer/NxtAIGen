@@ -108,7 +108,7 @@ if ($isGuest) {
       $timeText = "Réinitialisation dans {$seconds}s";
     }
 
-    sendSSE(['error' => "Limite atteinte. {$timeText}, ou inscrivez-vous pour un accès illimité !", 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
+    sendSSE(['error' => "Limite atteinte. {$timeText}, ou inscrivez-vous pour un accès étendu !", 'limit_reached' => true, 'usage_count' => $_SESSION['guest_usage_count'], 'usage_limit' => GUEST_USAGE_LIMIT], 'error');
     exit();
   }
 
@@ -166,6 +166,7 @@ if (!isset($input['message']) || empty(trim($input['message']))) {
 
 $userMessage = isset($input['message']) ? trim($input['message']) : '';
 $files = isset($input['files']) ? $input['files'] : [];
+$thinkingEnabled = !empty($input['thinking']);
 
 // Validation et sanitization du provider (whitelist stricte)
 $allowedProviders = ['openai', 'anthropic', 'gemini', 'deepseek', 'mistral', 'xai', 'openrouter', 'perplexity', 'huggingface', 'moonshot', 'github', 'ollama'];
@@ -326,11 +327,19 @@ switch ($provider) {
         ['role' => 'user', 'content' => $messageContent]
       ]
     ];
+    if ($thinkingEnabled) {
+      $postData['thinking'] = ['type' => 'enabled', 'budget_tokens' => 10000];
+      $postData['max_tokens'] = 16000;
+    }
     $headers = [
       'Content-Type: application/json',
       'x-api-key: ' . $apiKey,
       'anthropic-version: 2023-06-01'
     ];
+    // Extended thinking requiert une version plus récente
+    if ($thinkingEnabled) {
+      $headers[2] = 'anthropic-version: 2025-01-01';
+    }
     break;
 
   case 'gemini':
@@ -341,6 +350,15 @@ switch ($provider) {
         ['parts' => $parts]
       ]
     ];
+    // Gemini 2.5+ a le thinking activé par défaut
+    // On peut contrôler le budget avec thinkingConfig si nécessaire
+    if ($thinkingEnabled) {
+      $postData['generationConfig'] = [
+        'thinkingConfig' => [
+          'thinkingBudget' => 10000 // Budget de tokens pour le thinking
+        ]
+      ];
+    }
     $headers = ['Content-Type: application/json'];
     break;
 
@@ -356,6 +374,10 @@ switch ($provider) {
       'stream' => true,
       'keep_alive' => 0  // Décharger le modèle immédiatement après la génération
     ];
+    // Activer le thinking pour Ollama (Qwen 3, DeepSeek R1, etc.)
+    if ($thinkingEnabled) {
+      $postData['think'] = true;
+    }
     $headers = ['Content-Type: application/json'];
     // Ajouter l'authentification si une clé API est fournie (pour Ollama distant)
     if (!empty($apiKey)) {
@@ -374,6 +396,10 @@ switch ($provider) {
       'stream' => true,
       'max_tokens' => 4096
     ];
+    // Activer le thinking pour GPT-OSS et autres modèles
+    if ($thinkingEnabled) {
+      $postData['reasoning_effort'] = 'high';
+    }
     $headers = [
       'Content-Type: application/json',
       'Authorization: Bearer ' . $apiKey
@@ -408,6 +434,23 @@ switch ($provider) {
       'stream' => true,
       'max_tokens' => 4096
     ];
+
+    // Activer le thinking pour les providers qui le supportent
+    if ($thinkingEnabled) {
+      // DeepSeek: ajouter le paramètre thinking
+      if ($provider === 'deepseek') {
+        $postData['thinking'] = ['type' => 'enabled'];
+        $postData['max_tokens'] = 16000; // Inclut le CoT
+      }
+      // OpenRouter: ajouter reasoning avec effort high
+      if ($provider === 'openrouter') {
+        $postData['reasoning'] = ['effort' => 'high'];
+        $postData['max_tokens'] = 16000;
+      }
+      // xAI Grok: pas de paramètre spécifique, le reasoning est automatique pour grok-3-mini
+      // Perplexity: pas de paramètre spécifique, le reasoning est dans les modèles sonar-reasoning-*
+    }
+
     $headers = [
       'Content-Type: application/json',
       'Authorization: Bearer ' . $apiKey
@@ -498,22 +541,84 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
       // Extraire le contenu selon le provider
       switch ($provider) {
         case 'anthropic':
-          if (isset($decoded['type']) && $decoded['type'] === 'content_block_delta') {
-            $content = $decoded['delta']['text'] ?? '';
-          }
-          // Gérer message_stop
-          if (isset($decoded['type']) && $decoded['type'] === 'message_stop') {
-            sendSSE(['done' => true], 'done');
+          if (isset($decoded['type'])) {
+            if ($decoded['type'] === 'content_block_delta') {
+              $deltaType = $decoded['delta']['type'] ?? '';
+              if ($deltaType === 'thinking_delta') {
+                $thinking = $decoded['delta']['thinking'] ?? '';
+                if ($thinking !== '') {
+                  sendSSE(['thinking' => $thinking], 'thinking');
+                }
+              } else {
+                $content = $decoded['delta']['text'] ?? '';
+              }
+            } elseif ($decoded['type'] === 'message_stop') {
+              sendSSE(['done' => true], 'done');
+            }
           }
           break;
 
         case 'gemini':
-          if (isset($decoded['candidates'][0]['content']['parts'][0]['text'])) {
-            $content = $decoded['candidates'][0]['content']['parts'][0]['text'];
+          // Gemini peut avoir plusieurs parts: thinking + text
+          if (isset($decoded['candidates'][0]['content']['parts'])) {
+            foreach ($decoded['candidates'][0]['content']['parts'] as $part) {
+              // Thinking part (Gemini 2.5+)
+              if (isset($part['thought']) && $part['thought'] !== '') {
+                sendSSE(['thinking' => $part['thought']], 'thinking');
+              }
+              // Text part
+              if (isset($part['text']) && $part['text'] !== '') {
+                $content .= $part['text'];
+              }
+            }
           }
           break;
 
-        default: // OpenAI-compatible
+        case 'mistral':
+          // Mistral Magistral models - thinking avec tokens [THINK]...[/THINK]
+          if (isset($decoded['choices'][0]['delta']['content'])) {
+            $deltaContent = $decoded['choices'][0]['delta']['content'];
+            if (is_string($deltaContent)) {
+              // Vérifier si c'est du thinking inline
+              // Note: Les tokens spéciaux [THINK] et [/THINK] marquent le début/fin du thinking
+              $content = $deltaContent;
+            }
+          }
+          // Mistral reasoning_content (format standard)
+          if (isset($decoded['choices'][0]['delta']['reasoning_content'])) {
+            $reasoning = $decoded['choices'][0]['delta']['reasoning_content'];
+            if ($reasoning !== '') {
+              sendSSE(['thinking' => $reasoning], 'thinking');
+            }
+          }
+          // Vérifier finish_reason
+          if (isset($decoded['choices'][0]['finish_reason']) && $decoded['choices'][0]['finish_reason'] !== null) {
+            sendSSE(['done' => true], 'done');
+          }
+          break;
+
+        default: // OpenAI-compatible (DeepSeek, xAI, OpenRouter, Perplexity, HuggingFace, Moonshot, GitHub)
+          // Vérifier reasoning_content (DeepSeek, OpenRouter, etc.)
+          if (isset($decoded['choices'][0]['delta']['reasoning_content'])) {
+            $reasoning = $decoded['choices'][0]['delta']['reasoning_content'];
+            if ($reasoning !== '') {
+              sendSSE(['thinking' => $reasoning], 'thinking');
+            }
+          }
+          // Vérifier reasoning (HuggingFace GPT-OSS, etc.)
+          if (isset($decoded['choices'][0]['delta']['reasoning'])) {
+            $reasoning = $decoded['choices'][0]['delta']['reasoning'];
+            if ($reasoning !== '') {
+              sendSSE(['thinking' => $reasoning], 'thinking');
+            }
+          }
+          // Vérifier thinking (certains modèles)
+          if (isset($decoded['choices'][0]['delta']['thinking'])) {
+            $thinking = $decoded['choices'][0]['delta']['thinking'];
+            if ($thinking !== '') {
+              sendSSE(['thinking' => $thinking], 'thinking');
+            }
+          }
           if (isset($decoded['choices'][0]['delta']['content'])) {
             $content = $decoded['choices'][0]['delta']['content'];
           }
@@ -538,14 +643,19 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullRespons
           $hasError = true;
           continue;
         }
+        // Thinking (Qwen 3, DeepSeek R1, etc.)
+        if (isset($decoded['message']['thinking']) && $decoded['message']['thinking'] !== '') {
+          sendSSE(['thinking' => $decoded['message']['thinking']], 'thinking');
+        }
+        // Content
         if (isset($decoded['message']['content'])) {
           $content = $decoded['message']['content'];
           $fullResponse .= $content;
           sendSSE(['content' => $content], 'content');
-
-          if (isset($decoded['done']) && $decoded['done']) {
-            sendSSE(['done' => true], 'done');
-          }
+        }
+        // Done
+        if (isset($decoded['done']) && $decoded['done']) {
+          sendSSE(['done' => true], 'done');
         }
       }
     }

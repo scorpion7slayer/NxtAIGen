@@ -315,8 +315,9 @@ if ($user) {
   <!-- Contenu Principal -->
   <main id="mainContent" class="flex-1 flex flex-col items-center justify-center p-4 min-w-0 relative overflow-hidden transition-all duration-500 ease-out">
     <!-- Logo NxtGenAI -->
-    <div id="logoContainer" class="mb-8 transition-all duration-500 ease-out">
+    <div id="logoContainer" class="mb-8 transition-all duration-500 ease-out flex flex-col items-center">
       <img src="assets/images/logo.svg" alt="NxtGenAI - Assistant IA conversationnel" class="h-20 w-auto" id="siteLogo">
+      <h1 id="logoTitle" class="text-2xl font-bold text-white mt-3 text-center tracking-tight">NxtGenAI</h1>
     </div>
 
     <!-- Zone de conversation -->
@@ -343,11 +344,11 @@ if ($user) {
           </span>
           <?php if ($remaining === 0): ?>
             <p class="mt-2 text-xs text-gray-500">
-              <span id="resetTimer" data-reset-time="<?php echo $timeRemaining; ?>"></span> â€¢ <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+              <span id="resetTimer" data-reset-time="<?php echo $timeRemaining; ?>"></span> &bull; <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès étendu
             </p>
           <?php else: ?>
             <p class="mt-2 text-xs text-gray-500">
-              <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité
+              <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès étendu
             </p>
           <?php endif; ?>
         </div>
@@ -375,9 +376,9 @@ if ($user) {
         <div class="flex items-center justify-between">
           <!-- Icônes gauche -->
           <div class="flex items-center gap-2">
-            <!-- Bouton ampoule -->
-            <button
-              class="p-2 rounded-lg text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer">
+            <!-- Bouton thinking (ampoule) -->
+            <button id="thinkingToggleBtn" title="Activer/désactiver le mode thinking"
+              class="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors cursor-pointer">
               <i class="fa-solid fa-lightbulb"></i>
             </button>
             <?php if ($isGuest): ?>
@@ -633,7 +634,56 @@ if ($user) {
   </main>
 
   <script>
-    // Ã‰tat utilisateur (isGuest et guestUsageLimit déjà définis dans le head)
+    // Animation du titre NxtGenAI
+    (function() {
+      try {
+        const titleEl = document.getElementById('logoTitle');
+        if (!titleEl) return;
+        const text = titleEl.textContent;
+        titleEl.textContent = '';
+        titleEl.setAttribute('aria-label', text);
+        text.split('').forEach(function(char) {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.style.display = 'inline-block';
+          span.style.opacity = '0';
+          span.className = 'logo-letter';
+          titleEl.appendChild(span);
+        });
+        anime.animate('.logo-letter', {
+          opacity: [0, 1],
+          translateY: ['1.5rem', 0],
+          delay: anime.stagger(60, {
+            start: 300
+          }),
+          duration: 800,
+          ease: 'outExpo',
+        });
+      } catch (e) {}
+    })();
+  </script>
+
+  <script>
+    // État thinking (ampoule)
+    window.thinkingEnabled = localStorage.getItem('thinkingEnabled') === 'true';
+    (function() {
+      const btn = document.getElementById('thinkingToggleBtn');
+      if (!btn) return;
+
+      function updateThinkingBtn() {
+        btn.classList.toggle('text-amber-400', window.thinkingEnabled);
+        btn.classList.toggle('text-gray-500', !window.thinkingEnabled);
+        btn.title = window.thinkingEnabled ? 'Thinking activé' : 'Thinking désactivé';
+      }
+      updateThinkingBtn();
+      btn.addEventListener('click', function() {
+        window.thinkingEnabled = !window.thinkingEnabled;
+        localStorage.setItem('thinkingEnabled', window.thinkingEnabled);
+        updateThinkingBtn();
+      });
+    })();
+
+    // État utilisateur (isGuest et guestUsageLimit déjà définis dans le head)
     let guestUsageCount = <?php echo $guestUsageCount; ?>;
 
     // Timer de réinitialisation pour les visiteurs
@@ -1034,7 +1084,7 @@ if ($user) {
           if (!resetTimer && timerParagraph) {
             // Calculer le temps restant (approximatif)
             const timeRemaining = 86400; // Par défaut 24h, sera mis à jour par le serveur
-            timerParagraph.innerHTML = '<span id="resetTimer" data-reset-time="' + timeRemaining + '"></span> â€¢ <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès illimité';
+            timerParagraph.innerHTML = '<span id="resetTimer" data-reset-time="' + timeRemaining + '"></span> &bull; <a href="zone_membres/register.php" class="text-green-400 hover:text-green-300 underline">Inscrivez-vous</a> pour un accès étendu';
 
             // Réinitialiser le timer
             const newResetTimer = document.getElementById('resetTimer');
@@ -1079,7 +1129,7 @@ if ($user) {
               <div>
                 <p class="text-amber-300 font-medium mb-1">Limite d'essais atteinte</p>
                 <p class="text-gray-300 text-sm mb-3">Vous avez utilisé vos ${guestUsageLimit} essais gratuits.</p>
-                <p class="text-gray-400 text-sm mb-3">${timeInfo}, ou créez un compte gratuit pour un accès illimité !</p>
+                <p class="text-gray-400 text-sm mb-3">${timeInfo}, ou créez un compte gratuit pour un accès étendu !</p>
                 <div class="flex gap-2">
                   <a href="zone_membres/register.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium transition-colors">
                     <i class="fa-solid fa-user-plus"></i>
@@ -1098,7 +1148,7 @@ if ($user) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ==== MODALES PERSONNALISÃ‰ES ====
+    // ==== MODALES PERSONNALISÉES ====
     // Modal Confirm personnalisée
     function showConfirmModal(message) {
       return new Promise((resolve) => {
@@ -1366,15 +1416,22 @@ if ($user) {
         <div id="${loadingId}" class="flex justify-start">
           <div class="bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3">
             <div class="flex items-center">
-              <div class="typing-indicator">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
+              <div class="typing-indicator" style="display:flex;align-items:center;gap:5px;">
+                <span class="dot" style="display:inline-block;width:8px;height:8px;background-color:#10b981;border-radius:50%;"></span>
+                <span class="dot" style="display:inline-block;width:8px;height:8px;background-color:#10b981;border-radius:50%;"></span>
+                <span class="dot" style="display:inline-block;width:8px;height:8px;background-color:#10b981;border-radius:50%;"></span>
               </div>
             </div>
           </div>
         </div>
       `;
+
+      // Animer les 3 points avec anime.js
+      const loadingEl = document.getElementById(loadingId);
+      if (loadingEl && window.NxtAnim?.typingDots) {
+        window.NxtAnim.typingDots(loadingEl.querySelector('.typing-indicator'));
+      }
+
       // Auto-scroll to show loading indicator
       if (shouldAutoScroll) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -1412,7 +1469,8 @@ if ($user) {
             message: message,
             model: selectedModel.model,
             provider: selectedModel.provider,
-            files: filesData
+            files: filesData,
+            thinking: window.thinkingEnabled || false
           }),
           signal: currentAbortController.signal
         });
@@ -1421,20 +1479,43 @@ if ($user) {
           throw new Error('Erreur de connexion');
         }
 
-        // Supprimer l'indicateur de chargement maintenant que la connexion est établie
-        document.getElementById(loadingId)?.remove();
+        // Flag pour supprimer le loading au premier chunk (pas immédiatement)
+        let loadingRemoved = false;
 
-        // Créer le conteneur de réponse pour le streaming
+        function removeLoadingOnce() {
+          if (!loadingRemoved) {
+            loadingRemoved = true;
+            document.getElementById(loadingId)?.remove();
+            responseWrapper?.classList.remove('hidden');
+          }
+        }
+
+        // Créer le conteneur de réponse pour le streaming (caché initialement)
         const responseId = 'response-' + Date.now();
+        const thinkingId = 'thinking-' + Date.now();
+        const responseWrapperId = 'response-wrapper-' + Date.now();
         chatContainer.innerHTML += `
-          <div class="flex justify-start">
+          <div id="${responseWrapperId}" class="flex justify-start hidden">
             <div class="ai-message bg-gray-700/50 border border-gray-600/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+              <div id="${thinkingId}" class="thinking-container hidden">
+                <button class="thinking-toggle" onclick="this.parentElement.classList.toggle('expanded')">
+                  <span class="thinking-dot"></span>
+                  <span class="thinking-label">Thinking...</span>
+                  <i class="fa-solid fa-chevron-down thinking-chevron"></i>
+                </button>
+                <div class="thinking-content"><pre class="thinking-text"></pre></div>
+              </div>
               <div id="${responseId}" class="text-gray-200 text-sm streaming-response"></div>
             </div>
           </div>
         `;
+        const responseWrapper = document.getElementById(responseWrapperId);
         const responseContainer = document.getElementById(responseId);
+        const thinkingContainer = document.getElementById(thinkingId);
         let fullResponse = '';
+        let thinkingContent = '';
+        let thinkingStartTime = null;
+        let isThinking = false;
         let renderTimeout = null;
         currentStreamingContent = ''; // Réinitialiser le contenu global
 
@@ -1464,6 +1545,7 @@ if ($user) {
         // Lire le stream SSE
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let sseBuffer = ''; // Buffer pour les lignes SSE incomplètes
 
         while (true) {
           const {
@@ -1475,7 +1557,10 @@ if ($user) {
           const chunk = decoder.decode(value, {
             stream: true
           });
-          const lines = chunk.split('\n');
+          sseBuffer += chunk;
+          const lines = sseBuffer.split('\n');
+          // Garder la dernière ligne incomplète dans le buffer
+          sseBuffer = lines.pop() || '';
 
           for (const line of lines) {
             if (line.startsWith('data:')) {
@@ -1483,6 +1568,7 @@ if ($user) {
                 const data = JSON.parse(line.slice(5).trim());
 
                 if (data.error) {
+                  removeLoadingOnce(); // Supprimer le loading en cas d'erreur
                   responseContainer.innerHTML = `<span class="text-red-400">Erreur: ${escapeHtml(data.error)}</span>`;
                   // Si limite atteinte, afficher le message d'inscription
                   if (data.limit_reached && isGuest) {
@@ -1493,7 +1579,32 @@ if ($user) {
                   break;
                 }
 
+                if (data.thinking) {
+                  removeLoadingOnce(); // Supprimer le loading au premier chunk
+                  if (!isThinking) {
+                    isThinking = true;
+                    thinkingStartTime = Date.now();
+                    thinkingContainer.classList.remove('hidden');
+                  }
+                  thinkingContent += data.thinking;
+                  const thinkingText = thinkingContainer.querySelector('.thinking-text');
+                  if (thinkingText) thinkingText.textContent = thinkingContent;
+                  if (shouldAutoScroll) chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+
                 if (data.content) {
+                  removeLoadingOnce(); // Supprimer le loading au premier chunk
+                  // Finaliser le thinking si on passe au contenu
+                  if (isThinking) {
+                    isThinking = false;
+                    const elapsed = Math.round((Date.now() - thinkingStartTime) / 1000);
+                    const label = thinkingContainer.querySelector('.thinking-label');
+                    if (label) label.textContent = `Thinking · ${elapsed}s`;
+                    const thinkingDot = thinkingContainer.querySelector('.thinking-dot');
+                    if (thinkingDot) {
+                      thinkingDot.classList.add('done');
+                    }
+                  }
                   fullResponse += data.content;
                   batchBuffer += data.content;
                   currentStreamingContent = fullResponse; // Synchroniser avec la variable globale
@@ -1542,10 +1653,10 @@ if ($user) {
                     window.updateRateLimits(data.rate_limits);
                   }
 
-                  // === SAUVEGARDER LA RÃ‰PONSE IA ===
+                  // === SAUVEGARDER LA RÉPONSE IA ===
                   <?php if (!$isGuest): ?>
                     if (currentConversationId && fullResponse && !responseSaved) {
-                      responseSaved = true; // Ã‰viter la double sauvegarde
+                      responseSaved = true; // Éviter la double sauvegarde
                       // Sauvegarder la réponse IA
                       fetch('api/conversations.php', {
                         method: 'POST',
@@ -1588,6 +1699,18 @@ if ($user) {
             }
           }
         }
+        // Traiter le buffer restant si non vide
+        if (sseBuffer.trim().startsWith('data:')) {
+          try {
+            const data = JSON.parse(sseBuffer.slice(5).trim());
+            if (data.content) {
+              fullResponse += data.content;
+              responseContainer.innerHTML = renderMarkdown(fullResponse);
+            }
+          } catch (e) {
+            /* ignorer */
+          }
+        }
         // S'assurer que le curseur est retiré à la fin
         responseContainer?.classList.add('done');
         setButtonCancelMode(false);
@@ -1602,6 +1725,7 @@ if ($user) {
         if (streamingEl) streamingEl.classList.add('done');
 
         document.getElementById(loadingId)?.remove();
+        responseWrapper?.remove(); // Supprimer le wrapper caché en cas d'erreur
 
         // Ne pas afficher d'erreur si c'est une annulation volontaire
         if (error.name === 'AbortError') {
@@ -1983,7 +2107,7 @@ if ($user) {
         micButton.classList.remove('text-red-500', 'animate-pulse');
         micButton.classList.add('text-gray-500', 'hover:text-gray-300');
         micButton.title = 'Cliquer pour dicter';
-        messageInput.placeholder = 'Posez une question. Tapez @ pour mentions et / pour raccourcis.';
+        messageInput.placeholder = 'Posez une question.';
       };
 
       // Gestion des erreurs
@@ -2011,7 +2135,7 @@ if ($user) {
         }
         messageInput.placeholder = errorMessage;
         setTimeout(() => {
-          messageInput.placeholder = 'Posez une question. Tapez @ pour mentions et / pour raccourcis.';
+          messageInput.placeholder = 'Posez une question.';
         }, 3000);
       };
 
@@ -2048,7 +2172,7 @@ if ($user) {
 
             messageInput.placeholder = errorMessage;
             setTimeout(() => {
-              messageInput.placeholder = 'Posez une question. Tapez @ pour mentions et / pour raccourcis.';
+              messageInput.placeholder = 'Posez une question.';
             }, 4000);
           }
         }
@@ -2177,7 +2301,7 @@ if ($user) {
     const noConversationsPlaceholder = document.getElementById('noConversationsPlaceholder');
     const profileContainer = document.getElementById('profileContainer');
 
-    // Ã‰tat de la sidebar
+    // État de la sidebar
     let currentConversationId = null;
     let conversations = [];
     let conversationMessages = []; // Messages de la conversation actuelle en mémoire
@@ -2201,7 +2325,7 @@ if ($user) {
 
       // Gérer l'overlay mobile
       const overlay = document.getElementById('sidebarOverlay');
-      if (window.innerWidth < 768) {
+      if (window.innerWidth <= 1024) {
         overlay.dataset.visible = isCollapsed ? 'true' : 'false';
         overlay.classList.toggle('opacity-0', !isCollapsed);
         overlay.classList.toggle('invisible', !isCollapsed);
@@ -2329,7 +2453,7 @@ if ($user) {
       const hours = Math.floor(diff / 3600000);
       const days = Math.floor(diff / 86400000);
 
-      if (minutes < 1) return "Ã€ l'instant";
+      if (minutes < 1) return "\u00C0 l'instant";
       if (minutes < 60) return `Il y a ${minutes} min`;
       if (hours < 24) return `Il y a ${hours}h`;
       if (days < 7) return `Il y a ${days}j`;
@@ -2611,9 +2735,9 @@ if ($user) {
       if (window.innerWidth <= 480) {
         input.placeholder = "Posez une question...";
       } else if (window.innerWidth <= 640) {
-        input.placeholder = "Posez une question. Tapez @ ou /";
+        input.placeholder = "Posez une question..";
       } else {
-        input.placeholder = "Posez une question. Tapez @ pour mentions et / pour raccourcis.";
+        input.placeholder = "Posez une question.";
       }
     }
 
@@ -2709,7 +2833,7 @@ if ($user) {
 
     // ===== MOBILE BOTTOM SHEETS - GESTION =====
 
-    // Ã‰tat des bottom sheets
+    // État des bottom sheets
     let mobileModelSheetOpen = false;
     let mobileProfileSheetOpen = false;
     let mobileAuthSheetOpen = false;
@@ -3027,7 +3151,7 @@ if ($user) {
       document.body.style.overflow = '';
     }
 
-    // ===== GESTION DES Ã‰VÃ‰NEMENTS MOBILE =====
+    // ===== GESTION DES ÉVÉNEMENTS MOBILE =====
 
     // Modifier le comportement du sélecteur modèle mobile
     if (mobileModelSelector) {

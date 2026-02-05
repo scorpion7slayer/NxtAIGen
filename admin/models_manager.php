@@ -863,8 +863,8 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
 
   <!-- Modal: Model Details -->
   <div id="modelModal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
-    <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg">
+    <div id="modalBackdrop" class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-10">
       <div class="bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl overflow-hidden h-full md:h-auto">
         <!-- Modal Header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-700/50 bg-neutral-800/30">
@@ -1415,7 +1415,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     function showModelDetails(model, provider) {
       currentModalModel = model;
       const modal = document.getElementById('modelModal');
-      const backdrop = modal.querySelector('.modal-backdrop');
+      const backdrop = document.getElementById('modalBackdrop');
       const content = modal.querySelector('.bg-neutral-900');
       const icon = providerIcons[provider] || 'openai.svg';
 
@@ -1465,7 +1465,7 @@ function getApiKeyValue($provider, $keyName, $apiConfig, $dbApiKeys)
     // Close modal with NxtAnim
     function closeModal() {
       const modal = document.getElementById('modelModal');
-      const backdrop = modal.querySelector('.modal-backdrop');
+      const backdrop = document.getElementById('modalBackdrop');
       const content = modal.querySelector('.bg-neutral-900');
 
       // Use NxtAnim if available

@@ -4,6 +4,11 @@ session_start();
 /**
  * Page d'achat d'abonnement Stripe
  * Intègre les plans définis dans rate_limiter.php
+ *
+ * Tailwind safelist (classes dynamiques par couleur de plan) :
+ * bg-blue-500 bg-blue-500/10 bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-600 focus:ring-blue-500
+ * bg-green-500 bg-green-500/10 bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-600 focus:ring-green-500
+ * bg-purple-500 bg-purple-500/10 bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-600 focus:ring-purple-500
  */
 
 // Configuration Stripe (cles dans stripe_config.php, hors du repo)
@@ -314,8 +319,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
 
         <!-- Plans payants -->
         <?php foreach ($stripePlans as $key => $plan): ?>
-          <div class="<?php echo $plan['popular'] ? 'rounded-2xl p-0.5 bg-linear-to-tr from-green-500 via-green-400 to-green-700' : ''; ?>">
-            <div class="bg-neutral-800/50 border <?php echo $plan['popular'] ? 'border-transparent' : 'border-neutral-700/50'; ?> rounded-2xl p-5 lg:p-6 flex flex-col h-full relative transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
+          <div>
+            <div class="bg-neutral-800/50 border border-neutral-700/50 rounded-2xl p-5 lg:p-6 flex flex-col h-full relative transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
               <?php if ($plan['popular']): ?>
                 <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full animate-pulse">
                   Populaire

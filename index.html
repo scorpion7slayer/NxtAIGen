@@ -137,7 +137,9 @@
                         rel="noopener noreferrer"
                         class="hover:text-white transition-colors duration-200"
                         aria-label="GitHub"
-                        ><i class="fa-brands fa-github text-base opacity-60 hover:opacity-100 transition-opacity duration-200"></i
+                        ><i
+                            class="fa-brands fa-github text-base opacity-60 hover:opacity-100 transition-opacity duration-200"
+                        ></i
                     ></a>
                 </div>
 
@@ -374,8 +376,8 @@
                         <p
                             class="text-neutral-400 text-sm sm:text-base leading-relaxed"
                         >
-                            Toutes les clés API chiffrées en AES-256-CBC. Jamais
-                            stockées en clair, sécurité maximale.
+                            Toutes les clés API chiffrées en AES-256-CBC. Pour
+                            une sécurité maximale.
                         </p>
                     </div>
 
@@ -679,7 +681,7 @@
                                 Ollama
                             </p>
                             <p class="text-neutral-500 text-xs sm:text-sm">
-                                Modèles locaux
+                                Modèles locaux et cloud
                             </p>
                         </div>
                     </div>
@@ -1022,7 +1024,11 @@
         <button
             id="scrollTopBtn"
             class="fixed bottom-24 right-6 sm:bottom-8 sm:right-8 z-50 w-12 h-12 rounded-full bg-neutral-800/80 backdrop-blur-md border border-white/10 text-neutral-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-500/50 shadow-lg flex items-center justify-center"
-            style="opacity: 0; pointer-events: none; transform: translateY(16px) scale(0.8)"
+            style="
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(16px) scale(0.8);
+            "
             aria-label="Retour en haut"
         >
             <i class="fa-solid fa-arrow-up"></i>
@@ -1379,8 +1385,7 @@
                 });
 
                 // ===== SCROLL TO TOP BUTTON =====
-                const scrollTopBtn =
-                    document.getElementById("scrollTopBtn");
+                const scrollTopBtn = document.getElementById("scrollTopBtn");
                 let scrollTopVisible = false;
 
                 // Click: scroll to top using native smooth scroll
