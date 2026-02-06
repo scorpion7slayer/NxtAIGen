@@ -229,6 +229,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_checkout'])) {
   <script src="../assets/js/anime.min.js"></script>
   <script src="../assets/js/animations.js" defer></script>
 </head>
+<!-- Forçage du thème sombre -->
+<script>
+  document.documentElement.classList.add('dark');
+</script>
 
 <body class="min-h-screen bg-gray-50 dark:bg-bg-dark text-gray-900 dark:text-neutral-400">
   <!-- Header -->
