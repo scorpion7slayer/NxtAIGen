@@ -1,9 +1,11 @@
 <?php
 
-$dbHost = 'localhost';
-$dbName = 'nxtgenai';
-$dbUser = 'root';
-$dbPass = '';
+require_once __DIR__ . '/../api/env_loader.php';
+
+$dbHost = env('DB_HOST');
+$dbName = env('DB_NAME');
+$dbUser = env('DB_USER');
+$dbPass = env('DB_PASS');
 
 $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4";
 
