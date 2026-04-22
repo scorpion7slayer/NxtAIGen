@@ -140,9 +140,9 @@ npm install
 # 3. Importer le schéma de base de données
 mysql -u root -p < database/nxtgenai.schema.sql
 
-# 4. Configurer les clés API
-cp api/config.php.example api/config.php
-# Éditez api/config.php avec vos clés de fournisseurs
+# 4. Configurer les variables d'environnement
+cp .env.example .env
+# Éditez .env avec vos clés de fournisseurs, credentials DB, Stripe, GitHub OAuth
 
 # 5. Compiler le CSS (mode développement)
 npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch

@@ -2,43 +2,75 @@
 # NxtGenAI - .gitignore
 # ============================================
 
-# === FICHIERS DE CONFIGURATION ===
-api/config.php
-api/github/config.php
-zone_membres/db.php
-shop/stripe_config.php
+# === ENVIRONNEMENT (SECRETS) ===
+# Toutes les cles API, credentials DB, Stripe, GitHub OAuth sont dans .env
+.env
+.env.*
+!.env.example
+
+# === FICHIERS SENSIBLES LEGACY (au cas ou crees localement) ===
+# Les loaders api/config.php, api/github/config.php, shop/stripe_config.php
+# ne contiennent plus de secrets (lecture via env()) - ils sont commit.
+# On ignore uniquement les fichiers pouvant contenir des secrets en clair.
 shop/stripe_secrets.php
 
 # === BASE DE DONNEES ===
 # Utiliser database/nxtgenai.schema.sql pour le schema propre
 database/nxtgenai.sql
+database/*.backup.sql
+database/dumps/
+*.sqlite
+*.sqlite3
+*.db
 
 # === FICHIERS DE LOGS ===
 shop/webhook_logs.txt
 *.log
 logs/
+error_log
+php_errors.log
 
 # === FICHIERS DE TEST/DEBUG ===
 api/github/test_oauth.php
+test_*.php
+debug_*.php
+phpinfo.php
 
-# === ENVIRONNEMENT ===
-.env
-.env.*
-!.env.example
+# === UPLOADS / CACHE / SESSIONS ===
+uploads/
+tmp/
+cache/
+sessions/
+
+# === PHP / COMPOSER ===
+vendor/
+composer.lock
+composer.phar
 
 # === TAILWIND / NODE ===
 node_modules/
 package-lock.json
-package.json
+yarn.lock
+pnpm-lock.yaml
 
 # === OUTILS DE DEVELOPPEMENT ===
 .grepai/
 .claude/settings.local.json
 agents/
+.vscode/
+.idea/
+*.bak
+*.orig
+*.tmp
+
+# === DDEV ===
+.ddev/
+.tarballs/
 
 # === SYSTEME ===
 .DS_Store
 Thumbs.db
+desktop.ini
 *.swp
 *.swo
 *~
