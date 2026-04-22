@@ -74,3 +74,6 @@ desktop.ini
 *.swp
 *.swo
 *~
+# === AUTRES ===
+.vscode/
+.ddev
